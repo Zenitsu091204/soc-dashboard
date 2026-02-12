@@ -40,13 +40,13 @@ export default function AlertStatusCard({ alerts }) {
   const data = React.useMemo(() => buildStatusData(alerts), [alerts]);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, height: 260 }}>
+    <Paper variant="outlined" sx={{ p: 2, height: 320 }}>
       <Typography sx={{ fontWeight: 900 }}>Alert status</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         Workflow distribution (open, in progress, resolved, false positive).
       </Typography>
 
-      <Box sx={{ mt: 2, height: 180 }}>
+      <Box sx={{ mt: 2, height: 200 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
             <XAxis
@@ -77,4 +77,3 @@ export default function AlertStatusCard({ alerts }) {
     </Paper>
   );
 }
-

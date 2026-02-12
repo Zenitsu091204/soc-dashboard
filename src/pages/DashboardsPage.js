@@ -1,13 +1,13 @@
 import * as React from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
-import PageHeader from '../components/PageHeader';
-import StatCard from '../components/StatCard';
+import PageHeader from '../components/PageHeader.js';
+import StatCard from '../components/StatCard.js';
 import {
   alerts,
   iocs,
   threatActors,
   formatUtc,
-} from '../data/mockSocData';
+} from '../data/mockSocData.js';
 import {
   Line,
   LineChart,
@@ -91,90 +91,105 @@ export default function DashboardsPage() {
   const totalIocs = iocs.length;
 
   return (
-    <Box>
+    <Box className="animate-fade-in">
       <PageHeader
-        title="Dashboards"
-        subtitle="Visual overview of SOC activity using mock data."
+        title="Security Operations Center"
+        subtitle="Real-time monitoring and threat intelligence overview."
       />
 
       {/* KPI row for this dashboards page */}
-      <Grid container spacing={3} sx={{ mt: 1, mb: 1 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Grid container spacing={3} sx={{ mt: 1, mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3} sx={{ animationDelay: '0.1s' }} className="animate-slide-in">
           <StatCard
             label="Total alerts"
             value={totalAlerts}
-            helper="All time (mock)"
+            helper="All time"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={3} sx={{ animationDelay: '0.2s' }} className="animate-slide-in">
           <StatCard
             label="Unique assets"
             value={uniqueAssets}
-            helper="Entities with alerts"
+            helper="Active entities"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={3} sx={{ animationDelay: '0.3s' }} className="animate-slide-in">
           <StatCard
             label="Threat actors"
             value={totalActors}
-            helper="Profiles tracked"
+            helper="Tracked profiles"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid item xs={12} sm={6} md={3} sx={{ animationDelay: '0.4s' }} className="animate-slide-in">
           <StatCard
-            label="IOCs"
+            label="Active IOCs"
             value={totalIocs}
-            helper="Indicators loaded"
+            helper="Intelligence feed"
           />
         </Grid>
       </Grid>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
-          <Paper variant="outlined" sx={{ p: 2, height: 300 }}>
-            <Typography sx={{ fontWeight: 900 }}>
-              Alerts over time
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Simple time series of alerts.
-            </Typography>
+          <Paper
+            sx={{
+              p: 3,
+              height: 400,
+              borderRadius: 1,
+            }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+               <div>
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>Alert Activity</Typography>
+                  <Typography variant="body2" color="text.secondary">7-day volume per entity</Typography>
+               </div>
+               <Box sx={{ px: 2, py: 0.5, bgcolor: 'rgba(16, 185, 129, 0.1)', borderRadius: 1, border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                   <Typography variant="caption" sx={{ color: '#10B981', fontWeight: 600 }}>LIVE</Typography>
+               </Box>
+            </Box>
+
             {alertsOverTime.length === 0 ? (
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="body2" color="text.secondary">
-                  No alert data yet. Connect your SIEM to visualize trends.
-                </Typography>
-              </Box>
+               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+                 <Typography color="text.secondary">No data available</Typography>
+               </Box>
             ) : (
-              <Box sx={{ mt: 2, height: 220 }}>
+              <Box sx={{ height: 300, ml: -2 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={alertsOverTime}>
                     <XAxis
                       dataKey="label"
-                      stroke="#9ca3af"
+                      stroke="#475569"
                       tickLine={false}
-                      axisLine={{ stroke: '#4b5563' }}
+                      axisLine={false}
+                      tick={{ fill: '#64748B', fontSize: 12 }}
+                      dy={10}
                     />
                     <YAxis
                       allowDecimals={false}
-                      stroke="#9ca3af"
+                      stroke="#475569"
                       tickLine={false}
-                      axisLine={{ stroke: '#4b5563' }}
+                      axisLine={false}
+                      tick={{ fill: '#64748B', fontSize: 12 }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#020617',
-                        border: '1px solid #1f2937',
-                        borderRadius: 8,
-                        color: '#e5e7eb',
-                        fontSize: 12,
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 12,
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                        color: '#f5f5f5',
+                        fontSize: 13,
                       }}
+                      cursor={{ stroke: 'rgba(99, 102, 241, 0.2)', strokeWidth: 2 }}
                     />
                     <Line
                       type="monotone"
                       dataKey="count"
-                      stroke="#22c55e"
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
+                      stroke="#10B981"
+                      strokeWidth={3}
+                      dot={{ r: 4, stroke: '#0B1120', strokeWidth: 2, fill: '#10B981' }}
+                      activeDot={{ r: 6, strokeWidth: 0, fill: '#34D399' }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -184,57 +199,54 @@ export default function DashboardsPage() {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Paper variant="outlined" sx={{ p: 2, height: 300 }}>
-            <Typography sx={{ fontWeight: 900 }}>
-              Top affected assets
+          <Paper sx={{ p: 3, height: 400, borderRadius: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>Top Assets</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              By alert volume
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              How many alerts each asset generated.
-            </Typography>
+
             {alertsByEntity.length === 0 ? (
-              <Box sx={{ mt: 3 }}>
-                <Typography variant="body2" color="text.secondary">
-                  No asset alerts yet. Once alerts arrive, top assets will be
-                  shown here.
-                </Typography>
-              </Box>
+               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+                 <Typography color="text.secondary">No data available</Typography>
+               </Box>
             ) : (
-              <Box sx={{ mt: 2, height: 220 }}>
+              <Box sx={{ height: 300, mx: -2 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={alertsByEntity}
                     layout="vertical"
-                    margin={{ left: 80, right: 24, top: 8, bottom: 8 }}
+                    margin={{ left: 20, right: 20, top: 0, bottom: 0 }}
+                    barSize={20}
                   >
-                    <XAxis
-                      type="number"
-                      stroke="#9ca3af"
-                      tickLine={false}
-                      axisLine={{ stroke: '#4b5563' }}
-                      allowDecimals={false}
-                    />
+                    <XAxis type="number" hide />
                     <YAxis
                       type="category"
                       dataKey="entity"
-                      stroke="#9ca3af"
-                      width={90}
+                      stroke="#94A3B8"
+                      width={100}
                       tickLine={false}
-                      axisLine={{ stroke: '#4b5563' }}
+                      axisLine={false}
+                      tick={{ fill: '#94A3B8', fontSize: 13, fontWeight: 500 }}
                     />
                     <Tooltip
+                      cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                       contentStyle={{
-                        backgroundColor: '#020617',
-                        border: '1px solid #1f2937',
-                        borderRadius: 8,
-                        color: '#e5e7eb',
-                        fontSize: 12,
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 12,
+                        color: '#f5f5f5',
                       }}
                     />
                     <Bar
                       dataKey="count"
                       fill="#38bdf8"
-                      radius={[6, 6, 6, 6]}
-                    />
+                      radius={[0, 4, 4, 0]}
+                    >
+                      {alertsByEntity.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={index === 0 ? '#F472B6' : '#22D3EE'} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </Box>
@@ -243,23 +255,25 @@ export default function DashboardsPage() {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Paper variant="outlined" sx={{ p: 2, height: 300 }}>
-            <Typography sx={{ fontWeight: 900 }}>
-              IOC types
+          <Paper sx={{ p: 3, height: 380, borderRadius: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>IOC Types</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Distribution by category
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Distribution of tracked indicators by type.
-            </Typography>
-            <Box sx={{ mt: 2, height: 220 }}>
+            <Box sx={{ mt: 2, height: 280 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={iocTypeDistribution}
                     dataKey="value"
                     nameKey="name"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={2}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    cornerRadius={6}
+                    stroke="none"
                   >
                     {iocTypeDistribution.map((entry, index) => (
                       <Cell
@@ -269,14 +283,15 @@ export default function DashboardsPage() {
                     ))}
                   </Pie>
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#020617',
-                      border: '1px solid #1f2937',
-                      borderRadius: 8,
-                      color: '#e5e7eb',
-                      fontSize: 12,
-                    }}
-                  />
+                      contentStyle={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        backdropFilter: 'blur(8px)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: 12,
+                        color: '#f5f5f5',
+                      }}
+                      itemStyle={{ color: '#fff' }}
+                    />
                 </PieChart>
               </ResponsiveContainer>
             </Box>
@@ -284,18 +299,51 @@ export default function DashboardsPage() {
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Paper variant="outlined" sx={{ p: 2, height: 300 }}>
-            <Typography sx={{ fontWeight: 900 }}>
-              Tracked actors
+          <Paper sx={{ p: 3, height: 380, borderRadius: 1, overflow: 'hidden' }}>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>Threat Actors</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Recently active groups
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Simple count of actor profiles by sophistication.
-            </Typography>
-            <Box sx={{ mt: 2, fontSize: 14 }}>
-              {threatActors.map((t) => (
-                <Typography key={t.id} sx={{ mb: 0.5 }}>
-                  <strong>{t.name}</strong> — {t.region} • {t.sophistication}
-                </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+              {threatActors.map((t, i) => (
+                <Box
+                  key={t.id}
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1,
+                    bgcolor: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: 'rgba(255, 255, 255, 0.06)',
+                      transform: 'translateX(4px)'
+                    }
+                  }}
+                >
+                  <Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#F8FAFC' }}>
+                      {t.name}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#94A3B8' }}>
+                      {t.region}
+                    </Typography>
+                  </Box>
+                  <Box sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 4,
+                    bgcolor: t.sophistication === 'Advanced' ? 'rgba(249, 115, 22, 0.2)' : 'rgba(99, 102, 241, 0.2)',
+                    color: t.sophistication === 'Advanced' ? '#F97316' : '#818CF8',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase'
+                  }}>
+                    {t.sophistication}
+                  </Box>
+                </Box>
               ))}
             </Box>
           </Paper>

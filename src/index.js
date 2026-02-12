@@ -3,11 +3,11 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import App from './App.js';
+import reportWebVitals from './reportWebVitals.js';
 import { BrowserRouter } from 'react-router-dom';
 import { CssBaseline, ThemeProvider } from '@mui/material';
-import { theme } from './theme';
+import { theme } from './theme.js';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

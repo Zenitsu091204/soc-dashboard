@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import SOCLayout from './layout/SOCLayout';
-import OverviewPage from './pages/OverviewPage';
-import DashboardsPage from './pages/DashboardsPage';
-import IOCFeedPage from './pages/IOCFeedPage';
-import SearchPage from './pages/SearchPage';
-import ThreatActorsPage from './pages/ThreatActorsPage';
+import SOCLayout from './layout/SOCLayout.js';
+import OverviewPage from './pages/OverviewPage.js';
+import DashboardsPage from './pages/DashboardsPage.js';
+import IOCFeedPage from './pages/IOCFeedPage.js';
+import SearchPage from './pages/SearchPage.js';
+import ThreatActorsPage from './pages/ThreatActorsPage.js';
 
 function App() {
   return (

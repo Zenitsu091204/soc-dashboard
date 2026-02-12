@@ -31,25 +31,35 @@ export default function TopAssetsCard() {
   const data = React.useMemo(() => buildAssetData(), []);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, height: 320 }}>
-      <Typography sx={{ fontWeight: 900 }}>Top affected assets</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-        Assets with the highest alert volume (mock data).
-      </Typography>
+    <Paper 
+      variant="outlined" 
+      sx={{ 
+        p: 3, // Standard 24px padding
+        height: 380, // Consistent height
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      <Box sx={{ mb: 2 }}>
+        <Typography sx={{ fontWeight: 900, fontSize: '1.1rem' }}>Top affected assets</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Assets with the highest alert volume.
+        </Typography>
+      </Box>
 
       {data.length === 0 ? (
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Typography variant="body2" color="text.secondary">
-            No asset data yet. This chart will show your most targeted systems.
+            No asset data available.
           </Typography>
         </Box>
       ) : (
-        <Box sx={{ mt: 2, height: 230 }}>
+        <Box sx={{ flex: 1, minHeight: 0 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
               data={data}
-              margin={{ left: 80, right: 24, top: 8, bottom: 8 }}
+              margin={{ left: 20, right: 30, top: 0, bottom: 0 }} // Clean margins
             >
               <XAxis
                 type="number"
@@ -57,28 +67,40 @@ export default function TopAssetsCard() {
                 tickLine={false}
                 axisLine={{ stroke: '#475569' }}
                 allowDecimals={false}
+                hide // Hide X axis for cleaner look since we have labels
               />
               <YAxis
                 type="category"
                 dataKey="entity"
-                stroke="#94a3b8"
+                stroke="#f1f5f9"
                 tickLine={false}
-                axisLine={{ stroke: '#475569' }}
+                axisLine={false}
+                width={140} // Sufficient width for text
+                style={{ fontSize: 13, fontWeight: 600 }}
               />
               <Tooltip
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                 contentStyle={{
-                  backgroundColor: '#0f172a',
-                  border: '1px solid rgba(148,163,184,0.35)',
+                  backgroundColor: 'rgba(15, 23, 42, 0.98)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(99, 102, 241, 0.5)',
                   borderRadius: 8,
-                  color: '#e2e8f0',
-                  fontSize: 12,
+                  color: '#ffffff',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
                 }}
               />
-              <Bar dataKey="count" radius={[6, 6, 6, 6]} fill="#22c55e">
+              <Bar 
+                dataKey="count" 
+                radius={[0, 4, 4, 0]} 
+                barSize={24}
+                fill="#22c55e"
+              >
                 <LabelList
                   dataKey="count"
                   position="right"
-                  style={{ fill: '#e2e8f0', fontSize: 12 }}
+                  style={{ fill: '#e2e8f0', fontSize: 13, fontWeight: 700 }}
                 />
               </Bar>
             </BarChart>
@@ -88,4 +110,3 @@ export default function TopAssetsCard() {
     </Paper>
   );
 }
-

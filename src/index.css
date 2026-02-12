@@ -5,9 +5,32 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #0f172a;
+  background-image: radial-gradient(
+    circle at top right,
+    rgba(99, 102, 241, 0.15) 0%,
+    transparent 40%
+  ),
+  radial-gradient(
+    circle at bottom left,
+    rgba(6, 182, 212, 0.1) 0%,
+    transparent 40%
+  );
+  background-attachment: fixed;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }

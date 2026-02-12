@@ -42,7 +42,7 @@ export default function SeverityDistributionCard({ alerts }) {
   const data = React.useMemo(() => buildSeverityData(alerts), [alerts]);
 
   return (
-    <Paper variant="outlined" sx={{ mt: 2, p: 2 }}>
+    <Paper variant="outlined" sx={{ p: 2, height: 320 }}>
       <Typography sx={{ fontWeight: 900 }}>Severity Distribution</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         Counts of alerts by severity (mock data).
@@ -78,4 +78,3 @@ export default function SeverityDistributionCard({ alerts }) {
     </Paper>
   );
 }
-

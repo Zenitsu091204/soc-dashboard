@@ -2,70 +2,77 @@ import * as React from 'react';
 import { Box, Chip, Paper, Typography } from '@mui/material';
 import { threatActors } from '../data/mockSocData';
 
+const riskColors = {
+  Critical: { bg: 'rgba(239, 68, 68, 0.15)', border: '#EF4444', text: '#EF4444' },
+  High: { bg: 'rgba(249, 115, 22, 0.15)', border: '#F97316', text: '#F97316' },
+  Medium: { bg: 'rgba(234, 179, 8, 0.15)', border: '#EAB308', text: '#EAB308' },
+  Low: { bg: 'rgba(34, 197, 94, 0.15)', border: '#22C55E', text: '#22C55E' },
+};
+
 export default function TopThreatActorsCard() {
   return (
-    <Paper variant="outlined" sx={{ p: 2, height: 320 }}>
+    <Paper sx={{ p: 2, pl: 3, height: '100%', borderRadius: 1 }}>
       <Typography sx={{ fontWeight: 900 }}>Top threat actors</Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-        Mock list of actor profiles ranked by activity.
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+        Active threat groups ranked by risk
       </Typography>
 
-      <Box sx={{ mt: 2 }}>
-        {threatActors.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            No actor intelligence loaded yet. Connect your TI platform to see
-            profiles here.
-          </Typography>
-        ) : (
-          threatActors.map((actor, index) => (
-            <Box
-              key={actor.id}
-              sx={{
-                mb: 1.5,
-                display: 'flex',
-                alignItems: 'flex-start',
-              }}
-            >
+      {threatActors.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No actor intelligence loaded yet. Connect your TI platform to see profiles here.
+        </Typography>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {threatActors.map((actor) => {
+            const colors = riskColors[actor.riskLevel];
+            return (
               <Box
+                key={actor.id}
                 sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '999px',
-                  bgcolor:
-                    actor.sophistication === 'High'
-                      ? 'error.main'
-                      : actor.sophistication === 'Medium'
-                      ? 'warning.main'
-                      : 'success.main',
-                  mr: 1.5,
-                  mt: 0.7,
+                  p: 2,
+                  borderRadius: 1,
+                  bgcolor: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.05)',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 255, 255, 0.05)',
+                    borderColor: colors.border,
+                    transform: 'translateX(4px)',
+                  },
                 }}
-              />
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography sx={{ fontWeight: 800, fontSize: 14 }}>
-                  {index + 1}. {actor.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {actor.region} • {actor.motive}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                    {actor.name}
+                  </Typography>
+                  <Chip
+                    label={actor.riskLevel}
+                    size="small"
+                    sx={{
+                      bgcolor: colors.bg,
+                      color: colors.text,
+                      border: `1px solid ${colors.border}`,
+                      fontWeight: 700,
+                      fontSize: '0.65rem',
+                      height: 20,
+                    }}
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 2, mb: 0.5 }}>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                    <strong>Sophistication:</strong> {actor.sophistication}
+                  </Typography>
+                </Box>
+
+                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                  Last seen: <strong>{actor.lastSeen}</strong>
                 </Typography>
               </Box>
-              <Chip
-                size="small"
-                label={actor.sophistication}
-                sx={{ ml: 1, textTransform: 'uppercase', fontSize: 10 }}
-                color={
-                  actor.sophistication === 'High'
-                    ? 'error'
-                    : actor.sophistication === 'Medium'
-                    ? 'warning'
-                    : 'success'
-                }
-              />
-            </Box>
-          ))
-        )}
-      </Box>
+            );
+          })}
+        </Box>
+      )}
     </Paper>
   );
 }
-
