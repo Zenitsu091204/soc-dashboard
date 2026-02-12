@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Box, Grid, Paper, Typography } from '@mui/material';
 import PageHeader from '../components/PageHeader';
+import StatCard from '../components/StatCard';
 import {
   alerts,
   iocs,
@@ -48,10 +49,14 @@ function buildAlertsByEntity() {
     counts.set(key, current + 1);
   });
 
-  return Array.from(counts.entries()).map(([entity, count]) => ({
+  const data = Array.from(counts.entries()).map(([entity, count]) => ({
     entity,
     count,
   }));
+
+  // Sort descending and keep top 5 for readability
+  data.sort((a, b) => b.count - a.count);
+  return data.slice(0, 5);
 }
 
 function buildIocTypeDistribution() {
@@ -77,6 +82,14 @@ export default function DashboardsPage() {
     []
   );
 
+  const totalAlerts = alerts.length;
+  const uniqueAssets = React.useMemo(
+    () => new Set(alerts.map((a) => a.entity)).size,
+    []
+  );
+  const totalActors = threatActors.length;
+  const totalIocs = iocs.length;
+
   return (
     <Box>
       <PageHeader
@@ -84,90 +97,148 @@ export default function DashboardsPage() {
         subtitle="Visual overview of SOC activity using mock data."
       />
 
-      <Grid container spacing={2} sx={{ mt: 1 }}>
+      {/* KPI row for this dashboards page */}
+      <Grid container spacing={3} sx={{ mt: 1, mb: 1 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            label="Total alerts"
+            value={totalAlerts}
+            helper="All time (mock)"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            label="Unique assets"
+            value={uniqueAssets}
+            helper="Entities with alerts"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            label="Threat actors"
+            value={totalActors}
+            helper="Profiles tracked"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            label="IOCs"
+            value={totalIocs}
+            helper="Indicators loaded"
+          />
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={3}>
         <Grid item xs={12} md={8}>
           <Paper variant="outlined" sx={{ p: 2, height: 300 }}>
             <Typography sx={{ fontWeight: 900 }}>
               Alerts over time
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Simple time series of alerts using mock timestamps.
+              Simple time series of alerts.
             </Typography>
-            <Box sx={{ mt: 2, height: 220 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={alertsOverTime}>
-                  <XAxis
-                    dataKey="label"
-                    stroke="#9ca3af"
-                    tickLine={false}
-                    axisLine={{ stroke: '#4b5563' }}
-                  />
-                  <YAxis
-                    allowDecimals={false}
-                    stroke="#9ca3af"
-                    tickLine={false}
-                    axisLine={{ stroke: '#4b5563' }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#020617',
-                      border: '1px solid #1f2937',
-                      borderRadius: 8,
-                      color: '#e5e7eb',
-                      fontSize: 12,
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="count"
-                    stroke="#22c55e"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Box>
+            {alertsOverTime.length === 0 ? (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No alert data yet. Connect your SIEM to visualize trends.
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ mt: 2, height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={alertsOverTime}>
+                    <XAxis
+                      dataKey="label"
+                      stroke="#9ca3af"
+                      tickLine={false}
+                      axisLine={{ stroke: '#4b5563' }}
+                    />
+                    <YAxis
+                      allowDecimals={false}
+                      stroke="#9ca3af"
+                      tickLine={false}
+                      axisLine={{ stroke: '#4b5563' }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#020617',
+                        border: '1px solid #1f2937',
+                        borderRadius: 8,
+                        color: '#e5e7eb',
+                        fontSize: 12,
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#22c55e"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            )}
           </Paper>
         </Grid>
 
         <Grid item xs={12} md={4}>
           <Paper variant="outlined" sx={{ p: 2, height: 300 }}>
             <Typography sx={{ fontWeight: 900 }}>
-              Alerts by asset
+              Top affected assets
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               How many alerts each asset generated.
             </Typography>
-            <Box sx={{ mt: 2, height: 220 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={alertsByEntity} layout="vertical">
-                  <XAxis
-                    type="number"
-                    stroke="#9ca3af"
-                    tickLine={false}
-                    axisLine={{ stroke: '#4b5563' }}
-                    allowDecimals={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="entity"
-                    stroke="#9ca3af"
-                    tickLine={false}
-                    axisLine={{ stroke: '#4b5563' }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#020617',
-                      border: '1px solid #1f2937',
-                      borderRadius: 8,
-                      color: '#e5e7eb',
-                      fontSize: 12,
-                    }}
-                  />
-                  <Bar dataKey="count" fill="#38bdf8" />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
+            {alertsByEntity.length === 0 ? (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No asset alerts yet. Once alerts arrive, top assets will be
+                  shown here.
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ mt: 2, height: 220 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={alertsByEntity}
+                    layout="vertical"
+                    margin={{ left: 80, right: 24, top: 8, bottom: 8 }}
+                  >
+                    <XAxis
+                      type="number"
+                      stroke="#9ca3af"
+                      tickLine={false}
+                      axisLine={{ stroke: '#4b5563' }}
+                      allowDecimals={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="entity"
+                      stroke="#9ca3af"
+                      width={90}
+                      tickLine={false}
+                      axisLine={{ stroke: '#4b5563' }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#020617',
+                        border: '1px solid #1f2937',
+                        borderRadius: 8,
+                        color: '#e5e7eb',
+                        fontSize: 12,
+                      }}
+                    />
+                    <Bar
+                      dataKey="count"
+                      fill="#38bdf8"
+                      radius={[6, 6, 6, 6]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            )}
           </Paper>
         </Grid>
 

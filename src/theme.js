@@ -52,7 +52,7 @@ export const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#0F172A',
+          background: 'linear-gradient(180deg, #0B1120 0%, #0F172A 100%)',
         },
       },
     },
@@ -60,8 +60,10 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          borderColor: alpha('#94A3B8', 0.35),
-          boxShadow: '0 18px 45px rgba(0, 0, 0, 0.55)',
+          backgroundColor: 'rgba(15, 23, 42, 0.78)',
+          border: '1px solid rgba(148, 163, 184, 0.25)',
+          boxShadow: '0 24px 60px rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(10px)',
         },
       },
     },

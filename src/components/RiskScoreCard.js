@@ -22,6 +22,12 @@ export default function RiskScoreCard({ score = 72, trend = 5 }) {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
+        transition: 'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 24px 48px rgba(15, 23, 42, 0.95)',
+          borderColor: 'primary.main',
+        },
       }}
     >
       <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: 0.6 }}>

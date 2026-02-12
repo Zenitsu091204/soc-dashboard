@@ -1,8 +1,9 @@
 import * as React from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import {
+  Area,
+  AreaChart,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -31,15 +32,21 @@ export default function AlertsTrendCard({ alerts }) {
   const data = React.useMemo(() => buildAlertsOverTime(alerts), [alerts]);
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, height: 260 }}>
+    <Paper variant="outlined" sx={{ p: 2, height: 420 }}>
       <Typography sx={{ fontWeight: 900 }}>Alerts trend</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
         Simple timeline of alert volume (mock data).
       </Typography>
 
-      <Box sx={{ mt: 2, height: 180 }}>
+      <Box sx={{ mt: 2, height: 320 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data}>
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="alertsArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#22D3EE" stopOpacity={0.4} />
+                <stop offset="100%" stopColor="#22D3EE" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <XAxis
               dataKey="label"
               stroke="#9e9e9e"
@@ -62,14 +69,21 @@ export default function AlertsTrendCard({ alerts }) {
                 fontSize: 12,
               }}
             />
+            <Area
+              type="monotone"
+              dataKey="count"
+              stroke="#22D3EE"
+              strokeWidth={0}
+              fill="url(#alertsArea)"
+            />
             <Line
               type="monotone"
               dataKey="count"
-              stroke="#3B82F6"
-              strokeWidth={2}
-              dot={{ r: 3 }}
+              stroke="#22D3EE"
+              strokeWidth={3}
+              dot={{ r: 4, stroke: '#22D3EE', strokeWidth: 2 }}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </Box>
     </Paper>

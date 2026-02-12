@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import {
   AppBar,
   Box,
+  Container,
   Divider,
   Drawer,
   List,
@@ -256,7 +257,9 @@ export default function SOCLayout() {
         }}
       >
         <Toolbar sx={{ minHeight: 64 }} />
-        <Outlet context={{ timeRange }} />
+        <Container maxWidth="xl" sx={{ px: { xs: 0, md: 1 } }}>
+          <Outlet context={{ timeRange }} />
+        </Container>
       </Box>
     </Box>
   );
