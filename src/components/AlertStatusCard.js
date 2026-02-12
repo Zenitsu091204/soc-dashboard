@@ -1,0 +1,80 @@
+import * as React from 'react';
+import { Box, Paper, Typography } from '@mui/material';
+import {
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
+const STATUS_ORDER = ['open', 'in-progress', 'resolved', 'false-positive'];
+const LABELS = {
+  open: 'Open',
+  'in-progress': 'In progress',
+  resolved: 'Resolved',
+  'false-positive': 'False positive',
+};
+
+function buildStatusData(alerts) {
+  const counts = STATUS_ORDER.reduce(
+    (acc, key) => ({ ...acc, [key]: 0 }),
+    {},
+  );
+
+  alerts.forEach((a) => {
+    if (a.status && counts[a.status] !== undefined) {
+      counts[a.status] += 1;
+    }
+  });
+
+  return STATUS_ORDER.map((key) => ({
+    key,
+    name: LABELS[key],
+    value: counts[key],
+  }));
+}
+
+export default function AlertStatusCard({ alerts }) {
+  const data = React.useMemo(() => buildStatusData(alerts), [alerts]);
+
+  return (
+    <Paper variant="outlined" sx={{ p: 2, height: 260 }}>
+      <Typography sx={{ fontWeight: 900 }}>Alert status</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        Workflow distribution (open, in progress, resolved, false positive).
+      </Typography>
+
+      <Box sx={{ mt: 2, height: 180 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis
+              dataKey="name"
+              stroke="#94a3b8"
+              tickLine={false}
+              axisLine={{ stroke: '#475569' }}
+            />
+            <YAxis
+              allowDecimals={false}
+              stroke="#94a3b8"
+              tickLine={false}
+              axisLine={{ stroke: '#475569' }}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#0f172a',
+                border: '1px solid rgba(148,163,184,0.35)',
+                borderRadius: 8,
+                color: '#e2e8f0',
+                fontSize: 12,
+              }}
+            />
+            <Bar dataKey="value" fill="#22c55e" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </Box>
+    </Paper>
+  );
+}
+
