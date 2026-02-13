@@ -9,6 +9,7 @@ import {
   YAxis,
 } from 'recharts';
 import { formatUtc } from '../data/mockSocData';
+import showToast from '../utils/toast';
 
 function buildAlertsOverTime(alerts) {
   const counts = new Map();
@@ -23,12 +24,40 @@ function buildAlertsOverTime(alerts) {
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([key, count]) => {
       const label = formatUtc(key + ':00:00Z');
-      return { key, label, count };
-      return { key, label, count, date: label }; // Added 'date' for XAxis dataKey
+      return { key, label, count, date: label };
     });
 }
 
-export default function AlertsTrendCard({ alerts }) {
+// Custom Tooltip Component
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <Box
+        sx={{
+          backgroundColor: 'rgba(15, 23, 42, 0.98)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(99, 102, 241, 0.4)',
+          borderRadius: 2,
+          p: 2,
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+        }}
+      >
+        <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block', mb: 1 }}>
+          {label}
+        </Typography>
+        <Typography variant="h6" sx={{ color: '#6366F1', fontWeight: 700 }}>
+          {payload[0].value} alerts
+        </Typography>
+        <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block', mt: 0.5 }}>
+          Click to filter by this time
+        </Typography>
+      </Box>
+    );
+  }
+  return null;
+};
+
+export default function AlertsTrendCard({ alerts, onTimeRangeClick }) {
   const data = React.useMemo(() => buildAlertsOverTime(alerts), [alerts]);
 
   // Calculate trend
@@ -42,13 +71,37 @@ export default function AlertsTrendCard({ alerts }) {
 
   const trend = calculateTrend();
 
+  // Handle chart click
+  const handleChartClick = (data) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const clickedData = data.activePayload[0].payload;
+      showToast.info(
+        'Time range selected',
+        `Showing ${clickedData.count} alerts from ${clickedData.label}`
+      );
+      if (onTimeRangeClick) {
+        onTimeRangeClick(clickedData);
+      }
+    }
+  };
+
   return (
-    <Paper sx={{ p: 3, height: 450, borderRadius: 1 }}>
+    <Paper 
+      sx={{ 
+        p: 3, 
+        height: 450, 
+        borderRadius: 1,
+        transition: 'all 0.3s ease',
+        '&:hover': {
+          boxShadow: '0 4px 20px rgba(99, 102, 241, 0.15)',
+        },
+      }}
+    >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <div>
           <Typography variant="h6" sx={{ fontWeight: 800 }}>Alerts Trend</Typography>
           <Typography variant="body2" color="text.secondary">
-            Real-time volume analysis
+            Real-time volume analysis • Click to filter
           </Typography>
         </div>
         {/* Trend Indicator */}
@@ -77,7 +130,11 @@ export default function AlertsTrendCard({ alerts }) {
       </Box>
 
       <ResponsiveContainer width="100%" height={360}>
-        <AreaChart data={data}>
+        <AreaChart 
+          data={data}
+          onClick={handleChartClick}
+          style={{ cursor: 'pointer' }}
+        >
           <defs>
             <linearGradient id="alertsGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3} />
@@ -97,18 +154,7 @@ export default function AlertsTrendCard({ alerts }) {
             axisLine={{ stroke: '#475569' }}
             style={{ fontSize: 12 }}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: 'rgba(15, 23, 42, 0.95)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
-              borderRadius: 12,
-              color: '#e2e8f0',
-              fontSize: 13,
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
-            }}
-            labelStyle={{ color: '#94a3b8', marginBottom: 4 }}
-          />
+          <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6366F1', strokeWidth: 2 }} />
           <Area
             type="monotone"
             dataKey="count"
@@ -116,7 +162,15 @@ export default function AlertsTrendCard({ alerts }) {
             strokeWidth={3}
             fill="url(#alertsGradient)"
             dot={{ r: 4, fill: '#6366F1', strokeWidth: 2, stroke: '#1E293B' }}
-            activeDot={{ r: 6, fill: '#818CF8', strokeWidth: 2, stroke: '#1E293B' }}
+            activeDot={{ 
+              r: 8, 
+              fill: '#818CF8', 
+              strokeWidth: 3, 
+              stroke: '#1E293B',
+              style: { cursor: 'pointer' }
+            }}
+            animationDuration={1000}
+            animationEasing="ease-in-out"
           />
         </AreaChart>
       </ResponsiveContainer>

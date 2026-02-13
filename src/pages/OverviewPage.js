@@ -21,6 +21,7 @@ import TopThreatActorsCard from '../components/TopThreatActorsCard';
 import TopAssetsCard from '../components/TopAssetsCard';
 import IocDistributionCard from '../components/IocDistributionCard';
 import RecentActivityFeed from '../components/RecentActivityFeed';
+import FilterPanel, { FilterButton } from '../components/FilterPanel';
 import { alerts, formatUtc } from '../data/mockSocData';
 
 function filterAlertsByRange(allAlerts, range) {
@@ -44,11 +45,40 @@ function filterAlertsByRange(allAlerts, range) {
 
 export default function OverviewPage() {
   const { timeRange } = useOutletContext() || { timeRange: '24h' };
+  const [filterPanelOpen, setFilterPanelOpen] = React.useState(false);
+  const [activeFilters, setActiveFilters] = React.useState({
+    severity: {
+      critical: true,
+      high: true,
+      medium: true,
+      low: true,
+    },
+    status: {
+      open: true,
+      'in-progress': true,
+      resolved: false,
+      'false-positive': false,
+    },
+  });
 
-  const filteredAlerts = React.useMemo(
-    () => filterAlertsByRange(alerts, timeRange),
-    [timeRange],
-  );
+  // Apply filters to alerts
+  const applyFilters = (alertsList, filters) => {
+    return alertsList.filter((alert) => {
+      // Check severity filter
+      const severityMatch = filters.severity[alert.severity.toLowerCase()];
+      
+      // Check status filter (assuming alerts have a status property, defaulting to 'open' if not)
+      const alertStatus = alert.status || 'open';
+      const statusMatch = filters.status[alertStatus];
+      
+      return severityMatch && statusMatch;
+    });
+  };
+
+  const filteredAlerts = React.useMemo(() => {
+    const timeFiltered = filterAlertsByRange(alerts, timeRange);
+    return applyFilters(timeFiltered, activeFilters);
+  }, [timeRange, activeFilters]);
 
   const totalAlerts = filteredAlerts.length;
   const criticalAlerts = filteredAlerts.filter(
@@ -71,11 +101,28 @@ export default function OverviewPage() {
 
   const riskScore = calculateRiskScore();
 
+  const handleApplyFilters = (filters) => {
+    setActiveFilters(filters);
+  };
+
+  const activeFiltersCount = 
+    Object.values(activeFilters.severity).filter(Boolean).length +
+    Object.values(activeFilters.status).filter(Boolean).length;
+
   return (
     <Box>
-      <PageHeader
-        title="Overview"
-        subtitle="Real-time SOC monitoring and threat intelligence"
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <PageHeader
+          title="Overview"
+          subtitle="Real-time SOC monitoring and threat intelligence"
+        />
+        <FilterButton onClick={() => setFilterPanelOpen(true)} activeCount={activeFiltersCount} />
+      </Box>
+
+      <FilterPanel
+        open={filterPanelOpen}
+        onClose={() => setFilterPanelOpen(false)}
+        onApplyFilters={handleApplyFilters}
       />
 
       {/* Row 1: Main KPI Cards */}

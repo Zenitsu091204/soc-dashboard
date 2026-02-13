@@ -175,3 +175,30 @@ export function matchesText(haystack, query) {
   if (!query) return true;
   return String(haystack).toLowerCase().includes(query.trim().toLowerCase());
 }
+
+/**
+ * Calculate global risk score based on alert severity distribution
+ * Returns a score from 0-100
+ */
+export function calculateRiskScore(alertsList = alerts) {
+  if (!alertsList || alertsList.length === 0) return 0;
+
+  const severityWeights = {
+    critical: 25,
+    high: 15,
+    medium: 8,
+    low: 3,
+  };
+
+  const openAlerts = alertsList.filter(a => a.status === 'open' || a.status === 'in-progress');
+  
+  const totalWeight = openAlerts.reduce((sum, alert) => {
+    return sum + (severityWeights[alert.severity] || 0);
+  }, 0);
+
+  // Normalize to 0-100 scale (assuming max ~10 critical alerts = 100%)
+  const maxPossibleScore = 250; // 10 critical alerts
+  const score = Math.min(100, Math.round((totalWeight / maxPossibleScore) * 100));
+  
+  return score;
+}

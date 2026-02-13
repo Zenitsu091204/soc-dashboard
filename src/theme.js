@@ -132,14 +132,44 @@ export const theme = createTheme({
         root: {
           borderRadius: 2,
           boxShadow: 'none',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
             boxShadow: 'none',
+            transform: 'translateY(-1px)',
+          },
+          '&:active': {
+            transform: 'translateY(0)',
+          },
+          '&:disabled': {
+            opacity: 0.5,
+            cursor: 'not-allowed',
+            pointerEvents: 'none',
+          },
+          '&:focus-visible': {
+            outline: '2px solid #6366F1',
+            outlineOffset: 2,
           },
         },
         containedPrimary: {
           background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
           '&:hover': {
             background: 'linear-gradient(135deg, #4F46E5 0%, #4338CA 100%)',
+            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.4)',
+          },
+          '&:disabled': {
+            background: 'rgba(99, 102, 241, 0.3)',
+          },
+        },
+        outlined: {
+          borderColor: 'rgba(99, 102, 241, 0.5)',
+          '&:hover': {
+            borderColor: '#6366F1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          },
+        },
+        text: {
+          '&:hover': {
+            backgroundColor: 'rgba(99, 102, 241, 0.08)',
           },
         },
       },

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -13,6 +13,9 @@ import {
   Paper,
   Toolbar,
   Typography,
+  IconButton,
+  Tooltip,
+  Avatar,
 } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
@@ -22,8 +25,14 @@ import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
 import RuleFolderRoundedIcon from '@mui/icons-material/RuleFolderRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
+import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import LanRoundedIcon from '@mui/icons-material/LanRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useAuth } from '../context/AuthContext';
+import RiskPulseBar from '../components/RiskPulseBar';
+import GlobalSearch from '../components/GlobalSearch';
+import { alerts, calculateRiskScore } from '../data/mockSocData';
 
 const drawerWidth = 260;
 
@@ -73,6 +82,20 @@ const navItems = [
     id: 'intel-reports',
     label: 'Intel reports',
     icon: <DescriptionRoundedIcon fontSize="small" />,
+  },
+  {
+    type: 'item',
+    id: 'dashboards',
+    label: 'Dashboards',
+    icon: <DashboardRoundedIcon fontSize="small" />,
+    to: '/dashboards',
+  },
+  {
+    type: 'item',
+    id: 'custom-dashboard',
+    label: 'Custom Dashboard',
+    icon: <TuneRoundedIcon fontSize="small" />,
+    to: '/custom-dashboard',
   },
   {
     type: 'item',
@@ -149,6 +172,15 @@ function SidebarNavItem({ label, to, icon }) {
 
 export default function SOCLayout() {
   const [timeRange, setTimeRange] = React.useState('24h');
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const riskScore = calculateRiskScore(alerts);
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -206,8 +238,54 @@ export default function SOCLayout() {
             <MenuItem value="7d">Last 7 days</MenuItem>
             <MenuItem value="30d">Last 30 days</MenuItem>
           </TextField>
+
+          {/* Global Search */}
+          <Box sx={{ mx: 2 }}>
+            <GlobalSearch />
+          </Box>
+
+          <Box sx={{ flexGrow: 1 }} />
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 2 }}>
+            <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                {user?.name || 'User'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {user?.role || 'SOC Analyst'}
+              </Typography>
+            </Box>
+            <Avatar
+              sx={{
+                width: 36,
+                height: 36,
+                bgcolor: 'primary.main',
+                fontSize: 14,
+                fontWeight: 700,
+              }}
+            >
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </Avatar>
+            <Tooltip title="Logout">
+              <IconButton
+                onClick={handleLogout}
+                sx={{
+                  color: 'text.secondary',
+                  '&:hover': {
+                    color: 'error.main',
+                    bgcolor: 'rgba(239, 68, 68, 0.1)',
+                  },
+                }}
+              >
+                <LogoutIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Toolbar>
       </AppBar>
+
+      {/* Global Risk Pulse Bar */}
+      <RiskPulseBar riskScore={riskScore} />
 
       <Drawer
         variant="permanent"
@@ -276,6 +354,7 @@ export default function SOCLayout() {
           width: `calc(100% - ${drawerWidth}px)`,
           px: { xs: 2, md: 4 },
           py: 4,
+          mt: 5, // Add margin top for risk pulse bar
         }}
       >
         <Toolbar sx={{ minHeight: 70 }} />
