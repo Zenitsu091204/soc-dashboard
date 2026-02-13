@@ -1,70 +1,175 @@
-# Getting Started with Create React App
+# SOC Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A professional, enterprise-grade Security Operations Center (SOC) dashboard built with React and Material-UI. This dashboard provides real-time monitoring, threat intelligence visualization, and alert management capabilities.
 
-## Available Scripts
+![SOC Dashboard](https://img.shields.io/badge/React-18.x-blue) ![Material-UI](https://img.shields.io/badge/MUI-5.x-blue) ![Recharts](https://img.shields.io/badge/Recharts-2.x-green)
 
-In the project directory, you can run:
+## 🚀 Features
+
+### Overview Dashboard
+- **Real-time KPI Cards**: Total alerts, critical/high priority counts, and dynamic risk score calculation
+- **Severity Snapshot**: Color-coded severity distribution with trend indicators
+- **Alert Activity Trends**: 7-day volume visualization with gradient area charts
+- **IOC Distribution**: Donut chart showing indicator types (IP, Domain, Hash, URL)
+- **Top Affected Assets**: Horizontal bar chart of assets with highest alert volume
+- **Threat Actor Intelligence**: Active threat groups with risk levels and sophistication ratings
+- **Recent Activity Feed**: Live-updating alert stream with severity chips
+- **Alert Status Breakdown**: Distribution by status (Open, In Progress, Resolved, False Positive)
+
+### Additional Pages
+- **Dashboards**: Custom dashboard management
+- **IOC Workbench**: Indicator of Compromise analysis tools
+- **Threat Actors**: Detailed threat actor profiles
+- **Search**: Advanced search and filtering capabilities
+
+### Design Highlights
+- **Data-Dense Layout**: Professional SOC-style information hierarchy
+- **Dark Theme**: High-contrast design optimized for 24/7 monitoring
+- **Glassmorphism Effects**: Modern UI with backdrop blur and subtle gradients
+- **Responsive Grid**: Adaptive layout for different screen sizes
+- **Enterprise-Grade Styling**: Consistent 24px padding, clean typography, professional tooltips
+
+## 🛠️ Technology Stack
+
+- **React 18** - Modern React with hooks
+- **Material-UI (MUI) 5** - Component library and theming
+- **Recharts** - Data visualization library
+- **React Router DOM** - Client-side routing
+- **Mock Data** - Realistic SOC data for demonstration
+
+## 📦 Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+
+# Navigate to project directory
+cd soc-dashboard
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
+The application will open at [http://localhost:3000](http://localhost:3000)
+
+## 🎨 Project Structure
+
+```
+soc-dashboard/
+├── src/
+│   ├── components/          # Reusable UI components
+│   │   ├── AlertStatusCard.js
+│   │   ├── AlertsTrendCard.js
+│   │   ├── IocDistributionCard.js
+│   │   ├── RecentActivityFeed.js
+│   │   ├── SeveritySnapshotRow.js
+│   │   ├── StatCard.js
+│   │   ├── TopAssetsCard.js
+│   │   └── TopThreatActorsCard.js
+│   ├── data/                # Mock data and utilities
+│   │   └── mockSocData.js
+│   ├── layout/              # Layout components
+│   │   └── SOCLayout.js
+│   ├── pages/               # Page components
+│   │   ├── OverviewPage.js
+│   │   ├── DashboardsPage.js
+│   │   ├── IOCFeedPage.js
+│   │   ├── SearchPage.js
+│   │   └── ThreatActorsPage.js
+│   ├── theme.js             # MUI theme configuration
+│   ├── App.js               # Main application component
+│   └── index.js             # Application entry point
+├── public/
+└── package.json
+```
+
+## 🎯 Key Components
+
+### StatCard
+Displays KPI metrics with trend indicators and dynamic severity-based coloring.
+
+### SeveritySnapshotRow
+Color-coded cards showing alert distribution across severity levels (Critical, High, Medium, Low).
+
+### AlertsTrendCard
+Hero section with gradient area chart showing 7-day alert volume trends.
+
+### IocDistributionCard
+Donut chart with centered total count and legend showing IOC type distribution.
+
+### TopAssetsCard
+Horizontal bar chart displaying assets with the highest alert volume.
+
+### TopThreatActorsCard
+List of active threat groups with risk badges and sophistication levels.
+
+### RecentActivityFeed
+Scrollable feed of recent alerts with severity chips and relative timestamps.
+
+## 🎨 Customization
+
+### Theme
+Edit `src/theme.js` to customize colors, typography, and component styles.
+
+### Mock Data
+Update `src/data/mockSocData.js` to modify sample alerts, IOCs, and threat actors.
+
+### Layout
+Adjust grid columns and spacing in `src/pages/OverviewPage.js` for different layouts.
+
+## 📊 Data Integration
+
+Currently using mock data. To integrate with real SOC data:
+
+1. Replace mock data imports with API calls
+2. Implement data fetching hooks (e.g., `useAlerts`, `useIOCs`)
+3. Add WebSocket connections for real-time updates
+4. Implement authentication and authorization
+
+## 🚀 Available Scripts
 
 ### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Runs the app in development mode at [http://localhost:3000](http://localhost:3000)
 
 ### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Launches the test runner in interactive watch mode
 
 ### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Builds the app for production to the `build` folder
 
 ### `npm run eject`
+**Note: This is a one-way operation!** Ejects from Create React App for full configuration control.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🐛 Troubleshooting
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Charts Not Displaying
+Ensure Recharts is properly installed:
+```bash
+npm install recharts
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Layout Issues
+Clear browser cache and ensure you're using the latest version:
+```bash
+npm install
+npm start
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📝 License
 
-## Learn More
+This project is licensed under the MIT License.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 🤝 Contributing
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-### Code Splitting
+## 📧 Contact
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+For questions or support, please open an issue in the repository.
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Built with ❤️ for Security Operations Centers**
