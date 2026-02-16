@@ -54,26 +54,28 @@ const GlobalSearch = () => {
 
     const lowerQuery = searchQuery.toLowerCase();
 
-    // Search alerts
+    // Search alerts (with null-safe checks)
     const alertResults = alerts.filter(
       (alert) =>
-        alert.title.toLowerCase().includes(lowerQuery) ||
-        alert.entity.toLowerCase().includes(lowerQuery) ||
-        alert.severity.toLowerCase().includes(lowerQuery)
+        (alert.title && String(alert.title).toLowerCase().includes(lowerQuery)) ||
+        (alert.entity && String(alert.entity).toLowerCase().includes(lowerQuery)) ||
+        (alert.severity && String(alert.severity).toLowerCase().includes(lowerQuery))
     ).slice(0, 5);
 
-    // Search IOCs
+    // Search IOCs (with null-safe checks)
     const iocResults = iocs.filter(
       (ioc) =>
-        ioc.value.toLowerCase().includes(lowerQuery) ||
-        ioc.type.toLowerCase().includes(lowerQuery)
+        (ioc.value && String(ioc.value).toLowerCase().includes(lowerQuery)) ||
+        (ioc.type && String(ioc.type).toLowerCase().includes(lowerQuery))
     ).slice(0, 5);
 
-    // Search threat actors
+    // Search threat actors (with null-safe checks; uses sophistication/riskLevel - no category in mock data)
     const threatActorResults = threatActors.filter(
       (actor) =>
-        actor.name.toLowerCase().includes(lowerQuery) ||
-        actor.category.toLowerCase().includes(lowerQuery)
+        (actor.name && String(actor.name).toLowerCase().includes(lowerQuery)) ||
+        (actor.sophistication && String(actor.sophistication).toLowerCase().includes(lowerQuery)) ||
+        (actor.riskLevel && String(actor.riskLevel).toLowerCase().includes(lowerQuery)) ||
+        (Array.isArray(actor.targetSectors) && actor.targetSectors.some((s) => String(s).toLowerCase().includes(lowerQuery)))
     ).slice(0, 5);
 
     setResults({
@@ -288,7 +290,7 @@ const GlobalSearch = () => {
                             </ListItemIcon>
                             <ListItemText
                               primary={actor.name}
-                              secondary={`${actor.category} • ${actor.campaigns} campaigns`}
+                              secondary={`${actor.sophistication || ''} • ${actor.riskLevel || ''}`}
                               primaryTypographyProps={{ variant: 'body2' }}
                               secondaryTypographyProps={{ variant: 'caption' }}
                             />

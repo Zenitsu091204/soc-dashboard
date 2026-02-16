@@ -66,6 +66,7 @@ export default function StatCard({ label, value, helper, icon: Icon, trend, seve
         {label}
       </Typography>
 
+
       <Typography
         className="stat-value"
         variant="h3"
@@ -76,7 +77,7 @@ export default function StatCard({ label, value, helper, icon: Icon, trend, seve
           lineHeight: 1,
         }}
       >
-        {value.toLocaleString()}
+        {typeof value === 'number' && !isNaN(value) ? value.toLocaleString() : '0'}
       </Typography>
 
       {/* Trend indicator */}

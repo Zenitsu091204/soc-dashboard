@@ -19,9 +19,10 @@ body {
   background-attachment: fixed;
 }
 
-/* Smooth scroll behavior */
+/* Smooth scroll behavior and reserve space for scrollbar to prevent content clipping */
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 /* Enhanced focus indicators for accessibility */

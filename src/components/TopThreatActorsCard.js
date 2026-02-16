@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Box, Chip, Paper, Typography } from '@mui/material';
-import { threatActors } from '../data/mockSocData';
 
 const riskColors = {
   Critical: { bg: 'rgba(239, 68, 68, 0.15)', border: '#EF4444', text: '#EF4444' },
@@ -9,9 +8,23 @@ const riskColors = {
   Low: { bg: 'rgba(34, 197, 94, 0.15)', border: '#22C55E', text: '#22C55E' },
 };
 
-export default function TopThreatActorsCard() {
+export default function TopThreatActorsCard({ threatActors = [] }) {
   return (
-    <Paper sx={{ p: 2, pl: 3, height: '100%', borderRadius: 1 }}>
+    <Paper
+      sx={{
+        p: 3,
+        height: '100%',
+        border: '1px solid rgba(255,255,255,0.05)',
+        background: 'linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.7))',
+        borderRadius: '16px',
+        backdropFilter: 'blur(10px)',
+        transition: 'all 0.3s ease',
+        '&:hover': { 
+          borderColor: 'rgba(99, 102, 241, 0.3)',
+          boxShadow: '0 8px 32px rgba(99, 102, 241, 0.15)',
+        },
+      }}
+    >
       <Typography sx={{ fontWeight: 900 }}>Top threat actors</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
         Active threat groups ranked by risk

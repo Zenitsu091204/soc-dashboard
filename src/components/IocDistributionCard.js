@@ -7,11 +7,10 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
-import { iocs } from '../data/mockSocData';
 
 const COLORS = ['#6366F1', '#22D3EE', '#F97316', '#A855F7'];
 
-function buildIocTypeData() {
+function buildIocTypeData(iocs) {
   const counts = new Map();
   iocs.forEach((ioc) => {
     counts.set(ioc.type, (counts.get(ioc.type) || 0) + 1);
@@ -23,18 +22,29 @@ function buildIocTypeData() {
   }));
 }
 
-export default function IocDistributionCard() {
-  const data = React.useMemo(() => buildIocTypeData(), []);
+export default function IocDistributionCard({ iocs = [] }) {
+  const data = React.useMemo(() => buildIocTypeData(iocs), [iocs]);
   const totalIOCs = iocs.length;
+
 
   return (
     <Paper 
       variant="outlined" 
       sx={{ 
-        p: 3, // Standard 24px padding
-        height: 380, // Consistent height
+        p: 3,
+        height: '100%',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'visible',
+        border: '1px solid rgba(255,255,255,0.05)',
+        background: 'linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.7))',
+        borderRadius: '16px',
+        backdropFilter: 'blur(10px)',
+        transition: 'all 0.3s ease',
+        '&:hover': { 
+          borderColor: 'rgba(99, 102, 241, 0.3)',
+          boxShadow: '0 8px 32px rgba(99, 102, 241, 0.15)',
+        },
       }}
     >
       <Box sx={{ mb: 2 }}>
@@ -52,7 +62,7 @@ export default function IocDistributionCard() {
         </Box>
       ) : (
         <>
-          <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
+          <Box sx={{ flex: 1, minHeight: 150, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -61,8 +71,8 @@ export default function IocDistributionCard() {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
+                  innerRadius={50}
+                  outerRadius={70}
                   paddingAngle={4}
                   stroke="none"
                 >
@@ -121,7 +131,7 @@ export default function IocDistributionCard() {
                     boxShadow: `0 0 8px ${COLORS[index % COLORS.length]}`,
                   }}
                 />
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                <Typography variant="caption" sx={{ color: 'text.primary', fontWeight: 600 }}>
                   {entry.name} <Box component="span" sx={{ color: 'text.primary', fontWeight: 700, ml: 0.5 }}>{entry.value}</Box>
                 </Typography>
               </Box>

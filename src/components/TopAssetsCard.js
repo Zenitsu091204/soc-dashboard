@@ -9,9 +9,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { alerts } from '../data/mockSocData';
 
-function buildAssetData() {
+function buildAssetData(alerts) {
   const counts = new Map();
   alerts.forEach((a) => {
     counts.set(a.entity, (counts.get(a.entity) || 0) + 1);
@@ -27,17 +26,28 @@ function buildAssetData() {
   return data.slice(0, 5);
 }
 
-export default function TopAssetsCard() {
-  const data = React.useMemo(() => buildAssetData(), []);
+export default function TopAssetsCard({ alerts = [] }) {
+  const data = React.useMemo(() => buildAssetData(alerts), [alerts]);
+
 
   return (
     <Paper 
       variant="outlined" 
       sx={{ 
-        p: 3, // Standard 24px padding
-        height: 380, // Consistent height
+        p: 3,
+        height: '100%',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'visible',
+        border: '1px solid rgba(255,255,255,0.05)',
+        background: 'linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.7))',
+        borderRadius: '16px',
+        backdropFilter: 'blur(10px)',
+        transition: 'all 0.3s ease',
+        '&:hover': { 
+          borderColor: 'rgba(99, 102, 241, 0.3)',
+          boxShadow: '0 8px 32px rgba(99, 102, 241, 0.15)',
+        },
       }}
     >
       <Box sx={{ mb: 2 }}>
@@ -54,12 +64,12 @@ export default function TopAssetsCard() {
           </Typography>
         </Box>
       ) : (
-        <Box sx={{ flex: 1, minHeight: 0 }}>
+        <Box sx={{ flex: 1, minHeight: 150 }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
               data={data}
-              margin={{ left: 20, right: 30, top: 0, bottom: 0 }} // Clean margins
+              margin={{ left: 20, right: 30, top: 8, bottom: 16 }}
             >
               <XAxis
                 type="number"

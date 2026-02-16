@@ -11,6 +11,7 @@ import DraggableDashboard from './pages/DraggableDashboard.js';
 import IOCFeedPage from './pages/IOCFeedPage.js';
 import SearchPage from './pages/SearchPage.js';
 import ThreatActorsPage from './pages/ThreatActorsPage.js';
+import IntelReportPage from './pages/IntelReportPage.js';
 import LoginPage from './pages/LoginPage.js';
 
 // Loading component
@@ -81,6 +82,7 @@ function App() {
             <Route path="/ioc-feed" element={<IOCFeedPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/threat-actors" element={<ThreatActorsPage />} />
+            <Route path="/intel-reports" element={<IntelReportPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
