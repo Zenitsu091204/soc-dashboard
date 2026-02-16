@@ -19,7 +19,7 @@ const getRiskLevel = (score) => {
   return { level: 'Low', color: '#10B981', icon: '🟢', bgColor: 'rgba(16, 185, 129, 0.1)' };
 };
 
-const RiskPulseBar = ({ riskScore = 75 }) => {
+const RiskPulseBar = ({ riskScore = 75, drawerWidth = 0 }) => {
   const risk = getRiskLevel(riskScore);
   const isCritical = riskScore >= 80;
 
@@ -28,14 +28,17 @@ const RiskPulseBar = ({ riskScore = 75 }) => {
       sx={{
         position: 'fixed',
         top: 70, // Below navbar
-        left: 0,
+        left: drawerWidth, 
         right: 0,
         zIndex: (theme) => theme.zIndex.appBar - 1,
         backgroundColor: 'rgba(11, 17, 32, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: `2px solid ${risk.color}`,
         animation: isCritical ? `${pulse} 2s ease-in-out infinite` : 'none',
-        transition: 'all 0.3s ease',
+        transition: (theme) => theme.transitions.create(['left'], {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
       }}
     >
       <Box

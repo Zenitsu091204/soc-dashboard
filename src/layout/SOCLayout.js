@@ -365,7 +365,7 @@ export default function SOCLayout() {
         </Toolbar>
       </AppBar>
 
-      <RiskPulseBar riskScore={riskScore} />
+      <RiskPulseBar riskScore={riskScore} drawerWidth={drawerWidth} />
 
       <Drawer
         variant="permanent"
@@ -462,7 +462,7 @@ export default function SOCLayout() {
         }}
       >
         <Toolbar sx={{ minHeight: 70 }} />
-        <Container maxWidth="xl" sx={{ px: { xs: 0, md: 1 } }} className="animate-fade-in">
+        <Container maxWidth={false} sx={{ px: { xs: 2, md: 3 } }} className="animate-fade-in">
           <Outlet context={{ timeRange }} />
         </Container>
       </Box>

@@ -1,0 +1,19 @@
+# Handle line endings automatically for files detected as text
+# and leave files detected as binary untouched.
+* text=auto
+
+# text files will be normalized to Ensure consistent line endings on checkout
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+
+# Deny checkout of binary files that are not binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text

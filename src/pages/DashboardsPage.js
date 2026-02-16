@@ -7,6 +7,7 @@ import AlertStatusCard from '../components/AlertStatusCard';
 import TopAssetsCard from '../components/TopAssetsCard';
 import IocDistributionCard from '../components/IocDistributionCard';
 import TopThreatActorsCard from '../components/TopThreatActorsCard';
+import RecentActivityFeed from '../components/RecentActivityFeed';
 import { alerts, iocs, threatActors } from '../data/mockSocData.js';
 
 const enterpriseCardSx = {
@@ -42,28 +43,28 @@ export default function DashboardsPage() {
 
       {/* KPI row for this dashboards page */}
       <Grid container spacing={3} sx={{ mt: 1, mb: 4 }} alignItems="stretch">
-        <Grid item xs={12} sm={6} md={3} sx={{ animationDelay: '0.1s' }} className="animate-slide-in">
+        <Grid item xs={12} sm={6} md={3} lg={3} xl={3} sx={{ animationDelay: '0.1s' }} className="animate-slide-in">
           <StatCard
             label="Total alerts"
             value={totalAlerts}
             helper="All time"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3} sx={{ animationDelay: '0.2s' }} className="animate-slide-in">
+        <Grid item xs={12} sm={6} md={3} lg={3} xl={3} sx={{ animationDelay: '0.2s' }} className="animate-slide-in">
           <StatCard
             label="Unique assets"
             value={uniqueAssets}
             helper="Active entities"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3} sx={{ animationDelay: '0.3s' }} className="animate-slide-in">
+        <Grid item xs={12} sm={6} md={3} lg={3} xl={3} sx={{ animationDelay: '0.3s' }} className="animate-slide-in">
           <StatCard
             label="Threat actors"
             value={totalActors}
             helper="Tracked profiles"
           />
         </Grid>
-        <Grid item xs={12} sm={6} md={3} sx={{ animationDelay: '0.4s' }} className="animate-slide-in">
+        <Grid item xs={12} sm={6} md={3} lg={3} xl={3} sx={{ animationDelay: '0.4s' }} className="animate-slide-in">
           <StatCard
             label="Active IOCs"
             value={totalIocs}
@@ -72,39 +73,52 @@ export default function DashboardsPage() {
         </Grid>
       </Grid>
 
-      {/* Main Charts Row */}
-      <Grid container spacing={3} alignItems="stretch" sx={{ mb: 3 }}>
-        <Grid item xs={12} lg={8}>
-          <Box sx={{ height: '100%', minHeight: 400 }}>
-             <AlertsTrendCard alerts={alerts} />
-          </Box>
+      {/* Main Content Layout */}
+      <Grid container spacing={3}>
+        {/* Left Column - Main Charts */}
+        <Grid item xs={12} md={9}>
+          {/* Main Charts Row */}
+          <Grid container spacing={3} alignItems="stretch" sx={{ mb: 3 }}>
+            <Grid item xs={12} lg={8}>
+              <Box sx={{ height: '100%', minHeight: 400 }}>
+                 <AlertsTrendCard alerts={alerts} />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <Box sx={{ height: '100%', minHeight: 400 }}>
+                 <AlertStatusCard alerts={alerts} />
+              </Box>
+            </Grid>
+          </Grid>
+
+          {/* Secondary Charts Row */}
+          <Grid container spacing={3} alignItems="stretch">
+            <Grid item xs={12} lg={4}>
+              <Box sx={{ height: '100%', minHeight: 400 }}>
+                 <TopAssetsCard alerts={alerts} />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <Box sx={{ height: '100%', minHeight: 400 }}>
+                 <TopThreatActorsCard threatActors={threatActors} />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} lg={4}>
+              <Box sx={{ height: '100%', minHeight: 400 }}>
+                 <IocDistributionCard iocs={iocs} />
+              </Box>
+            </Grid>
+          </Grid>
         </Grid>
 
-        <Grid item xs={12} lg={4}>
-          <Box sx={{ height: '100%', minHeight: 400 }}>
-             <AlertStatusCard alerts={alerts} />
-          </Box>
-        </Grid>
-      </Grid>
-
-      {/* Secondary Charts Row */}
-      <Grid container spacing={3} alignItems="stretch">
-        <Grid item xs={12} md={4}>
-          <Box sx={{ height: '100%', minHeight: 400 }}>
-             <TopAssetsCard alerts={alerts} />
-          </Box>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Box sx={{ height: '100%', minHeight: 400 }}>
-             <TopThreatActorsCard threatActors={threatActors} />
-          </Box>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Box sx={{ height: '100%', minHeight: 400 }}>
-             <IocDistributionCard iocs={iocs} />
-          </Box>
+        {/* Right Column - Feed */}
+        <Grid item xs={12} md={3}>
+           <Box sx={{ height: '100%', minHeight: 400 }}>
+             <RecentActivityFeed alerts={alerts} maxItems={15} />
+           </Box>
         </Grid>
       </Grid>
     </Box>
