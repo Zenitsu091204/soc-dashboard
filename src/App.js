@@ -4,15 +4,17 @@ import { Toaster } from 'react-hot-toast';
 import { Box, CircularProgress } from '@mui/material';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ErrorBoundary from './components/ErrorBoundary';
-import SOCLayout from './layout/SOCLayout.js';
-import OverviewPage from './pages/OverviewPage.js';
-import DashboardsPage from './pages/DashboardsPage.js';
-import DraggableDashboard from './pages/DraggableDashboard.js';
-import IOCFeedPage from './pages/IOCFeedPage.js';
-import SearchPage from './pages/SearchPage.js';
-import ThreatActorsPage from './pages/ThreatActorsPage.js';
-import IntelReportPage from './pages/IntelReportPage.js';
-import LoginPage from './pages/LoginPage.js';
+
+// Lazy-loaded components for performance (Code Splitting)
+const SOCLayout = React.lazy(() => import('./layout/SOCLayout.js'));
+const OverviewPage = React.lazy(() => import('./pages/OverviewPage.js'));
+const DashboardsPage = React.lazy(() => import('./pages/DashboardsPage.js'));
+const DraggableDashboard = React.lazy(() => import('./pages/DraggableDashboard.js'));
+const IOCFeedPage = React.lazy(() => import('./pages/IOCFeedPage.js'));
+const SearchPage = React.lazy(() => import('./pages/SearchPage.js'));
+const ThreatActorsPage = React.lazy(() => import('./pages/ThreatActorsPage.js'));
+const IntelReportPage = React.lazy(() => import('./pages/IntelReportPage.js'));
+const LoginPage = React.lazy(() => import('./pages/LoginPage.js'));
 
 // Loading component
 function LoadingScreen() {
@@ -67,25 +69,27 @@ function App() {
     <ErrorBoundary>
       <Toaster />
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<LoginRoute />} />
-          <Route
-            element={
-              <ProtectedRoute>
-                <SOCLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/dashboards" element={<DashboardsPage />} />
-            <Route path="/custom-dashboard" element={<DraggableDashboard />} />
-            <Route path="/" element={<OverviewPage />} />
-            <Route path="/ioc-feed" element={<IOCFeedPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/threat-actors" element={<ThreatActorsPage />} />
-            <Route path="/intel-reports" element={<IntelReportPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
+        <React.Suspense fallback={<LoadingScreen />}>
+          <Routes>
+            <Route path="/login" element={<LoginRoute />} />
+            <Route
+              element={
+                <ProtectedRoute>
+                  <SOCLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboards" element={<DashboardsPage />} />
+              <Route path="/custom-dashboard" element={<DraggableDashboard />} />
+              <Route path="/" element={<OverviewPage />} />
+              <Route path="/ioc-feed" element={<IOCFeedPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/threat-actors" element={<ThreatActorsPage />} />
+              <Route path="/intel-reports" element={<IntelReportPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </React.Suspense>
       </AuthProvider>
     </ErrorBoundary>
   );
