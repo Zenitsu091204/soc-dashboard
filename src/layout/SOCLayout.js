@@ -28,7 +28,7 @@ import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
 import RuleFolderRoundedIcon from '@mui/icons-material/RuleFolderRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
-import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
+
 import LanRoundedIcon from '@mui/icons-material/LanRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
 import LogoutIcon from '@mui/icons-material/Logout';

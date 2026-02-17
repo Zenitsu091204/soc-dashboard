@@ -10,20 +10,7 @@ import TopThreatActorsCard from '../components/TopThreatActorsCard';
 import RecentActivityFeed from '../components/RecentActivityFeed';
 import { alerts, iocs, threatActors } from '../data/mockSocData.js';
 
-const enterpriseCardSx = {
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  border: '1px solid rgba(255,255,255,0.05)',
-  background: 'linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.7))',
-  borderRadius: '16px',
-  backdropFilter: 'blur(10px)',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    borderColor: 'rgba(99, 102, 241, 0.3)',
-    boxShadow: '0 8px 32px rgba(99, 102, 241, 0.15)',
-  },
-};
+
 
 export default function DashboardsPage() {
   const totalAlerts = alerts.length;

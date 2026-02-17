@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import StatCard from '../StatCard';
+import StatCard from './StatCard';
 
 describe('StatCard', () => {
   describe('Rendering', () => {
@@ -71,7 +71,7 @@ describe('StatCard', () => {
 
   describe('Severity Colors', () => {
     test('should apply critical color for critical severity', () => {
-      const { container } = render(
+      render(
         <StatCard label="Test" value={100} severity="critical" />
       );
       const valueElement = screen.getByText('100');
@@ -79,7 +79,7 @@ describe('StatCard', () => {
     });
 
     test('should apply high color for high severity', () => {
-      const { container } = render(
+      render(
         <StatCard label="Test" value={100} severity="high" />
       );
       const valueElement = screen.getByText('100');
@@ -87,7 +87,7 @@ describe('StatCard', () => {
     });
 
     test('should apply medium color for medium severity', () => {
-      const { container } = render(
+      render(
         <StatCard label="Test" value={100} severity="medium" />
       );
       const valueElement = screen.getByText('100');
@@ -95,7 +95,7 @@ describe('StatCard', () => {
     });
 
     test('should apply low color for low severity', () => {
-      const { container } = render(
+      render(
         <StatCard label="Test" value={100} severity="low" />
       );
       const valueElement = screen.getByText('100');

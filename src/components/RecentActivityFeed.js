@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Paper, Typography, Chip } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import { getRelativeTime } from '../data/mockSocData';
 
 const severityColors = {
