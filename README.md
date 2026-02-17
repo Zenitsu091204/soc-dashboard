@@ -2,7 +2,7 @@
 
 A professional, enterprise-grade Security Operations Center (SOC) dashboard built with React and Material-UI. This dashboard provides real-time monitoring, threat intelligence visualization, alert management capabilities, and advanced interactive features.
 
-![SOC Dashboard](https://img.shields.io/badge/React-19.x-blue) ![Material-UI](https://img.shields.io/badge/MUI-7.x-blue) ![Recharts](https://img.shields.io/badge/Recharts-3.x-green) ![TypeScript](https://img.shields.io/badge/Hot_Toast-2.x-orange) ![Grid Layout](https://img.shields.io/badge/Grid_Layout-2.x-purple)
+![SOC Dashboard](https://img.shields.io/badge/React-19.x-blue) ![Material-UI](https://img.shields.io/badge/MUI-7.x-blue) ![Tests](https://img.shields.io/badge/Tests-Passing-brightgreen) ![Linting](https://img.shields.io/badge/Linting-Strict-green) ![Recharts](https://img.shields.io/badge/Recharts-3.x-green)
 
 ## ✨ Advanced Features
 
@@ -77,6 +77,19 @@ A professional, enterprise-grade Security Operations Center (SOC) dashboard buil
 - **Enterprise-Grade Styling**: Consistent 24px padding, clean typography, professional tooltips
 - **Smooth Animations**: All transitions are fluid and professional
 - **Loading States**: Spinner during authentication checks
+
+## 🛡️ Code Quality
+
+This project maintains high engineering standards through:
+
+- **Strict Linting**: Zero tolerance for ESLint errors or warnings.
+- **Type Safety**: PropType validation on all components.
+- **Testing Strategy**:
+    - **Unit Tests**: For individual components and utilities.
+    - **Integration Tests**: Ensuring modules work together.
+    - **Performance**: Automated benchmarks for render times.
+    - **Accessibility**: ARIA compliance checks.
+- **Asset Optimization**: Efficient loading and rendering of charts.
 
 ## 🛠️ Technology Stack
 
@@ -218,7 +231,25 @@ Currently using mock data. To integrate with real SOC data:
 Runs the app in development mode at [http://localhost:3000](http://localhost:3000)
 
 ### `npm test`
-Launches the test runner in interactive watch mode
+Launches the test runner in interactive watch mode.
+
+**Features:**
+- **Unit Tests**: Comprehensive coverage for components and utilities
+- **Integration Tests**: Verifies user flows (Login, Dashboard customization)
+- **Performance Tests**: Benchmarks render times and memory usage
+- **Accessibility Tests**: Ensures ARIA compliance and screen reader support
+
+To run specific test suites:
+```bash
+# Run performance benchmarks
+npm test performance
+
+# Run dashboard tests
+npm test DraggableDashboard
+```
+
+### `npx eslint src`
+Runs the linter to ensure code quality and adherence to best practices. Include `--fix` to automatically correct fixable issues.
 
 ### `npm run build`
 Builds the app for production to the `build` folder
