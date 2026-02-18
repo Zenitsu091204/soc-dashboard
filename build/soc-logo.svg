@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <rect x="0" y="0" width="512" height="512" rx="100" fill="#0B1120" />
+  
+  <g transform="translate(106, 106) scale(0.6)" filter="url(#glow)">
+    <!-- Shield Outline -->
+    <path d="M256 0c-44.2 0-80 35.8-80 80v48c-57.5 0-106.4 35.3-128.5 86.1C23.9 261.6 0 317.7 0 384c0 70.7 57.3 128 128 128h256c70.7 0 128-57.3 128-128 0-66.3-23.9-122.4-47.5-169.9C442.4 163.3 393.5 128 336 128V80c0-44.2-35.8-80-80-80zM128 176c0 53 43 96 96 96s96-43 96-96h-192zm128 96c46.7 0 86.1 32 97.4 75.3C363.3 381.1 391.6 416 432 416c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-17.7 0-32-14.3-32-32s14.3-32 32-32c40.4 0 68.7-34.9 78.6-68.7C169.9 304 209.3 272 256 272z" fill="url(#grad1)" opacity="0.2"/>
+    
+    <!-- Radar/Network Icon shape -->
+    <circle cx="250" cy="250" r="120" stroke="url(#grad1)" stroke-width="25" fill="none" />
+    <circle cx="250" cy="250" r="60" fill="url(#grad1)" />
+    <path d="M250 130 L250 250 L340 320" stroke="white" stroke-width="15" stroke-linecap="round" fill="none" />
+  </g>
+</svg>

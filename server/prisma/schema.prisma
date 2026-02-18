@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      String   @default("analyst") // analyst, admin
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Alert {
+  id            String   @id @default(uuid())
+  title         String
+  severity      String   // critical, high, medium, low
+  status        String   @default("new") // new, investigating, resolved
+  source        String
+  description   String?
+  timestamp     DateTime @default(now())
+  entity        String?  // The asset or user involved
+  sourceIp      String?
+  destIp        String?
+  assignedTo    String?  // User ID
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Case {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  status      String   @default("open")
+  priority    String   @default("medium")
+  assignedTo  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ThreatActor {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  type        String?  // e.g., "State-sponsored", "Cybercrime"
+  origin      String?
+  description String?
+  lastSeen    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Ioc {
+  id          String   @id @default(uuid())
+  type        String   // ip, domain, hash
+  value       String   @unique
+  reputation  Int?     // 0-100 score
+  seenAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
