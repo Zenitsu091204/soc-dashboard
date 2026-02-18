@@ -202,3 +202,35 @@ export function calculateRiskScore(alertsList = alerts) {
   
   return score;
 }
+
+export const wafRules = [
+  { id: 'RX-101', name: 'SQL Injection Attempt', count: 24, progress: 85 },
+  { id: 'RX-203', name: 'XSS Scripting Attack', count: 18, progress: 65 },
+  { id: 'RX-009', name: 'Command Injection', count: 12, progress: 45 },
+  { id: 'RX-315', name: 'Path Traversal', count: 9, progress: 30 },
+  { id: 'RX-404', name: 'Scanner/Bot Probe', count: 35, progress: 95 },
+];
+
+export const mispFeed = [
+  { id: 'm1', type: 'IP', value: '45.132.89.12', time: '10 min ago', severity: 'High' },
+  { id: 'm2', type: 'Domain', value: 'suspicious-login.net', time: '45 min ago', severity: 'Medium' },
+  { id: 'm3', type: 'Hash', value: '8a9f3b2e1c...', time: '2 hrs ago', severity: 'Low' },
+  { id: 'm4', type: 'URL', value: 'http://update-sys.tmp/dl', time: '3 hrs ago', severity: 'Critical' },
+  { id: 'm5', type: 'IP', value: '185.200.11.4', time: '5 hrs ago', severity: 'Medium' },
+];
+
+export const openCtiMatches = [
+  { id: 'oc1', actor: 'Carbanak', type: 'Domain', value: 'banking-gateway.xyz', confidence: 91, risk: 'Critical' },
+  { id: 'oc2', actor: 'APT29', type: 'IP', value: '192.168.1.105', confidence: 84, risk: 'High' },
+  { id: 'oc3', actor: 'Lazarus', type: 'Hash', value: 'e4d2c1b5...', confidence: 76, risk: 'Medium' },
+  { id: 'oc4', actor: 'FIN7', type: 'URL', value: 'promo-offer.doc', confidence: 68, risk: 'Low' },
+];
+
+export const slaMetrics = {
+  avgResponseTime: '12 min',
+  avgResolutionTime: '2.4 hrs',
+  slaBreaches: 1,
+  slaCompliance: 92,
+  trend: '+8% slower than last week',
+  trendType: 'negative', // or 'positive'
+};

@@ -79,6 +79,7 @@ export default function AlertStatusCard({ alerts }) {
               axisLine={{ stroke: '#475569' }}
             />
             <Tooltip
+              cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
               contentStyle={{
                 backgroundColor: '#0f172a',
                 border: '1px solid rgba(148,163,184,0.35)',

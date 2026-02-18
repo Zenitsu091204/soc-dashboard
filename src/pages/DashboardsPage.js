@@ -103,7 +103,7 @@ export default function DashboardsPage() {
 
         {/* Right Column - Feed */}
         <Grid item xs={12} md={3}>
-           <Box sx={{ height: '100%', minHeight: 400 }}>
+           <Box sx={{ height: 450 }}>
              <RecentActivityFeed alerts={alerts} maxItems={15} />
            </Box>
         </Grid>

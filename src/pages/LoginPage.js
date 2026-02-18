@@ -27,7 +27,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, error: authError, isLocked } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -203,10 +203,16 @@ const LoginPage = () => {
           {/* Login Form */}
           <form onSubmit={handleSubmit}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {error && (
+              {(error || authError) && (
                 <Alert severity="error" sx={{ borderRadius: 1 }}>
-                  {error}
+                  {error || authError}
                 </Alert>
+              )}
+              
+              {isLocked && (
+                 <Alert severity="warning" sx={{ borderRadius: 1 }}>
+                    Account is temporarily locked. Please wait.
+                 </Alert>
               )}
 
               <TextField
@@ -217,6 +223,7 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 variant="outlined"
                 autoComplete="email"
+                disabled={loading || isLocked}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -250,6 +257,7 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 variant="outlined"
                 autoComplete="current-password"
+                disabled={loading || isLocked}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -262,6 +270,7 @@ const LoginPage = () => {
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                         sx={{ color: 'text.secondary' }}
+                        disabled={loading || isLocked}
                       >
                         {showPassword ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
@@ -291,6 +300,7 @@ const LoginPage = () => {
                   <Checkbox
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
+                    disabled={loading || isLocked}
                     sx={{
                       color: 'text.secondary',
                       '&.Mui-checked': {
@@ -311,7 +321,7 @@ const LoginPage = () => {
                 variant="contained"
                 size="large"
                 fullWidth
-                disabled={loading}
+                disabled={loading || isLocked}
                 sx={{
                   py: 1.5,
                   fontSize: '1rem',
@@ -332,21 +342,15 @@ const LoginPage = () => {
                   },
                 }}
               >
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? 'Signing in...' : isLocked ? 'Account Locked' : 'Sign In'}
               </Button>
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ textAlign: 'center', flex: 1 }}
-                >
-                  Demo mode: Use any email and password
-                </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', mt: 2 }}>
                 <Button
                   variant="text"
                   size="small"
                   onClick={() => setForgotPasswordOpen(true)}
+                  disabled={loading || isLocked}
                   sx={{
                     color: 'primary.light',
                     textTransform: 'none',

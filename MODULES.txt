@@ -1,0 +1,28 @@
+PROJECT MODULES
+
+1. CORE INFRASTRUCTURE
+   - Authentication Module: Login page with validation, session persistence, and protected routes.
+   - Layout Module: Responsive sidebar navigation, header, and main content area.
+   - Theme Module: Custom dark theme configuration with glassmorphism effects.
+   - Global Search Module: Application-wide search functionality with keyboard shortcuts (Cmd+K).
+
+2. DASHBOARD & VISUALIZATION
+   - Overview Dashboard: Main monitoring interface aggregating key metrics.
+   - KPI Module: "StatCard" components for Total Alerts, Critical Alerts, and Risk Score.
+   - Charting Module:
+     - Alert Trends (Area Chart)
+     - IOC Distribution (Donut Chart)
+     - Top Assets (Bar Chart)
+   - Real-time Feed Module: Scrollable list of recent security alerts.
+
+3. CUSTOMIZATION
+   - Draggable Dashboard: User-configurable grid layout (drag-and-drop widgets).
+   - Filter Panel: Advanced filtering system for alerts based on severity and status.
+
+4. THREAT INTELLIGENCE
+   - Threat Actor Module: Profiles of active threat groups with risk levels.
+   - IOC Workbench: Analysis tools for Indicators of Compromise.
+
+5. UTILITIES
+   - Notification System: Toast notifications for user feedback (Success, Error, Info).
+   - Mock Data Generator: Simulates realistic SOC data for development and testing.

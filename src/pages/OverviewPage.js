@@ -21,7 +21,11 @@ import TopAssetsCard from '../components/TopAssetsCard';
 import IocDistributionCard from '../components/IocDistributionCard';
 import RecentActivityFeed from '../components/RecentActivityFeed';
 import FilterPanel, { FilterButton } from '../components/FilterPanel';
-import { alerts, formatUtc } from '../data/mockSocData';
+import WafRulesCard from '../components/WafRulesCard';
+import ThreatIntelFeedCard from '../components/ThreatIntelFeedCard';
+import OpenCtiMatchesCard from '../components/OpenCtiMatchesCard';
+import SlaPerformanceCard from '../components/SlaPerformanceCard';
+import { alerts, formatUtc, wafRules, mispFeed, openCtiMatches, slaMetrics } from '../data/mockSocData';
 
 // Enterprise card styling
 const enterpriseCardSx = {
@@ -213,9 +217,36 @@ export default function OverviewPage() {
           </Box>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Box sx={{ height: '100%', minHeight: 400 }}>
+          <Box sx={{ height: 450 }}> {/* Fixed height for scrollable content */ }
             <RecentActivityFeed alerts={filteredAlerts} maxItems={8} />
           </Box>
+        </Grid>
+      </Grid>
+
+      {/* Row 5: Advanced Threat Intel & Ops */}
+      <Typography variant="h6" sx={{ fontWeight: 800, mt: 4, mb: 2 }}>
+        Advanced Threat Intelligence & Ops
+      </Typography>
+      <Grid container spacing={3} alignItems="stretch">
+        <Grid item xs={12} md={6} lg={3}>
+           <Box sx={{ height: '100%', minHeight: 350 }}>
+             <WafRulesCard rules={wafRules} />
+           </Box>
+        </Grid>
+        <Grid item xs={12} md={6} lg={3}>
+           <Box sx={{ height: '100%', minHeight: 350 }}>
+             <ThreatIntelFeedCard feed={mispFeed} />
+           </Box>
+        </Grid>
+        <Grid item xs={12} md={6} lg={3}>
+           <Box sx={{ height: '100%', minHeight: 350 }}>
+             <OpenCtiMatchesCard matches={openCtiMatches} />
+           </Box>
+        </Grid>
+        <Grid item xs={12} md={6} lg={3}>
+           <Box sx={{ height: '100%', minHeight: 350 }}>
+             <SlaPerformanceCard metrics={slaMetrics} />
+           </Box>
         </Grid>
       </Grid>
 

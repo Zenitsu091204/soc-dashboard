@@ -85,15 +85,14 @@ export default function IocDistributionCard({ iocs = [] }) {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'rgba(15, 23, 42, 0.98)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(99, 102, 241, 0.5)',
+                    backgroundColor: '#0f172a',
+                    border: '1px solid rgba(148,163,184,0.35)',
                     borderRadius: 8,
-                    color: '#ffffff',
-                    fontSize: 13,
-                    fontWeight: 600,
+                    color: '#e2e8f0',
+                    fontSize: 12,
                     boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)',
                   }}
+                  itemStyle={{ color: '#e2e8f0' }}
                 />
               </PieChart>
             </ResponsiveContainer>

@@ -1,0 +1,41 @@
+MOCK DATA TYPES (JSON STRUCTURES)
+
+The dashboard uses static JSON arrays located in `src/data/mockSocData.js` to simulate a live backend.
+
+1. ALERTS DATA
+   Represents security incidents detected by the SIEM.
+   Structure:
+   {
+     "id": "String (Unique ID)",
+     "time": "ISO 8601 Timestamp (UTC)",
+     "title": "String (Alert Headline)",
+     "entity": "String (Affected Host/User)",
+     "severity": "Enum ('critical', 'high', 'medium', 'low')",
+     "status": "Enum ('open', 'in-progress', 'resolved', 'false-positive')"
+   }
+
+2. INDICATORS OF COMPROMISE (IOCs)
+   Represents malicious artifacts (IPs, Domains, Hashes).
+   Structure:
+   {
+     "id": "String (Unique ID)",
+     "type": "Enum ('IP', 'Domain', 'Hash', 'URL')",
+     "value": "String (The indicator itself)",
+     "source": "String (Intelligence Source e.g. 'AlienVault')",
+     "confidence": "Enum ('critical', 'high', 'medium', 'low')"
+   }
+
+3. THREAT ACTORS
+   Represents known adversary groups tracked by intelligence.
+   Structure:
+   {
+     "id": "String (Unique ID)",
+     "name": "String (Actor Name e.g. 'APT29')",
+     "sophistication": "String (e.g. 'Advanced')",
+     "lastSeen": "String (Relative time e.g. '2h ago')",
+     "riskLevel": "Enum ('Critical', 'High', 'Medium', 'Low')",
+     "targetSectors": "Array of Strings (e.g. ['Finance', 'Gov'])"
+   }
+
+4. NETWORK TRAFFIC (Simulated)
+   Though not explicitly stored as a static array, visuals like the "Alert Trends" chart simulate traffic volume over time using dynamically generated integer values mapped to dates.

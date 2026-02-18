@@ -91,15 +91,33 @@ This project maintains high engineering standards through:
     - **Accessibility**: ARIA compliance checks.
 - **Asset Optimization**: Efficient loading and rendering of charts.
 
-## 🛠️ Technology Stack
+## 🛠️ Technologies/Platform
 
-- **React 19** - Modern React with hooks
-- **Material-UI (MUI) 7** - Component library and theming
-- **Recharts 3** - Data visualization library
-- **React Router DOM 6** - Client-side routing
-- **React Hot Toast 2** - Toast notification system
-- **React Grid Layout 2** - Draggable and resizable grid
-- **Mock Data** - Realistic SOC data for demonstration
+### Front End
+- **React 19**: Core library for building the user interface.
+- **Material-UI (MUI) 7**: Comprehensive UI component framework and theming system.
+- **Recharts 3**: Composable charting library for data visualization.
+- **React Router DOM 6**: Standard routing library for React.
+- **React Hot Toast 2**: Lightweight notification system.
+- **React Grid Layout 2**: Draggable and resizable grid layout system.
+- **Context API**: State management for authentication and global preferences.
+
+### Back End
+- **Client-Side Simulation**: The application currently runs entirely in the browser.
+- **Mock Data Layer**: All API calls are simulated using local data structures (`src/data/mockSocData.js`).
+- **Local Storage**: Used for persisting user preferences and dashboard layouts.
+
+### Simulator
+- **SOC Data Generator**: Built-in mock data generator that creates realistic:
+    - Security Alerts (with variable severity and status)
+    - Indicators of Compromise (IOCs)
+    - Threat Actor profiles
+    - Network traffic simulation data
+
+### Hardware
+- **Development**: Standard PC/Laptop with Node.js installed.
+- **Deployment**: Any static file server (Vercel, Netlify, AWS S3, etc.).
+- **Client**: Modern web browser (Chrome, Firefox, Edge, Safari). No specialized hardware required.
 
 ## 📦 Installation
 

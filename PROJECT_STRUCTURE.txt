@@ -1,0 +1,42 @@
+PROJECT DIRECTORY STRUCTURE
+
+soc-dashboard/
+├── src/
+│   ├── components/          # Reusable UI components
+│   │   ├── AlertStatusCard.js
+│   │   ├── AlertsTrendCard.js      
+│   │   ├── ErrorBoundary.js
+│   │   ├── FilterPanel.js          
+│   │   ├── GlobalSearch.js         
+│   │   ├── IocDistributionCard.js
+│   │   ├── LoadingSpinner.js
+│   │   ├── PageHeader.js
+│   │   ├── RecentActivityFeed.js
+│   │   ├── RiskPulseBar.js
+│   │   ├── SeverityChip.js
+│   │   ├── SeveritySnapshotRow.js
+│   │   ├── StatCard.js
+│   │   ├── TopAssetsCard.js
+│   │   └── TopThreatActorsCard.js
+│   ├── context/             # React context providers
+│   │   └── AuthContext.js
+│   ├── data/                # Mock data and utilities
+│   │   └── mockSocData.js
+│   ├── layout/              # Layout components
+│   │   └── SOCLayout.js
+│   ├── pages/               # Page components
+│   │   ├── DashboardsPage.js
+│   │   ├── DraggableDashboard.js   
+│   │   ├── IOCFeedPage.js
+│   │   ├── LoginPage.js            
+│   │   ├── OverviewPage.js         
+│   │   ├── SearchPage.js
+│   │   └── ThreatActorsPage.js
+│   ├── utils/               # Utility functions
+│   │   └── toast.js
+│   ├── theme.js             # MUI theme configuration
+│   ├── index.css            # Global styles
+│   ├── App.js               # Main application component
+│   └── index.js             # Application entry point
+├── public/                  # Static public assets
+└── package.json             # Project dependencies and scripts

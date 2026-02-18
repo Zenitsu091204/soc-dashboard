@@ -10,7 +10,8 @@ const severityColors = {
 };
 
 export default function RecentActivityFeed({ alerts, maxItems = 8 }) {
-  const recentAlerts = alerts.slice(0, maxItems);
+  // Show all alerts, scrollable container handles the overflow
+  const recentAlerts = alerts;
 
   return (
     <Paper
@@ -21,20 +22,21 @@ export default function RecentActivityFeed({ alerts, maxItems = 8 }) {
         flexDirection: 'column',
         border: '1px solid rgba(255,255,255,0.05)',
         background: 'linear-gradient(145deg, rgba(15,23,42,0.9), rgba(30,41,59,0.7))',
-        borderRadius: '16px',
+        borderRadius: '24px', // 2xl rounded corners
         backdropFilter: 'blur(10px)',
         transition: 'all 0.3s ease',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         '&:hover': { 
-          borderColor: 'rgba(99, 102, 241, 0.3)',
-          boxShadow: '0 8px 32px rgba(99, 102, 241, 0.15)',
+          borderColor: 'rgba(99, 102, 241, 0.4)', // Soft neon blue/purple glow
+          boxShadow: '0 0 20px rgba(99, 102, 241, 0.2)',
         },
       }}
     >
-      <Box sx={{ flexShrink: 0 }}>
-        <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5, letterSpacing: '-0.5px' }}>
+      <Box sx={{ flexShrink: 0, mb: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: 800, mb: 0.5, letterSpacing: '-0.5px', color: '#fff' }}>
           Recent Activity
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '0.85rem' }}>
+        <Typography variant="body2" sx={{ color: '#94a3b8', fontSize: '0.85rem' }}>
           Live security alert feed
         </Typography>
       </Box>
@@ -43,21 +45,22 @@ export default function RecentActivityFeed({ alerts, maxItems = 8 }) {
         sx={{
           flex: 1,
           overflowY: 'auto',
+          minHeight: 0,
           pr: 1.5,
-          mr: -0.5, // compensative margin for padding
+          mr: -0.5,
           '&::-webkit-scrollbar': {
-            width: '4px', // Thinner scrollbar
+            width: '6px',
           },
           '&::-webkit-scrollbar-track': {
-            backgroundColor: 'transparent',
+            background: 'rgba(255, 255, 255, 0.02)',
+            borderRadius: '3px',
           },
           '&::-webkit-scrollbar-thumb': {
-            backgroundColor: 'rgba(99, 102, 241, 0.3)',
-            borderRadius: '10px',
-            transition: 'background 0.3s',
+            background: 'rgba(255, 255, 255, 0.1)', // Subtle gray thumb
+            borderRadius: '3px',
             '&:hover': {
-              backgroundColor: 'rgba(99, 102, 241, 0.6)',
-            }
+              background: 'rgba(255, 255, 255, 0.2)',
+            },
           },
         }}
       >
@@ -69,19 +72,15 @@ export default function RecentActivityFeed({ alerts, maxItems = 8 }) {
               sx={{
                 p: 2,
                 mb: 1.5,
-                borderRadius: 2,
+                borderRadius: '12px',
                 bgcolor: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid rgba(255, 255, 255, 0.03)',
-                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                animation: `slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) ${index * 0.08}s both`,
-                cursor: 'pointer',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
                 position: 'relative',
                 overflow: 'hidden',
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  bgcolor: 'rgba(255, 255, 255, 0.06)',
-                  borderColor: colors.border,
-                  transform: 'translateX(4px) scale(1.01)',
-                  boxShadow: `0 4px 12px ${colors.bg}`,
+                  bgcolor: 'rgba(255, 255, 255, 0.05)', // Slightly brighter on hover
+                  transform: 'translateY(-2px)',
                 },
                 '&::before': {
                   content: '""',
@@ -89,16 +88,15 @@ export default function RecentActivityFeed({ alerts, maxItems = 8 }) {
                   left: 0,
                   top: 0,
                   bottom: 0,
-                  width: '3px',
+                  width: '4px',
                   backgroundColor: colors.border,
-                  opacity: 0.6,
                 }
               }}
             >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
                  <Typography variant="caption" sx={{ 
                     color: colors.text, 
-                    fontWeight: 700, 
+                    fontWeight: 800, 
                     fontSize: '0.7rem', 
                     letterSpacing: '0.5px',
                     textTransform: 'uppercase',
@@ -106,10 +104,10 @@ export default function RecentActivityFeed({ alerts, maxItems = 8 }) {
                     alignItems: 'center',
                     gap: 0.5
                  }}>
-                   <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: colors.text, display: 'inline-block' }}></span>
+                   <Box component="span" sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: colors.text }} />
                    {alert.severity}
                  </Typography>
-                <Typography variant="caption" sx={{ color: 'text.disabled', fontSize: '0.7rem' }}>
+                <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 500 }}>
                   {getRelativeTime(alert.time)}
                 </Typography>
               </Box>
@@ -117,18 +115,18 @@ export default function RecentActivityFeed({ alerts, maxItems = 8 }) {
               <Typography
                 variant="body2"
                 sx={{
-                  fontWeight: 600,
-                  color: 'text.primary',
+                  fontWeight: 700,
+                  color: '#fff', // Bold white text
                   mb: 0.5,
-                  fontSize: '0.9rem',
-                  lineHeight: 1.4
+                  fontSize: '0.95rem',
+                  lineHeight: 1.3
                 }}
               >
                 {alert.title}
               </Typography>
 
-              <Typography variant="caption" sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                 <span>📍</span> {alert.entity}
+              <Typography variant="caption" sx={{ color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                 {alert.entity}
               </Typography>
             </Box>
           );
