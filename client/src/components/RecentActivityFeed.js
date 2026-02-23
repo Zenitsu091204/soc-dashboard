@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import api from '../services/api';
-// Icons
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ExclamationTriangleIcon,
   ShieldCheckIcon,
@@ -8,133 +6,124 @@ import {
   ServerStackIcon,
   UserIcon,
   ClockIcon,
-} from '@heroicons/react/24/outline'; // v2 syntax
+} from '@heroicons/react/24/outline';
 
-// Function to get the correct icon component based on source/type
 const getIcon = (source) => {
   switch (source) {
-    case 'Firewall':
-      return <ShieldCheckIcon className="w-5 h-5 text-emerald-400" />;
-    case 'EDR':
-      return <ServerStackIcon className="w-5 h-5 text-blue-400" />;
-    case 'NDR':
-      return <GlobeAltIcon className="w-5 h-5 text-indigo-400" />;
-    case 'IAM':
-      return <UserIcon className="w-5 h-5 text-purple-400" />;
-    default:
-      return <ExclamationTriangleIcon className="w-5 h-5 text-gray-400" />;
+    case 'Firewall': return <ShieldCheckIcon className="w-4 h-4 text-emerald-400" />;
+    case 'EDR':      return <ServerStackIcon className="w-4 h-4 text-blue-400" />;
+    case 'NDR':      return <GlobeAltIcon className="w-4 h-4 text-indigo-400" />;
+    case 'IAM':      return <UserIcon className="w-4 h-4 text-purple-400" />;
+    default:         return <ExclamationTriangleIcon className="w-4 h-4 text-slate-400" />;
   }
 };
 
-// Function to map severity to color styles
-const getSeverityColor = (severity) => {
-  switch (severity?.toLowerCase()) {
-    case 'critical':
-      return 'bg-red-500/10 text-red-500 border border-red-500/20';
-    case 'high':
-      return 'bg-orange-500/10 text-orange-500 border border-orange-500/20';
-    case 'medium':
-      return 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20';
-    case 'low':
-      return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
-    default:
-      return 'bg-gray-500/10 text-gray-400 border border-gray-500/20';
-  }
+const SEV = {
+  critical: 'bg-red-500/15 text-red-400 border-red-500/25',
+  high:     'bg-orange-500/15 text-orange-400 border-orange-500/25',
+  medium:   'bg-yellow-500/15 text-yellow-400 border-yellow-500/25',
+  low:      'bg-blue-500/15 text-blue-400 border-blue-500/25',
 };
 
-export default function RecentActivityFeed() {
-  const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(true);
+function timeAgo(ts) {
+  const diff = Math.floor((Date.now() - new Date(ts)) / 1000);
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  return `${Math.floor(diff / 3600)}h ago`;
+}
 
+// Single activity row — animates in when NEW
+function ActivityRow({ alert, isNew }) {
+  return (
+    <div
+      className={`group p-3 rounded-xl border transition-all duration-300
+        ${isNew
+          ? 'bg-indigo-500/10 border-indigo-500/30 animate-pulse-once'
+          : 'bg-slate-800/40 border-white/5 hover:bg-slate-800/70 hover:border-indigo-500/20'
+        }`}
+    >
+      <div className="flex items-start gap-2.5">
+        <div className="p-1.5 rounded-lg bg-slate-900/60 border border-white/5 mt-0.5 flex-shrink-0">
+          {getIcon(alert.source)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h3 className="text-xs font-semibold text-white truncate group-hover:text-indigo-300 transition-colors">
+              {alert.title}
+            </h3>
+            <span className="text-[10px] text-slate-500 flex items-center gap-1 whitespace-nowrap flex-shrink-0">
+              <ClockIcon className="w-3 h-3" />
+              {timeAgo(alert.timestamp)}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500 mb-1.5 line-clamp-1">
+            {alert.description || `Entity: ${alert.entity || 'N/A'}`}
+          </p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold border ${SEV[(alert.severity || 'low').toLowerCase()] || SEV.low}`}>
+              {(alert.severity || 'LOW').toUpperCase()}
+            </span>
+            {alert.source && (
+              <span className="text-[10px] text-slate-500 bg-white/5 px-1.5 py-0.5 rounded-full">{alert.source}</span>
+            )}
+            {isNew && (
+              <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded-full">NEW</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function RecentActivityFeed({ alerts: propAlerts = [] }) {
+  const [newIds, setNewIds] = useState(new Set());
+  const prevIdsRef = useRef(new Set());
+
+  // Detect newly added alerts when prop updates
   useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const { data } = await api.get('/alerts');
-        setAlerts(data);
-      } catch (error) {
-        console.error('Failed to fetch alerts', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const incoming = new Set(propAlerts.map((a) => a.id));
+    const fresh = [...incoming].filter((id) => !prevIdsRef.current.has(id));
+    if (fresh.length > 0) {
+      setNewIds(new Set(fresh));
+      setTimeout(() => setNewIds(new Set()), 5000); // reset after 5s
+    }
+    prevIdsRef.current = incoming;
+  }, [propAlerts]);
 
-    fetchAlerts();
-    // Optional: Poll every 30 seconds
-    const interval = setInterval(fetchAlerts, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (loading) {
-     return <div className="text-white/50 text-sm p-4">Loading activity...</div>;
-  }
+  const sorted = [...propAlerts]
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 20);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-white/90 font-display tracking-wide">
-          Recent Activity
-        </h2>
-        <span className="text-xs text-indigo-400 cursor-pointer hover:text-indigo-300 transition-colors">
-          View All
+    <div className="h-full flex flex-col p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+        <div>
+          <h2 className="text-sm font-bold text-white">Activity Feed</h2>
+          <p className="text-[11px] text-slate-500">{sorted.length} recent events</p>
+        </div>
+        <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">
+          <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+          AUTO
         </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-        {alerts.length === 0 ? (
-          <div className="text-white/50 text-sm">No recent activity</div>
+      {/* Scrollable Feed */}
+      <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar pr-1 min-h-0">
+        {sorted.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 text-slate-600">
+            <ShieldCheckIcon className="w-8 h-8 mb-2 opacity-40" />
+            <p className="text-sm">No recent activity</p>
+          </div>
         ) : (
-          alerts.map((alert) => (
-            <div
+          sorted.map((alert) => (
+            <ActivityRow
               key={alert.id}
-              className="group p-3 rounded-xl bg-slate-800/50 border border-white/5 hover:bg-slate-800 hover:border-indigo-500/30 transition-all duration-200"
-            >
-              <div className="flex items-start gap-3">
-                {/* Icon Container */}
-                <div className="p-2 rounded-lg bg-slate-900/80 border border-white/5 group-hover:border-indigo-500/20 transition-colors">
-                  {getIcon(alert.source)}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="text-sm font-medium text-white group-hover:text-indigo-400 transition-colors truncate pr-2">
-                       {alert.title}
-                    </h3>
-                    <span className="text-[10px] text-slate-400 flex items-center gap-1 whitespace-nowrap bg-slate-900/50 px-1.5 py-0.5 rounded">
-                      <ClockIcon className="w-3 h-3" />
-                      {(() => {
-                        const d = new Date(alert.timestamp);
-                        return isNaN(d.getTime()) 
-                          ? 'Unknown' 
-                          : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                      })()}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-slate-400 mb-2 line-clamp-1">
-                    {alert.description || `Detected on ${alert.entity} (${alert.sourceIp})`}
-                  </p>
-
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${getSeverityColor(
-                        alert.severity
-                      )}`}
-                    >
-                      {alert.severity?.toUpperCase()}
-                    </span>
-                    <span className="text-[10px] text-slate-500 px-2 py-0.5 rounded-full bg-slate-900/50 border border-white/5">
-                      {alert.source}
-                    </span>
-                    {alert.riskScore && (
-                       <span className={`text-[10px] px-2 py-0.5 rounded-full bg-slate-900/50 border border-white/5 ${alert.riskScore > 80 ? 'text-red-400' : 'text-slate-400'}`}>
-                         Risk: {alert.riskScore}
-                       </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+              alert={alert}
+              isNew={newIds.has(alert.id)}
+            />
           ))
         )}
       </div>

@@ -14,7 +14,7 @@ const protect = (req, res, next) => {
       // Attach user to request (excluding password)
       req.user = decoded; 
       
-      next();
+      return next();
     } catch (error) {
       console.error(error);
       res.status(401).json({ message: 'Not authorized, token failed' });

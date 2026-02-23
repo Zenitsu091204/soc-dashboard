@@ -8,7 +8,6 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import TravelExploreRoundedIcon from '@mui/icons-material/TravelExploreRounded';
 import GroupWorkRoundedIcon from '@mui/icons-material/GroupWorkRounded';
-import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
 import RuleFolderRoundedIcon from '@mui/icons-material/RuleFolderRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
@@ -29,13 +28,6 @@ const DRAWER_WIDTH_CLOSED = 70;
 const navItems = [
   // Operations
   { type: 'section', id: 'ops', label: 'OPERATIONS' },
-  {
-    type: 'item',
-    id: 'dashboards',
-    label: 'Dashboards',
-    to: '/dashboards',
-    icon: <QueryStatsRoundedIcon fontSize="small" />,
-  },
   {
     type: 'item',
     id: 'live-monitor',
@@ -102,6 +94,7 @@ const navItems = [
     type: 'item',
     id: 'settings',
     label: 'Workspace settings',
+    to: '/settings',
     icon: <TuneRoundedIcon fontSize="small" />,
   },
 ];

@@ -9,7 +9,7 @@ const {
 const { protect, admin } = require('../middleware/authMiddleware');
 
 router.get('/', protect, getAlerts);
-router.post('/', protect, createAlert);
+router.post('/', protect, admin, createAlert);
 router.get('/stats', protect, getStats);
 router.patch('/:id', protect, updateAlertStatus);
 
