@@ -15,7 +15,10 @@ function buildAlertsOverTime(alerts) {
   const counts = new Map();
 
   alerts.forEach((a) => {
-    const d = new Date(a.time);
+    const timeVal = a.timestamp || a.time;
+    if (!timeVal) return;
+    const d = new Date(timeVal);
+    if (isNaN(d.getTime())) return;
     const key = d.toISOString().slice(0, 13); // group by hour (YYYY-MM-DDTHH)
     counts.set(key, (counts.get(key) || 0) + 1);
   });

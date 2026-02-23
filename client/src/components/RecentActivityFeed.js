@@ -102,7 +102,12 @@ export default function RecentActivityFeed() {
                     </h3>
                     <span className="text-[10px] text-slate-400 flex items-center gap-1 whitespace-nowrap bg-slate-900/50 px-1.5 py-0.5 rounded">
                       <ClockIcon className="w-3 h-3" />
-                      {new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {(() => {
+                        const d = new Date(alert.timestamp);
+                        return isNaN(d.getTime()) 
+                          ? 'Unknown' 
+                          : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      })()}
                     </span>
                   </div>
 

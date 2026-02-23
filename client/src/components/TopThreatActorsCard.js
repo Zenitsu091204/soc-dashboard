@@ -63,7 +63,7 @@ export default function TopThreatActorsCard({ threatActors = [] }) {
           },
         }}>
           {threatActors.map((actor) => {
-            const colors = riskColors[actor.riskLevel];
+            const colors = riskColors[actor.riskLevel] || riskColors.Low;
             return (
               <Box
                 key={actor.id}
