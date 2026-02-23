@@ -1,18 +1,164 @@
 # Advanced Features Documentation
 
-This document provides detailed information about the advanced interactive features implemented in the SOC Dashboard.
+This document provides detailed information about all advanced interactive features implemented in the SOC Dashboard.
+
+**Last Updated:** 2026-02-23 12:15 IST — v3.0.0
 
 ## Table of Contents
 
-1. [Toast Notifications](#toast-notifications)
-2. [Global Search](#global-search)
-3. [Interactive Charts](#interactive-charts)
-4. [Advanced Filters](#advanced-filters)
-5. [Draggable Dashboard](#draggable-dashboard)
+1. [Settings Page](#settings-page) _(v3.0.0)_
+2. [Toast Notifications](#toast-notifications) _(v2.0.0)_
+3. [Global Search](#global-search) _(v2.0.0)_
+4. [Interactive Charts](#interactive-charts) _(v2.0.0)_
+5. [Advanced Filters](#advanced-filters) _(v2.0.0)_
+6. [Draggable Dashboard](#draggable-dashboard) _(v2.0.0)_
+
+---
+
+## ⚙️ Settings Page
+
+> **Added:** v3.0.0 — 2026-02-23 12:15 IST
+
+### Overview
+A fully redesigned, premium Settings page with a sticky sidebar navigation and 5 distinct configuration sections. Built entirely with Tailwind CSS utility classes and MUI icons — no MUI Box/sx props.
+
+### Location
+`src/pages/SettingsPage.js`
+
+### Sidebar Navigation Sections
+
+| Section | Icon Color | Description |
+|---------|-----------|-------------|
+| Profile | Indigo | Personal info, avatar, password change |
+| User Management | Cyan | Team members, roles, add/remove users |
+| Integrations | Violet | SIEM, Slack, VirusTotal, MISP connections |
+| Alert Rules | Amber | Notification channels, SLA thresholds |
+| Dashboard | Emerald | Display preferences, layout & locale |
+
+### Reusable Primitives
+
+```javascript
+// InputField — styled text / email / password / number input
+<InputField label="Full Name" id="name" value={v} onChange={fn} error={err} />
+
+// SelectField — styled native select
+<SelectField label="Role" id="role" value={v} onChange={fn} options={[...]} />
+
+// Toggle — accessible switch (role="switch", aria-checked)
+<Toggle label="Auto-Refresh" description="..." checked={bool} onChange={fn} />
+
+// SectionCard — glassmorphism card with optional header + action button
+<SectionCard title="Title" description="..." icon={Icon} action={<PrimaryBtn>Save</PrimaryBtn>}>
+  {children}
+</SectionCard>
+
+// Modal — backdrop blur dialog (sm / md / lg sizes)
+<Modal isOpen={bool} onClose={fn} title="Title" size="md">{children}</Modal>
+
+// SaveBanner — emerald flash message
+<SaveBanner visible={bool} message="Changes saved successfully" />
+
+// PrimaryBtn / GhostBtn — indigo primary and ghost action buttons
+<PrimaryBtn onClick={fn}>Save</PrimaryBtn>
+<GhostBtn danger onClick={fn}>Delete</GhostBtn>
+```
+
+### Profile Tab
+
+**Features:**
+- Gradient avatar (`from-indigo-500 to-cyan-500`) with emerald online dot
+- Editable: Full Name, Email, Phone; Role (read-only)
+- Inline validation (required name, valid email format)
+- Password change: Current → New → Confirm with 8-char minimum check
+- Flash `SaveBanner` on success (auto-hides after 3 s)
+
+### User Management Tab
+
+**Features:**
+- User list with per-user gradient avatar (4 rotating color schemes)
+- Role badge (Admin highlighted in cyan, Analyst in slate)
+- One-click Active ↔ Inactive status toggle button per row
+- Ghost delete button revealed on row hover
+- **Add User Modal**: Name, Email, Role with full validation
+- **Delete Confirm Modal**: Destructive action with explicit confirmation
+
+### Integrations Tab
+
+**Integrations Configured:**
+
+| ID | Name | Description | Default State |
+|----|------|-------------|---------------|
+| siem | SIEM Platform | Splunk / QRadar event ingestion | Connected |
+| slack | Slack | Push alert notifications | Disconnected |
+| virustotal | VirusTotal | IOC enrichment & threat analysis | Connected |
+| misp | MISP | Pull threat feeds | Disconnected |
+
+**Features:**
+- Integration cards with color-coded icon, connection badge
+- Connect / Disconnect toggle per card
+- Configure Modal: API Key (masked), Endpoint URL, Sync Frequency select
+- API key validation: ≥ 10 characters required
+- Confirmation banner on successful save
+
+### Alert Rules Tab
+
+**Notification Channels (Toggle switches):**
+- Email Alerts
+- Slack Notifications
+- Browser Sound (audio chime)
+
+**Alert Behaviour (Toggle switches):**
+- Critical Only Mode (suppress medium / low)
+- Auto-Escalate (trigger on SLA breach)
+- Weekly Summary Report (email digest)
+
+**SLA & Retention Fields:**
+- Critical SLA (minutes) — must be ≥ 1
+- High SLA (minutes) — must be ≥ 1
+- Retention (days) — minimum 7 days
+
+### Dashboard Tab
+
+**Display Preferences (Toggle switches):**
+- Auto-Refresh, Compact Mode, User Avatars, Dark Charts, Sticky Header, UI Animations
+
+**Layout & Locale (Select / Input):**
+- Default Landing Page
+- Refresh Interval (10–3600 seconds, validated)
+- Date Format (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD)
+- Timezone (UTC, US/Eastern, Europe/London, Asia/Kolkata, Asia/Tokyo, …)
+
+### Color Accent System
+
+```javascript
+const COLOR_MAP = {
+  indigo:  { bg, text, border, ring },
+  cyan:    { bg, text, border, ring },
+  violet:  { bg, text, border, ring },
+  amber:   { bg, text, border, ring },
+  emerald: { bg, text, border, ring },
+};
+```
+The section header bar and active sidebar item dynamically apply the accent for the currently active section.
+
+### Styling
+- Card background: `bg-slate-800/40 border-white/6 rounded-2xl`
+- Input: `bg-slate-800/60 border-white/8 rounded-xl`
+- Sidebar: `bg-slate-800/50 border-white/6 rounded-2xl` (sticky)
+- Focus rings: `ring-2 ring-indigo-500/50`
+- Transition: `duration-200` on all interactive elements
+
+### Accessibility
+- `role="switch"` + `aria-checked` on all toggle buttons
+- `htmlFor` on all labels
+- Keyboard-focusable modals with close button
+- Color-contrast–safe text colors (slate-200 on slate-900)
 
 ---
 
 ## 🔔 Toast Notifications
+
+> **Added:** v2.0.0 — 2026-02-13
 
 ### Overview
 Custom toast notification system with SOC-themed styling and glassmorphism effects.
@@ -33,47 +179,25 @@ Custom toast notification system with SOC-themed styling and glassmorphism effec
 ```javascript
 import showToast from '../utils/toast';
 
-// Success toast
 showToast.success('Operation completed!', 'Data saved successfully');
-
-// Error toast
 showToast.error('Operation failed', 'Please try again');
-
-// Warning toast
 showToast.warning('Low disk space', 'Consider cleaning up');
-
-// Info toast
-showToast.info('New update available', 'Version 2.0 ready');
-
-// Quick toast (no description)
+showToast.info('New update available', 'Version 3.0 ready');
 showToast.quick('Saved!', 'success');
-
-// Promise toast (for async operations)
-showToast.promise(
-  fetchData(),
-  {
-    loading: 'Loading...',
-    success: 'Loaded!',
-    error: 'Failed to load',
-  }
-);
+showToast.promise(fetchData(), { loading: 'Loading…', success: 'Loaded!', error: 'Failed' });
 ```
-
-### Integration
-- Login page: Login success/failure, missing credentials, password reset
-- Charts: Time range selection feedback
-- Filters: Filter application confirmation
-- Draggable Dashboard: Layout save/reset confirmation
 
 ### Styling
 - Background: `rgba(21, 30, 50, 0.95)` with blur
 - Border: `1px solid rgba(255, 255, 255, 0.1)`
 - Position: Top-right
-- Duration: 2-4 seconds (varies by type)
+- Duration: 2–4 seconds (varies by type)
 
 ---
 
 ## 🔍 Global Search
+
+> **Added:** v2.0.0 — 2026-02-13
 
 ### Overview
 Powerful global search with keyboard shortcut support and real-time results.
@@ -90,41 +214,21 @@ Powerful global search with keyboard shortcut support and real-time results.
 - Auto-focus on search input
 - Press `Esc` to close
 
-### Usage
-
-**Opening Search:**
-- Press `Cmd+K` or `Ctrl+K` anywhere in the app
-- Click the search bar in the navbar
-
-**Searching:**
-- Type your query
-- Results appear instantly
-- Results are categorized:
-  - ALERTS (with notification icon)
-  - INDICATORS OF COMPROMISE (with bug icon)
-  - THREAT ACTORS (with person icon)
-
-**Closing:**
-- Press `Esc`
-- Click outside the dialog
-
 ### Search Algorithm
 - Case-insensitive matching
-- Searches in:
-  - Alert titles, entities, severity
-  - IOC values and types
-  - Threat actor names and categories
+- Searches in: alert titles, entities, severity; IOC values and types; threat actor names
 - Results limited to 5 per category
 
 ### Styling
-- Dialog: Centered, max-width 'md'
+- Dialog: Centered, max-width `md`
 - Background: `rgba(21, 30, 50, 0.95)` with blur
 - Border: `1px solid rgba(99, 102, 241, 0.3)`
-- Icons: Color-coded by category
 
 ---
 
 ## 📊 Interactive Charts
+
+> **Added:** v2.0.0 — 2026-02-13
 
 ### Overview
 Enhanced chart components with click handlers, custom tooltips, and animations.
@@ -138,46 +242,28 @@ Enhanced chart components with click handlers, custom tooltips, and animations.
 - Hover effects on chart dots
 - Smooth animations
 - Callback support for filtering
-- Visual feedback on interaction
 
 ### Usage
 
 ```javascript
-<AlertsTrendCard 
+<AlertsTrendCard
   alerts={alerts}
   onTimeRangeClick={(data) => {
     console.log('Clicked:', data);
-    // Handle filtering by time range
   }}
 />
 ```
 
-### Interactions
-
-**Hover:**
-- Custom tooltip appears
-- Shows alert count and time
-- Displays "Click to filter by this time" hint
-
-**Click:**
-- Triggers toast notification
-- Calls `onTimeRangeClick` callback with data
-- Visual feedback with active dot styling
-
-### Tooltip Content
-- Time label (formatted)
-- Alert count (large, indigo color)
-- Action hint (click to filter)
-
 ### Styling
 - Tooltip background: `rgba(15, 23, 42, 0.98)` with blur
-- Border: `1px solid rgba(99, 102, 241, 0.4)`
 - Active dot: Larger size, lighter color
 - Animation: 1000ms ease-in-out
 
 ---
 
 ## 🎛️ Advanced Filters
+
+> **Added:** v2.0.0 — 2026-02-13
 
 ### Overview
 Multi-criteria filtering panel with severity and status filters.
@@ -187,75 +273,29 @@ Multi-criteria filtering panel with severity and status filters.
 
 ### Features
 - Right-side drawer UI
-- Severity filtering (Critical, High, Medium, Low)
-- Status filtering (Open, In Progress, Resolved, False Positive)
+- Severity filtering: Critical, High, Medium, Low
+- Status filtering: Open, In Progress, Resolved, False Positive
 - Color-coded checkboxes
 - Active filter count badge
-- Reset functionality
-- Apply button to confirm changes
-
-### Usage
-
-```javascript
-import FilterPanel, { FilterButton } from '../components/FilterPanel';
-
-// In your component
-const [filterPanelOpen, setFilterPanelOpen] = useState(false);
-const [activeFilters, setActiveFilters] = useState({
-  severity: { critical: true, high: true, medium: true, low: true },
-  status: { open: true, 'in-progress': true, resolved: false, 'false-positive': false }
-});
-
-// Filter button
-<FilterButton 
-  onClick={() => setFilterPanelOpen(true)} 
-  activeCount={activeFiltersCount} 
-/>
-
-// Filter panel
-<FilterPanel
-  open={filterPanelOpen}
-  onClose={() => setFilterPanelOpen(false)}
-  onApplyFilters={(filters) => {
-    setActiveFilters(filters);
-  }}
-/>
-```
+- Reset + Apply functionality
 
 ### Filter Structure
 
 ```javascript
 {
-  severity: {
-    critical: boolean,
-    high: boolean,
-    medium: boolean,
-    low: boolean
-  },
-  status: {
-    open: boolean,
-    'in-progress': boolean,
-    resolved: boolean,
-    'false-positive': boolean
-  }
+  severity: { critical, high, medium, low },
+  status:   { open, 'in-progress', resolved, 'false-positive' }
 }
 ```
 
 ### Checkbox Colors
-- Critical: `#EF4444` (Red)
-- High: `#F59E0B` (Orange)
-- Medium: `#EAB308` (Yellow)
-- Low: `#10B981` (Green)
-- Status: `#6366F1` (Indigo)
-
-### Actions
-- **Reset**: Clears all filters to default
-- **Apply Filters**: Closes drawer and applies filters
-- **Close**: Closes drawer without applying
+- Critical: `#EF4444`, High: `#F59E0B`, Medium: `#EAB308`, Low: `#10B981`, Status: `#6366F1`
 
 ---
 
 ## 🎯 Draggable Dashboard
+
+> **Added:** v2.0.0 — 2026-02-13
 
 ### Overview
 Fully customizable dashboard with drag-and-drop widgets and layout persistence.
@@ -267,190 +307,59 @@ Fully customizable dashboard with drag-and-drop widgets and layout persistence.
 - Drag and drop widgets
 - Resize from bottom-right corner
 - Edit mode toggle (lock/unlock)
-- Save layout to localStorage
+- Save layout to localStorage (`dashboard-layouts`)
 - Reset to default layout
 - Responsive grid system
-- Visual feedback in edit mode
 
-### Usage
-
-**Accessing:**
-- Navigate to "Custom Dashboard" in sidebar
-- Or visit `/custom-dashboard`
-
-**Edit Mode:**
-1. Click lock icon to unlock
-2. Drag widgets to reposition
-3. Resize from bottom-right corner
-4. Click "Save Layout" to persist
-5. Click "Reset" to restore defaults
-6. Click lock icon to exit edit mode
+### Widgets Included
+1. Total Alerts, 2. Critical Alerts, 3. High Priority, 4. Risk Score
+5. Alerts Trend, 6. Alert Status, 7. Top Assets, 8. Top Threats, 9. IOC Distribution
 
 ### Grid Configuration
-
 ```javascript
 breakpoints: { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }
-cols: { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }
+cols:        { lg: 12,   md: 10,  sm: 6,   xs: 4,   xxs: 2  }
 rowHeight: 30
 ```
 
-### Default Layout
-
-```javascript
-{
-  lg: [
-    { i: 'stat1', x: 0, y: 0, w: 3, h: 2, minW: 2, minH: 2 },
-    { i: 'stat2', x: 3, y: 0, w: 3, h: 2, minW: 2, minH: 2 },
-    { i: 'stat3', x: 6, y: 0, w: 3, h: 2, minW: 2, minH: 2 },
-    { i: 'stat4', x: 9, y: 0, w: 3, h: 2, minW: 2, minH: 2 },
-    { i: 'trend', x: 0, y: 2, w: 8, h: 6, minW: 6, minH: 4 },
-    { i: 'status', x: 8, y: 2, w: 4, h: 6, minW: 3, minH: 4 },
-    { i: 'assets', x: 0, y: 8, w: 4, h: 5, minW: 3, minH: 4 },
-    { i: 'threats', x: 4, y: 8, w: 4, h: 5, minW: 3, minH: 4 },
-    { i: 'iocs', x: 8, y: 8, w: 4, h: 5, minW: 3, minH: 4 },
-  ]
-}
-```
-
-### Widgets Included
-1. Total Alerts (StatCard)
-2. Critical Alerts (StatCard)
-3. High Priority (StatCard)
-4. Risk Score (StatCard)
-5. Alerts Trend (AlertsTrendCard)
-6. Alert Status (AlertStatusCard)
-7. Top Assets (TopAssetsCard)
-8. Top Threats (TopThreatActorsCard)
-9. IOC Distribution (IocDistributionCard)
-
-### LocalStorage
-- Key: `dashboard-layouts`
-- Value: JSON stringified layout object
-- Persists across sessions
-- Cleared on reset
-
-### Edit Mode Visual Feedback
-- Blue info banner at top
-- Dashed outline on hover
-- Move cursor on drag
-- Resize handle visible
-- Lock/unlock icon changes color
-
 ---
 
-## 🎨 Design Consistency
+## 🎨 Design System
 
-All features maintain consistent styling:
+All features share a consistent design language:
 
-### Colors
-- Primary: `#6366F1` (Indigo)
-- Background: `#0B1120`, `#1E293B`
-- Success: `#10B981`
-- Error: `#EF4444`
-- Warning: `#F59E0B`
-- Info: `#6366F1`
-
-### Effects
-- Glassmorphism: `backdrop-filter: blur(20px)`
-- Semi-transparent backgrounds
-- Subtle borders with low opacity
-- Smooth transitions (0.2s - 0.3s)
-
-### Typography
-- Headers: Font weight 700-800
-- Body: Font weight 400-600
-- Captions: Smaller size, secondary color
-
----
-
-## 🚀 Performance Considerations
-
-### Toast Notifications
-- Auto-dismiss prevents accumulation
-- Lightweight custom component
-- No external dependencies beyond react-hot-toast
-
-### Global Search
-- Debounced search (via useCallback)
-- Results limited to 5 per category
-- Efficient filtering algorithms
-
-### Interactive Charts
-- Memoized data processing
-- Optimized re-renders
-- Smooth animations without jank
-
-### Advanced Filters
-- Controlled component pattern
-- Efficient state updates
-- Minimal re-renders
-
-### Draggable Dashboard
-- Layout saved to localStorage (not state)
-- Conditional rendering in edit mode
-- Optimized grid calculations
+| Token | Value |
+|-------|-------|
+| Primary | `#6366F1` (Indigo) |
+| Background | `#0B1120`, `#1E293B` |
+| Success | `#10B981` |
+| Error | `#EF4444` |
+| Warning | `#F59E0B` |
+| Glassmorphism | `backdrop-filter: blur(20px)` |
+| Transition | 0.2s – 0.3s ease |
 
 ---
 
 ## 📱 Responsive Design
 
-All features are mobile-friendly:
-
-- **Toast Notifications**: Adapt to screen width
-- **Global Search**: Full-width on mobile
-- **Charts**: Responsive container
-- **Filters**: Full-height drawer on mobile
-- **Draggable Dashboard**: Responsive breakpoints
+All features adapt to mobile screens:
+- Settings sidebar collapses on small viewports
+- Toast notifications adapt to screen width
+- Global search is full-width on mobile
+- Charts use responsive containers
+- Draggable Dashboard has responsive breakpoints
 
 ---
 
 ## ♿ Accessibility
 
-- Keyboard navigation support
-- Focus indicators
+- `role="switch"` + `aria-checked` on toggles
+- Keyboard navigation throughout
+- Focus indicators on all interactive elements
 - ARIA labels where appropriate
-- Color contrast compliance
-- Screen reader friendly
+- Color-contrast–compliant text
 
 ---
 
-## 🔧 Customization
-
-### Toast Notifications
-Edit `src/utils/toast.js`:
-- Change colors
-- Adjust duration
-- Modify position
-- Add new variants
-
-### Global Search
-Edit `src/components/GlobalSearch.js`:
-- Change keyboard shortcut
-- Modify search algorithm
-- Add new categories
-- Customize styling
-
-### Interactive Charts
-Edit `src/components/AlertsTrendCard.js`:
-- Change chart type
-- Modify tooltip content
-- Adjust animations
-- Add new interactions
-
-### Advanced Filters
-Edit `src/components/FilterPanel.js`:
-- Add new filter criteria
-- Change checkbox colors
-- Modify drawer width
-- Add filter presets
-
-### Draggable Dashboard
-Edit `src/pages/DraggableDashboard.js`:
-- Add/remove widgets
-- Change grid configuration
-- Modify default layout
-- Add widget library
-
----
-
-**Version 2.0** - Advanced Interactive Features
+**Version 3.0** — Premium Settings Page Redesign  
+**Version 2.0** — Advanced Interactive Features

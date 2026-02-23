@@ -1,721 +1,612 @@
 import React, { useState } from 'react';
+import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
+import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
+import PowerRoundedIcon from '@mui/icons-material/PowerRounded';
+import NotificationsNoneRoundedIcon from '@mui/icons-material/NotificationsNoneRounded';
+import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
+import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
+import LinkOffRoundedIcon from '@mui/icons-material/LinkOffRounded';
+import SettingsInputCompositeRoundedIcon from '@mui/icons-material/SettingsInputCompositeRounded';
+import ShieldRoundedIcon from '@mui/icons-material/ShieldRounded';
+import SpeedRoundedIcon from '@mui/icons-material/SpeedRounded';
+import WifiTetheringRoundedIcon from '@mui/icons-material/WifiTetheringRounded';
 
-// ─── Tab Config ───────────────────────────────────────────────────────────────
-const TABS = ['Profile', 'Users', 'Integrations', 'Alerts', 'Dashboard'];
+// ─── Sidebar Nav Config ───────────────────────────────────────────────────────
+const NAV_ITEMS = [
+  { id: 'Profile',      label: 'Profile',       icon: PersonOutlineRoundedIcon,           color: 'indigo' },
+  { id: 'Users',        label: 'User Management', icon: GroupsRoundedIcon,                color: 'cyan'   },
+  { id: 'Integrations', label: 'Integrations',   icon: PowerRoundedIcon,                  color: 'violet' },
+  { id: 'Alerts',       label: 'Alert Rules',    icon: NotificationsNoneRoundedIcon,       color: 'amber'  },
+  { id: 'Dashboard',    label: 'Dashboard',      icon: TuneRoundedIcon,                   color: 'emerald'},
+];
 
-// ─── Reusable Components ──────────────────────────────────────────────────────
+const COLOR_MAP = {
+  indigo:  { bg: 'bg-indigo-500/15',  text: 'text-indigo-400',  border: 'border-indigo-500/30',  ring: 'ring-indigo-500/40'  },
+  cyan:    { bg: 'bg-cyan-500/15',    text: 'text-cyan-400',    border: 'border-cyan-500/30',    ring: 'ring-cyan-500/40'    },
+  violet:  { bg: 'bg-violet-500/15',  text: 'text-violet-400',  border: 'border-violet-500/30',  ring: 'ring-violet-500/40'  },
+  amber:   { bg: 'bg-amber-500/15',   text: 'text-amber-400',   border: 'border-amber-500/30',   ring: 'ring-amber-500/40'   },
+  emerald: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/30', ring: 'ring-emerald-500/40' },
+};
 
-function InputField({ label, id, type = 'text', value, onChange, error, placeholder, disabled }) {
+// ─── Reusable UI Primitives ───────────────────────────────────────────────────
+function InputField({ label, id, type = 'text', value, onChange, error, placeholder, disabled, helper }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-300 mb-1">
+      <label htmlFor={id} className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
         {label}
       </label>
       <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={onChange}
-        disabled={disabled}
-        placeholder={placeholder}
-        className={`w-full bg-slate-800 border rounded-lg px-3 py-2 text-slate-100 placeholder-slate-500
-          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition
-          disabled:opacity-50 disabled:cursor-not-allowed
-          ${error ? 'border-red-500' : 'border-slate-600 hover:border-slate-500'}`}
+        id={id} type={type} value={value} onChange={onChange}
+        disabled={disabled} placeholder={placeholder}
+        className={`w-full bg-slate-800/60 border rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-600
+          focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200
+          disabled:opacity-40 disabled:cursor-not-allowed
+          ${error ? 'border-red-500/60 focus:ring-red-500/30' : 'border-white/8 hover:border-white/15'}`}
       />
-      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+      {error  && <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">⚠ {error}</p>}
+      {helper && <p className="mt-1.5 text-xs text-slate-500">{helper}</p>}
+    </div>
+  );
+}
+
+function SelectField({ label, id, value, onChange, options }) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+        {label}
+      </label>
+      <select
+        id={id} value={value} onChange={onChange}
+        className="w-full bg-slate-800/60 border border-white/8 hover:border-white/15 rounded-xl px-3.5 py-2.5 text-sm text-slate-100
+          focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all duration-200"
+      >
+        {options.map((o) => <option key={o.value ?? o} value={o.value ?? o}>{o.label ?? o}</option>)}
+      </select>
     </div>
   );
 }
 
 function Toggle({ label, description, checked, onChange }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-slate-700/50 last:border-0">
-      <div>
+    <div className="flex items-center justify-between gap-4 py-3.5 border-b border-white/5 last:border-0">
+      <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-slate-200">{label}</p>
-        {description && <p className="text-xs text-slate-500 mt-0.5">{description}</p>}
+        {description && <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{description}</p>}
       </div>
       <button
-        role="switch"
-        aria-checked={checked}
+        role="switch" aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900
-          ${checked ? 'bg-indigo-600' : 'bg-slate-600'}`}
+        className={`relative flex-shrink-0 inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900
+          ${checked ? 'bg-indigo-600 focus:ring-indigo-500' : 'bg-slate-700 focus:ring-slate-500'}`}
       >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform
-            ${checked ? 'translate-x-6' : 'translate-x-1'}`}
+        <span className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${checked ? 'translate-x-5' : 'translate-x-1'}`}
+          style={{ height: 18, width: 18 }}
         />
       </button>
     </div>
   );
 }
 
-function SectionCard({ title, description, children }) {
+function SectionCard({ title, description, accent, icon: Icon, children, action }) {
   return (
-    <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-6 mb-5">
+    <div className="bg-slate-800/40 border border-white/6 rounded-2xl overflow-hidden mb-5 last:mb-0">
       {(title || description) && (
-        <div className="mb-5">
-          {title && <h3 className="text-base font-semibold text-slate-100">{title}</h3>}
-          {description && <p className="text-sm text-slate-400 mt-1">{description}</p>}
+        <div className={`px-5 py-4 border-b border-white/6 flex items-center justify-between gap-3
+          ${accent ? 'bg-gradient-to-r from-slate-800/80 to-slate-800/40' : ''}`}>
+          <div className="flex items-center gap-3">
+            {Icon && (
+              <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                <Icon style={{ fontSize: 16 }} className="text-indigo-400" />
+              </div>
+            )}
+            <div>
+              {title       && <h3 className="text-sm font-semibold text-white">{title}</h3>}
+              {description && <p className="text-xs text-slate-500 mt-0.5">{description}</p>}
+            </div>
+          </div>
+          {action}
         </div>
       )}
-      {children}
+      <div className="p-5">{children}</div>
     </div>
   );
 }
 
-function Badge({ color, text }) {
-  const colors = {
-    green: 'bg-emerald-500/20 text-emerald-400',
-    red: 'bg-red-500/20 text-red-400',
-    yellow: 'bg-yellow-500/20 text-yellow-400',
-    blue: 'bg-blue-500/20 text-blue-400',
-  };
+function SaveBanner({ visible, message = 'Changes saved successfully' }) {
+  if (!visible) return null;
   return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colors[color] || colors.blue}`}>
-      {text}
-    </span>
+    <div className="mb-5 flex items-center gap-2.5 px-4 py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-sm">
+      <CheckCircleOutlineRoundedIcon style={{ fontSize: 18 }} />
+      {message}
+    </div>
   );
 }
 
-function Modal({ isOpen, onClose, title, children }) {
+function Modal({ isOpen, onClose, title, children, size = 'md' }) {
   if (!isOpen) return null;
+  const widths = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg' };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fadeIn">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-slate-100">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-200 transition text-2xl leading-none"
-          >
-            &times;
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative bg-slate-900 border border-white/10 rounded-2xl shadow-2xl w-full ${widths[size]} animate-fadeIn`}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
+          <h2 className="text-base font-semibold text-white">{title}</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition">
+            <CloseRoundedIcon style={{ fontSize: 18 }} />
           </button>
         </div>
-        {children}
+        <div className="px-6 py-5">{children}</div>
       </div>
     </div>
   );
 }
 
-// ─── Tab: Profile ─────────────────────────────────────────────────────────────
+function PrimaryBtn({ onClick, children, disabled }) {
+  return (
+    <button onClick={onClick} disabled={disabled}
+      className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30">
+      {children}
+    </button>
+  );
+}
+
+function GhostBtn({ onClick, children, danger }) {
+  return (
+    <button onClick={onClick}
+      className={`px-4 py-2 text-sm font-medium rounded-xl border transition-all duration-200
+        ${danger
+          ? 'border-red-500/40 text-red-400 hover:bg-red-500/10'
+          : 'border-white/10 text-slate-300 hover:text-white hover:bg-white/6'}`}>
+      {children}
+    </button>
+  );
+}
+
+// ─── Profile Tab ──────────────────────────────────────────────────────────────
 function ProfileTab() {
   const [form, setForm] = useState({
-    name: 'Alex Johnson',
-    email: 'alex.johnson@soc.internal',
-    role: 'SOC Analyst',
-    phone: '+1 (555) 234-5678',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
+    name: 'Alex Johnson', email: 'alex.johnson@soc.internal',
+    role: 'SOC Analyst', phone: '+1 (555) 234-5678',
+    currentPassword: '', newPassword: '', confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState('');
 
-  const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+  const set = (f) => (e) => setForm({ ...form, [f]: e.target.value });
 
-  const validateProfile = () => {
+  const flash = (msg) => { setSaved(msg); setTimeout(() => setSaved(''), 3000); };
+
+  const saveProfile = () => {
     const errs = {};
     if (!form.name.trim()) errs.name = 'Name is required';
-    if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errs.email = 'Enter a valid email';
-    return errs;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Enter a valid email';
+    setErrors(errs);
+    if (!Object.keys(errs).length) flash('Profile information updated');
   };
 
-  const validatePassword = () => {
+  const savePassword = () => {
     const errs = {};
-    if (!form.currentPassword) errs.currentPassword = 'Current password is required';
-    if (form.newPassword.length < 8) errs.newPassword = 'Min 8 characters';
+    if (!form.currentPassword) errs.currentPassword = 'Required';
+    if (form.newPassword.length < 8) errs.newPassword = 'Minimum 8 characters';
     if (form.newPassword !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match';
-    return errs;
-  };
-
-  const handleSaveProfile = () => {
-    const errs = validateProfile();
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    }
-  };
-
-  const handleChangePassword = () => {
-    const errs = validatePassword();
-    setErrors(errs);
-    if (Object.keys(errs).length === 0) {
+    if (!Object.keys(errs).length) {
       setForm({ ...form, currentPassword: '', newPassword: '', confirmPassword: '' });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      flash('Password changed successfully');
     }
   };
+
+  const initial = form.name.charAt(0).toUpperCase();
 
   return (
     <div>
-      {saved && (
-        <div className="mb-4 px-4 py-3 bg-emerald-500/20 border border-emerald-500/40 rounded-lg text-emerald-400 text-sm">
-          ✓ Changes saved successfully
-        </div>
-      )}
+      <SaveBanner visible={!!saved} message={saved} />
 
-      {/* Avatar */}
-      <SectionCard title="Profile Picture">
+      {/* Avatar card */}
+      <SectionCard title="Profile Picture" icon={PersonOutlineRoundedIcon}>
         <div className="flex items-center gap-5">
-          <div className="h-16 w-16 rounded-full bg-indigo-600 flex items-center justify-center text-2xl font-bold text-white select-none">
-            {form.name.charAt(0)}
+          <div className="relative">
+            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-500 flex items-center justify-center text-3xl font-black text-white shadow-lg shadow-indigo-500/30 select-none ring-4 ring-indigo-500/20">
+              {initial}
+            </div>
+            <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-emerald-500 rounded-full border-2 border-slate-900" />
           </div>
           <div>
-            <button className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition">
-              Change Avatar
+            <p className="text-sm font-semibold text-white mb-0.5">{form.name}</p>
+            <p className="text-xs text-slate-400 mb-3">{form.role}</p>
+            <button className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 px-3 py-1.5 rounded-lg transition">
+              Upload Photo
             </button>
-            <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 2MB</p>
+            <p className="text-[11px] text-slate-600 mt-1.5">PNG or JPG up to 2 MB</p>
           </div>
         </div>
       </SectionCard>
 
-      {/* Personal Info */}
-      <SectionCard title="Personal Information" description="Update your account details.">
+      {/* Personal info */}
+      <SectionCard title="Personal Information" description="Update your account details" icon={PersonOutlineRoundedIcon}
+        action={<PrimaryBtn onClick={saveProfile}>Save Profile</PrimaryBtn>}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InputField label="Full Name" id="name" value={form.name} onChange={set('name')} error={errors.name} />
+          <InputField label="Full Name"     id="name"  value={form.name}  onChange={set('name')}  error={errors.name} />
           <InputField label="Email Address" id="email" type="email" value={form.email} onChange={set('email')} error={errors.email} />
-          <InputField label="Role" id="role" value={form.role} onChange={set('role')} disabled />
-          <InputField label="Phone" id="phone" value={form.phone} onChange={set('phone')} placeholder="+1 (555) 000-0000" />
-        </div>
-        <div className="mt-5 flex justify-end">
-          <button
-            onClick={handleSaveProfile}
-            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition"
-          >
-            Save Profile
-          </button>
+          <InputField label="Role"          id="role"  value={form.role}  disabled />
+          <InputField label="Phone Number"  id="phone" value={form.phone} onChange={set('phone')} placeholder="+1 (555) 000-0000" />
         </div>
       </SectionCard>
 
-      {/* Change Password */}
-      <SectionCard title="Change Password" description="Use a strong, unique password.">
-        <div className="space-y-4">
-          <InputField label="Current Password" id="currentPassword" type="password" value={form.currentPassword} onChange={set('currentPassword')} error={errors.currentPassword} />
-          <InputField label="New Password" id="newPassword" type="password" value={form.newPassword} onChange={set('newPassword')} error={errors.newPassword} />
-          <InputField label="Confirm New Password" id="confirmPassword" type="password" value={form.confirmPassword} onChange={set('confirmPassword')} error={errors.confirmPassword} />
-        </div>
-        <div className="mt-5 flex justify-end">
-          <button
-            onClick={handleChangePassword}
-            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition"
-          >
-            Update Password
-          </button>
+      {/* Change password */}
+      <SectionCard title="Change Password" description="Use a strong unique password" icon={LockOutlinedIcon}
+        action={<PrimaryBtn onClick={savePassword}>Update Password</PrimaryBtn>}>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <InputField label="Current Password" id="curPwd" type="password" value={form.currentPassword} onChange={set('currentPassword')} error={errors.currentPassword} />
+          <InputField label="New Password"     id="newPwd" type="password" value={form.newPassword}     onChange={set('newPassword')}     error={errors.newPassword}    helper="Min 8 characters" />
+          <InputField label="Confirm Password" id="cfmPwd" type="password" value={form.confirmPassword} onChange={set('confirmPassword')} error={errors.confirmPassword} />
         </div>
       </SectionCard>
     </div>
   );
 }
 
-// ─── Tab: Users ───────────────────────────────────────────────────────────────
+// ─── Users Tab ────────────────────────────────────────────────────────────────
 const INITIAL_USERS = [
-  { id: 1, name: 'Alex Johnson', email: 'alex.johnson@soc.internal', role: 'Analyst', status: 'Active' },
-  { id: 2, name: 'Sarah Chen', email: 'sarah.chen@soc.internal', role: 'Admin', status: 'Active' },
-  { id: 3, name: 'Mike Torres', email: 'mike.torres@soc.internal', role: 'Analyst', status: 'Inactive' },
-  { id: 4, name: 'Priya Nair', email: 'priya.nair@soc.internal', role: 'Analyst', status: 'Active' },
+  { id: 1, name: 'Alex Johnson', email: 'alex.johnson@soc.internal',  role: 'Analyst', status: 'Active' },
+  { id: 2, name: 'Sarah Chen',   email: 'sarah.chen@soc.internal',    role: 'Admin',   status: 'Active' },
+  { id: 3, name: 'Mike Torres',  email: 'mike.torres@soc.internal',   role: 'Analyst', status: 'Inactive' },
+  { id: 4, name: 'Priya Nair',   email: 'priya.nair@soc.internal',    role: 'Analyst', status: 'Active' },
 ];
 
-function UsersTab() {
-  const [users, setUsers] = useState(INITIAL_USERS);
-  const [showModal, setShowModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [form, setForm] = useState({ name: '', email: '', role: 'Analyst' });
-  const [errors, setErrors] = useState({});
+const AVATAR_COLORS = ['from-indigo-500 to-cyan-500','from-violet-500 to-pink-500','from-amber-500 to-orange-500','from-emerald-500 to-teal-500'];
 
-  const set = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+function UsersTab() {
+  const [users, setUsers]         = useState(INITIAL_USERS);
+  const [showAdd, setShowAdd]     = useState(false);
+  const [delTarget, setDelTarget] = useState(null);
+  const [form, setForm]           = useState({ name: '', email: '', role: 'Analyst' });
+  const [errors, setErrors]       = useState({});
+
+  const set = (f) => (e) => setForm({ ...form, [f]: e.target.value });
 
   const validate = () => {
-    const errs = {};
-    if (!form.name.trim()) errs.name = 'Name is required';
-    if (!form.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) errs.email = 'Valid email required';
-    return errs;
+    const e = {};
+    if (!form.name.trim()) e.name = 'Name is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email required';
+    return e;
   };
 
   const handleAdd = () => {
-    const errs = validate();
-    setErrors(errs);
-    if (Object.keys(errs).length === 0) {
+    const e = validate(); setErrors(e);
+    if (!Object.keys(e).length) {
       setUsers([...users, { id: Date.now(), ...form, status: 'Active' }]);
       setForm({ name: '', email: '', role: 'Analyst' });
-      setShowModal(false);
+      setShowAdd(false);
     }
   };
 
-  const handleDelete = () => {
-    setUsers(users.filter((u) => u.id !== deleteTarget.id));
-    setDeleteTarget(null);
-  };
-
-  const toggleStatus = (id) => {
-    setUsers(users.map((u) =>
-      u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u
-    ));
-  };
+  const toggleStatus = (id) =>
+    setUsers(users.map((u) => u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u));
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-slate-400">{users.length} users total</p>
-        <button
-          onClick={() => { setShowModal(true); setErrors({}); }}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition flex items-center gap-2"
-        >
-          <span>+</span> Add User
-        </button>
-      </div>
-
-      <SectionCard>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left border-b border-slate-700">
-                <th className="pb-3 text-slate-400 font-medium">Name</th>
-                <th className="pb-3 text-slate-400 font-medium hidden sm:table-cell">Email</th>
-                <th className="pb-3 text-slate-400 font-medium">Role</th>
-                <th className="pb-3 text-slate-400 font-medium">Status</th>
-                <th className="pb-3 text-slate-400 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700/50">
-              {users.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-700/20 transition">
-                  <td className="py-3 text-slate-100 font-medium">{u.name}</td>
-                  <td className="py-3 text-slate-400 hidden sm:table-cell">{u.email}</td>
-                  <td className="py-3">
-                    <Badge color={u.role === 'Admin' ? 'blue' : 'yellow'} text={u.role} />
-                  </td>
-                  <td className="py-3">
-                    <button onClick={() => toggleStatus(u.id)}>
-                      <Badge color={u.status === 'Active' ? 'green' : 'red'} text={u.status} />
-                    </button>
-                  </td>
-                  <td className="py-3 text-right">
-                    <button
-                      onClick={() => setDeleteTarget(u)}
-                      className="text-xs text-red-400 hover:text-red-300 transition font-medium"
-                    >
-                      Remove
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <SectionCard
+        title={`Team Members`} description={`${users.length} users in your workspace`}
+        icon={GroupsRoundedIcon}
+        action={
+          <button onClick={() => { setShowAdd(true); setErrors({}); }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition shadow-lg shadow-indigo-500/20">
+            <AddRoundedIcon style={{ fontSize: 14 }} /> Add User
+          </button>
+        }
+      >
+        <div className="space-y-2">
+          {users.map((u, i) => (
+            <div key={u.id}
+              className="flex items-center gap-4 p-3 rounded-xl bg-slate-800/50 border border-white/5 hover:border-indigo-500/20 hover:bg-slate-800/80 transition group">
+              {/* Avatar */}
+              <div className={`h-9 w-9 rounded-xl bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]} flex items-center justify-center text-xs font-bold text-white flex-shrink-0`}>
+                {u.name.charAt(0)}
+              </div>
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{u.name}</p>
+                <p className="text-xs text-slate-500 truncate">{u.email}</p>
+              </div>
+              {/* Role badge */}
+              <span className={`hidden sm:inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full border
+                ${u.role === 'Admin' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : 'bg-slate-700/60 text-slate-400 border-white/8'}`}>
+                {u.role}
+              </span>
+              {/* Status toggle */}
+              <button onClick={() => toggleStatus(u.id)}
+                className={`text-[10px] font-bold px-2.5 py-1 rounded-full border transition
+                  ${u.status === 'Active'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                    : 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20'}`}>
+                {u.status}
+              </button>
+              {/* Delete */}
+              <button onClick={() => setDelTarget(u)}
+                className="p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition opacity-0 group-hover:opacity-100">
+                <DeleteOutlineRoundedIcon style={{ fontSize: 16 }} />
+              </button>
+            </div>
+          ))}
         </div>
       </SectionCard>
 
       {/* Add User Modal */}
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add New User">
+      <Modal isOpen={showAdd} onClose={() => setShowAdd(false)} title="Add New Team Member">
         <div className="space-y-4">
-          <InputField label="Full Name" id="newName" value={form.name} onChange={set('name')} error={errors.name} placeholder="John Doe" />
-          <InputField label="Email" id="newEmail" type="email" value={form.email} onChange={set('email')} error={errors.email} placeholder="john@soc.internal" />
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Role</label>
-            <select
-              value={form.role}
-              onChange={set('role')}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="Analyst">Analyst</option>
-              <option value="Admin">Admin</option>
-            </select>
-          </div>
+          <InputField label="Full Name" id="nName"  value={form.name}  onChange={set('name')}  error={errors.name}  placeholder="Jane Smith" />
+          <InputField label="Email"     id="nEmail" type="email" value={form.email} onChange={set('email')} error={errors.email} placeholder="jane@soc.internal" />
+          <SelectField label="Role" id="nRole" value={form.role} onChange={set('role')}
+            options={[{ label: 'Analyst', value: 'Analyst' }, { label: 'Admin', value: 'Admin' }]} />
         </div>
-        <div className="mt-6 flex gap-3 justify-end">
-          <button onClick={() => setShowModal(false)} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">
-            Cancel
-          </button>
-          <button onClick={handleAdd} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition">
-            Add User
-          </button>
+        <div className="flex gap-3 justify-end mt-6">
+          <GhostBtn onClick={() => setShowAdd(false)}>Cancel</GhostBtn>
+          <PrimaryBtn onClick={handleAdd}>Add Member</PrimaryBtn>
         </div>
       </Modal>
 
       {/* Delete Confirm Modal */}
-      <Modal isOpen={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Remove User">
-        <p className="text-slate-300 text-sm mb-6">
-          Are you sure you want to remove <span className="font-semibold text-white">{deleteTarget?.name}</span>? This action cannot be undone.
-        </p>
+      <Modal isOpen={!!delTarget} onClose={() => setDelTarget(null)} title="Remove Member" size="sm">
+        <div className="flex items-start gap-3 mb-5">
+          <div className="p-2 bg-red-500/10 rounded-xl border border-red-500/20 flex-shrink-0">
+            <DeleteOutlineRoundedIcon className="text-red-400" style={{ fontSize: 20 }} />
+          </div>
+          <p className="text-sm text-slate-300 leading-relaxed">
+            Remove <span className="font-semibold text-white">{delTarget?.name}</span> from the workspace? This cannot be undone.
+          </p>
+        </div>
         <div className="flex gap-3 justify-end">
-          <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">
-            Cancel
-          </button>
-          <button onClick={handleDelete} className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-semibold rounded-lg transition">
-            Remove
-          </button>
+          <GhostBtn onClick={() => setDelTarget(null)}>Cancel</GhostBtn>
+          <GhostBtn danger onClick={() => { setUsers(users.filter(u => u.id !== delTarget.id)); setDelTarget(null); }}>Remove</GhostBtn>
         </div>
       </Modal>
     </div>
   );
 }
 
-// ─── Tab: Integrations ────────────────────────────────────────────────────────
+// ─── Integrations Tab ─────────────────────────────────────────────────────────
 const INTEGRATIONS = [
-  { id: 'siem', name: 'SIEM Platform', description: 'Connect to Splunk / QRadar for event ingestion', icon: '📡', connected: true, color: 'indigo' },
-  { id: 'slack', name: 'Slack Alerts', description: 'Send alert notifications to Slack channels', icon: '💬', connected: false, color: 'yellow' },
-  { id: 'virustotal', name: 'VirusTotal', description: 'Enrich IOCs with VirusTotal threat intelligence', icon: '🦠', connected: true, color: 'red' },
-  { id: 'misp', name: 'MISP', description: 'Pull threat feeds from MISP platform', icon: '🔗', connected: false, color: 'blue' },
+  { id: 'siem',       name: 'SIEM Platform',  desc: 'Splunk / QRadar event ingestion', Icon: WifiTetheringRoundedIcon,           connected: true,  color: 'indigo' },
+  { id: 'slack',      name: 'Slack',          desc: 'Push alert notifications to Slack', Icon: NotificationsNoneRoundedIcon,     connected: false, color: 'amber'  },
+  { id: 'virustotal', name: 'VirusTotal',     desc: 'IOC enrichment & threat analysis', Icon: ShieldRoundedIcon,                 connected: true,  color: 'violet' },
+  { id: 'misp',       name: 'MISP',           desc: 'Pull threat feeds from MISP',      Icon: SettingsInputCompositeRoundedIcon, connected: false, color: 'cyan'   },
 ];
 
 function IntegrationsTab() {
-  const [items, setItems] = useState(INTEGRATIONS);
-  const [apiKey, setApiKey] = useState('');
-  const [keyError, setKeyError] = useState('');
-  const [configTarget, setConfigTarget] = useState(null);
+  const [items, setItems]         = useState(INTEGRATIONS);
+  const [configTarget, setCT]     = useState(null);
+  const [apiKey, setApiKey]       = useState('');
+  const [apiKeyErr, setApiKeyErr] = useState('');
+  const [saved, setSaved]         = useState(false);
 
-  const toggle = (id) => {
-    setItems(items.map((i) => i.id === id ? { ...i, connected: !i.connected } : i));
-  };
+  const toggleConn = (id) => setItems(items.map(i => i.id === id ? { ...i, connected: !i.connected } : i));
 
-  const handleSaveKey = () => {
-    if (!apiKey.trim() || apiKey.length < 10) {
-      setKeyError('API key must be at least 10 characters');
-      return;
-    }
-    setKeyError('');
-    setApiKey('');
-    setConfigTarget(null);
+  const handleSave = () => {
+    if (!apiKey.trim() || apiKey.length < 10) { setApiKeyErr('API key must be at least 10 characters'); return; }
+    setApiKeyErr(''); setApiKey(''); setCT(null);
+    setSaved(true); setTimeout(() => setSaved(false), 3000);
   };
 
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-        {items.map((item) => (
-          <div key={item.id} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{item.icon}</span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-100">{item.name}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{item.description}</p>
+      <SaveBanner visible={saved} message="Integration configured successfully" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {items.map((item) => {
+          const c = COLOR_MAP[item.color] || COLOR_MAP.indigo;
+          return (
+            <div key={item.id} className={`bg-slate-800/40 border rounded-2xl p-5 hover:border-opacity-60 transition-all group
+              ${item.connected ? c.border : 'border-white/6'}`}>
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-xl border ${c.bg} ${c.border}`}>
+                    <item.Icon style={{ fontSize: 20 }} className={c.text} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white">{item.name}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-snug">{item.desc}</p>
+                  </div>
                 </div>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0
+                  ${item.connected ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-700/60 text-slate-500 border-white/8'}`}>
+                  {item.connected ? '● Connected' : '○ Off'}
+                </span>
               </div>
-              <Badge color={item.connected ? 'green' : 'red'} text={item.connected ? 'Connected' : 'Off'} />
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <button onClick={() => toggleConn(item.id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl border transition
+                    ${item.connected
+                      ? 'border-red-500/30 text-red-400 hover:bg-red-500/10'
+                      : `${c.border} ${c.text} hover:bg-indigo-500/10`}`}>
+                  {item.connected ? <><LinkOffRoundedIcon style={{ fontSize: 14 }} />Disconnect</> : <><LinkRoundedIcon style={{ fontSize: 14 }} />Connect</>}
+                </button>
+                <button onClick={() => { setCT(item); setApiKey(''); setApiKeyErr(''); }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl border border-white/10 text-slate-300 hover:text-white hover:bg-white/6 transition">
+                  <SettingsInputCompositeRoundedIcon style={{ fontSize: 14 }} /> Configure
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => toggle(item.id)}
-                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition border
-                  ${item.connected
-                    ? 'border-red-500/50 text-red-400 hover:bg-red-500/10'
-                    : 'border-indigo-500/50 text-indigo-400 hover:bg-indigo-500/10'}`}
-              >
-                {item.connected ? 'Disconnect' : 'Connect'}
-              </button>
-              <button
-                onClick={() => { setConfigTarget(item); setApiKey(''); setKeyError(''); }}
-                className="flex-1 py-1.5 text-xs font-semibold rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700 transition"
-              >
-                Configure
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Configure Modal */}
-      <Modal isOpen={!!configTarget} onClose={() => setConfigTarget(null)} title={`Configure ${configTarget?.name}`}>
+      <Modal isOpen={!!configTarget} onClose={() => setCT(null)} title={`Configure ${configTarget?.name}`}>
         <div className="space-y-4">
-          <InputField
-            label="API Key"
-            id="apiKey"
-            type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
-            error={keyError}
-            placeholder="Enter API key..."
-          />
+          <InputField label="API Key" id="apiKey" type="password" value={apiKey}
+            onChange={e => setApiKey(e.target.value)} error={apiKeyErr} placeholder="Paste your API key…" helper="Your key is stored encrypted and never displayed again." />
           <InputField label="Endpoint URL" id="endpoint" value="" onChange={() => {}} placeholder="https://api.example.com/v1" />
+          <SelectField label="Sync Frequency" id="syncFreq" value="5m"
+            onChange={() => {}} options={['1m', '5m', '15m', '30m', '1h'].map(v => ({ value: v, label: `Every ${v}` }))} />
         </div>
-        <div className="mt-6 flex gap-3 justify-end">
-          <button onClick={() => setConfigTarget(null)} className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium rounded-lg transition">
-            Cancel
-          </button>
-          <button onClick={handleSaveKey} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition">
-            Save Configuration
-          </button>
+        <div className="flex gap-3 justify-end mt-6">
+          <GhostBtn onClick={() => setCT(null)}>Cancel</GhostBtn>
+          <PrimaryBtn onClick={handleSave}>Save Configuration</PrimaryBtn>
         </div>
       </Modal>
     </div>
   );
 }
 
-// ─── Tab: Alerts ──────────────────────────────────────────────────────────────
+// ─── Alerts Tab ───────────────────────────────────────────────────────────────
 function AlertsTab() {
-  const [prefs, setPrefs] = useState({
-    emailAlerts: true,
-    slackAlerts: false,
-    criticalOnly: false,
-    autoEscalate: true,
-    soundAlerts: true,
-    weeklyReport: true,
-  });
-  const [thresholds, setThresholds] = useState({
-    criticalResponse: '15',
-    highResponse: '60',
-    retentionDays: '90',
-  });
-  const [thresholdErrors, setThresholdErrors] = useState({});
-  const [saved, setSaved] = useState(false);
+  const [channels, setChannels] = useState({ email: true, slack: false, sound: true });
+  const [behavior, setBehavior] = useState({ criticalOnly: false, autoEscalate: true, weeklyReport: true });
+  const [thresholds, setThresh] = useState({ criticalSla: '15', highSla: '60', retention: '90' });
+  const [errors, setErrors]     = useState({});
+  const [saved, setSaved]       = useState(false);
 
-  const setThreshold = (field) => (e) => setThresholds({ ...thresholds, [field]: e.target.value });
-
-  const validateThresholds = () => {
-    const errs = {};
-    if (!thresholds.criticalResponse || isNaN(thresholds.criticalResponse) || Number(thresholds.criticalResponse) < 1)
-      errs.criticalResponse = 'Must be a positive number';
-    if (!thresholds.highResponse || isNaN(thresholds.highResponse) || Number(thresholds.highResponse) < 1)
-      errs.highResponse = 'Must be a positive number';
-    if (!thresholds.retentionDays || isNaN(thresholds.retentionDays) || Number(thresholds.retentionDays) < 7)
-      errs.retentionDays = 'Minimum 7 days';
-    return errs;
-  };
+  const setT = (f) => (e) => setThresh({ ...thresholds, [f]: e.target.value });
 
   const handleSave = () => {
-    const errs = validateThresholds();
-    setThresholdErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    }
+    const e = {};
+    if (!thresholds.criticalSla || isNaN(thresholds.criticalSla) || +thresholds.criticalSla < 1)  e.criticalSla = 'Must be ≥ 1';
+    if (!thresholds.highSla     || isNaN(thresholds.highSla)     || +thresholds.highSla < 1)      e.highSla     = 'Must be ≥ 1';
+    if (!thresholds.retention   || isNaN(thresholds.retention)   || +thresholds.retention < 7)    e.retention   = 'Minimum 7 days';
+    setErrors(e);
+    if (!Object.keys(e).length) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
   };
-
-  const togglePref = (key) => (val) => setPrefs({ ...prefs, [key]: val });
 
   return (
     <div>
-      {saved && (
-        <div className="mb-4 px-4 py-3 bg-emerald-500/20 border border-emerald-500/40 rounded-lg text-emerald-400 text-sm">
-          ✓ Alert settings saved
-        </div>
-      )}
-
-      <SectionCard title="Notification Channels" description="Choose how you receive alert notifications.">
-        <Toggle label="Email Alerts" description="Send alerts to your registered email" checked={prefs.emailAlerts} onChange={togglePref('emailAlerts')} />
-        <Toggle label="Slack Notifications" description="Push alerts to your Slack channel" checked={prefs.slackAlerts} onChange={togglePref('slackAlerts')} />
-        <Toggle label="Browser Sound Alerts" description="Play a sound for new critical alerts" checked={prefs.soundAlerts} onChange={togglePref('soundAlerts')} />
+      <SaveBanner visible={saved} message="Alert settings saved" />
+      <SectionCard title="Notification Channels" description="Choose where alerts are delivered" icon={NotificationsNoneRoundedIcon}>
+        <Toggle label="Email Alerts"    description="Send critical alerts to your registered email" checked={channels.email} onChange={v => setChannels({ ...channels, email: v })} />
+        <Toggle label="Slack"           description="Push notifications to your configured Slack channel" checked={channels.slack} onChange={v => setChannels({ ...channels, slack: v })} />
+        <Toggle label="Browser Sound"   description="Play an audio chime when new critical alerts arrive" checked={channels.sound} onChange={v => setChannels({ ...channels, sound: v })} />
       </SectionCard>
 
-      <SectionCard title="Alert Behaviour" description="Control how alerts are processed.">
-        <Toggle label="Critical Only Mode" description="Only notify for critical severity alerts" checked={prefs.criticalOnly} onChange={togglePref('criticalOnly')} />
-        <Toggle label="Auto-Escalate" description="Automatically escalate unresolved alerts after SLA" checked={prefs.autoEscalate} onChange={togglePref('autoEscalate')} />
-        <Toggle label="Weekly Summary Report" description="Receive a weekly email summary of all alerts" checked={prefs.weeklyReport} onChange={togglePref('weeklyReport')} />
+      <SectionCard title="Alert Behaviour" description="Control escalation and filtering logic" icon={ShieldRoundedIcon}>
+        <Toggle label="Critical Only Mode"    description="Suppress notifications for medium and low severity alerts"  checked={behavior.criticalOnly}   onChange={v => setBehavior({ ...behavior, criticalOnly:   v })} />
+        <Toggle label="Auto-Escalate"         description="Escalate unresolved alerts when SLA threshold is exceeded"  checked={behavior.autoEscalate}   onChange={v => setBehavior({ ...behavior, autoEscalate:   v })} />
+        <Toggle label="Weekly Summary Report" description="Receive a weekly email digest of all alert activity"        checked={behavior.weeklyReport}   onChange={v => setBehavior({ ...behavior, weeklyReport:   v })} />
       </SectionCard>
 
-      <SectionCard title="Thresholds & Retention" description="Set response time SLAs and data retention policies.">
+      <SectionCard title="SLA Thresholds & Retention" description="Set response time SLAs and data retention policies"
+        icon={SpeedRoundedIcon} action={<PrimaryBtn onClick={handleSave}>Save</PrimaryBtn>}>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <InputField
-            label="Critical SLA (mins)"
-            id="criticalResponse"
-            type="number"
-            value={thresholds.criticalResponse}
-            onChange={setThreshold('criticalResponse')}
-            error={thresholdErrors.criticalResponse}
-            placeholder="15"
-          />
-          <InputField
-            label="High SLA (mins)"
-            id="highResponse"
-            type="number"
-            value={thresholds.highResponse}
-            onChange={setThreshold('highResponse')}
-            error={thresholdErrors.highResponse}
-            placeholder="60"
-          />
-          <InputField
-            label="Data Retention (days)"
-            id="retentionDays"
-            type="number"
-            value={thresholds.retentionDays}
-            onChange={setThreshold('retentionDays')}
-            error={thresholdErrors.retentionDays}
-            placeholder="90"
-          />
-        </div>
-        <div className="mt-5 flex justify-end">
-          <button
-            onClick={handleSave}
-            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition"
-          >
-            Save Alert Settings
-          </button>
+          <InputField label="Critical SLA (mins)" id="critSla"  type="number" value={thresholds.criticalSla} onChange={setT('criticalSla')} error={errors.criticalSla} placeholder="15" />
+          <InputField label="High SLA (mins)"     id="highSla"  type="number" value={thresholds.highSla}     onChange={setT('highSla')}     error={errors.highSla}     placeholder="60" />
+          <InputField label="Retention (days)"    id="retention" type="number" value={thresholds.retention}  onChange={setT('retention')}   error={errors.retention}   placeholder="90" helper="Min 7 days" />
         </div>
       </SectionCard>
     </div>
   );
 }
 
-// ─── Tab: Dashboard ───────────────────────────────────────────────────────────
+// ─── Dashboard Tab ────────────────────────────────────────────────────────────
 function DashboardTab() {
-  const [settings, setSettings] = useState({
-    autoRefresh: true,
-    compactMode: false,
-    showAvatars: true,
-    darkCharts: true,
-    stickyHeader: true,
-    animationsEnabled: true,
-  });
-  const [layout, setLayout] = useState({
-    defaultPage: 'Overview',
-    refreshInterval: '30',
-    dateFormat: 'MM/DD/YYYY',
-    timezone: 'UTC',
-  });
-  const [layoutErrors, setLayoutErrors] = useState({});
-  const [saved, setSaved] = useState(false);
+  const [display, setDisplay] = useState({ autoRefresh: true, compact: false, avatars: true, darkCharts: true, stickyHeader: true, animations: true });
+  const [layout, setLayout]   = useState({ defaultPage: 'Live Monitor', refreshInterval: '30', dateFormat: 'DD/MM/YYYY', timezone: 'UTC' });
+  const [errors, setErrors]   = useState({});
+  const [saved, setSaved]     = useState(false);
 
-  const setL = (field) => (e) => setLayout({ ...layout, [field]: e.target.value });
-  const toggleSetting = (key) => (val) => setSettings({ ...settings, [key]: val });
-
-  const validateLayout = () => {
-    const errs = {};
-    const ri = Number(layout.refreshInterval);
-    if (!layout.refreshInterval || isNaN(ri) || ri < 10 || ri > 3600)
-      errs.refreshInterval = 'Value must be 10–3600 seconds';
-    return errs;
-  };
+  const setL = (f) => (e) => setLayout({ ...layout, [f]: e.target.value });
+  const toggleD = (k) => (v) => setDisplay({ ...display, [k]: v });
 
   const handleSave = () => {
-    const errs = validateLayout();
-    setLayoutErrors(errs);
-    if (Object.keys(errs).length === 0) {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    }
+    const e = {};
+    const ri = Number(layout.refreshInterval);
+    if (!layout.refreshInterval || isNaN(ri) || ri < 10 || ri > 3600) e.refreshInterval = '10–3600 seconds';
+    setErrors(e);
+    if (!Object.keys(e).length) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
   };
 
   return (
     <div>
-      {saved && (
-        <div className="mb-4 px-4 py-3 bg-emerald-500/20 border border-emerald-500/40 rounded-lg text-emerald-400 text-sm">
-          ✓ Dashboard settings saved
-        </div>
-      )}
-
-      <SectionCard title="Display Preferences" description="Customize how the dashboard looks and behaves.">
-        <Toggle label="Auto-Refresh Data" description="Automatically refresh widgets on the dashboard" checked={settings.autoRefresh} onChange={toggleSetting('autoRefresh')} />
-        <Toggle label="Compact Mode" description="Reduce padding and card sizes for a denser layout" checked={settings.compactMode} onChange={toggleSetting('compactMode')} />
-        <Toggle label="Show User Avatars" description="Display profile avatars in comments and tables" checked={settings.showAvatars} onChange={toggleSetting('showAvatars')} />
-        <Toggle label="Dark Charts" description="Use dark-themed chart backgrounds" checked={settings.darkCharts} onChange={toggleSetting('darkCharts')} />
-        <Toggle label="Sticky Header" description="Keep the top navigation visible while scrolling" checked={settings.stickyHeader} onChange={toggleSetting('stickyHeader')} />
-        <Toggle label="UI Animations" description="Enable smooth transitions and hover animations" checked={settings.animationsEnabled} onChange={toggleSetting('animationsEnabled')} />
+      <SaveBanner visible={saved} message="Dashboard settings saved" />
+      <SectionCard title="Display Preferences" description="Customize the look and feel of your workspace" icon={TuneRoundedIcon}>
+        <Toggle label="Auto-Refresh"   description="Automatically poll the backend for updated data every 30s" checked={display.autoRefresh}   onChange={toggleD('autoRefresh')} />
+        <Toggle label="Compact Mode"   description="Reduce card padding for a denser, information-rich layout"  checked={display.compact}       onChange={toggleD('compact')} />
+        <Toggle label="User Avatars"   description="Show profile avatar initials in tables and comments"        checked={display.avatars}       onChange={toggleD('avatars')} />
+        <Toggle label="Dark Charts"    description="Use dark-themed chart backgrounds matching the dashboard"   checked={display.darkCharts}    onChange={toggleD('darkCharts')} />
+        <Toggle label="Sticky Header"  description="Keep the navigation bar pinned while scrolling the page"   checked={display.stickyHeader}  onChange={toggleD('stickyHeader')} />
+        <Toggle label="UI Animations"  description="Enable smooth transitions, hover effects and micro-animations" checked={display.animations} onChange={toggleD('animations')} />
       </SectionCard>
 
-      <SectionCard title="Layout & Locale" description="Set default views, refresh rate, and time format.">
+      <SectionCard title="Layout & Locale" description="Default page, refresh interval and time settings"
+        icon={SpeedRoundedIcon} action={<PrimaryBtn onClick={handleSave}>Save Layout</PrimaryBtn>}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Default Landing Page</label>
-            <select
-              value={layout.defaultPage}
-              onChange={setL('defaultPage')}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {['Overview', 'Dashboards', 'IOC Feed', 'Threat Actors', 'Intel Reports'].map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-          <InputField
-            label="Refresh Interval (seconds)"
-            id="refreshInterval"
-            type="number"
-            value={layout.refreshInterval}
-            onChange={setL('refreshInterval')}
-            error={layoutErrors.refreshInterval}
-            placeholder="30"
-          />
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Date Format</label>
-            <select
-              value={layout.dateFormat}
-              onChange={setL('dateFormat')}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'].map((f) => (
-                <option key={f} value={f}>{f}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1">Timezone</label>
-            <select
-              value={layout.timezone}
-              onChange={setL('timezone')}
-              className="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {['UTC', 'US/Eastern', 'US/Pacific', 'Europe/London', 'Asia/Kolkata'].map((tz) => (
-                <option key={tz} value={tz}>{tz}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <div className="mt-5 flex justify-end">
-          <button
-            onClick={handleSave}
-            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition"
-          >
-            Save Dashboard Settings
-          </button>
+          <SelectField label="Default Landing Page" id="defPage" value={layout.defaultPage} onChange={setL('defaultPage')}
+            options={['Live Monitor', 'IOC Workbench', 'Investigations', 'Actor Profiles', 'Intel Reports']} />
+          <InputField  label="Refresh Interval (s)" id="refInt" type="number" value={layout.refreshInterval} onChange={setL('refreshInterval')} error={errors.refreshInterval} placeholder="30" helper="Allowed range: 10–3600 seconds" />
+          <SelectField label="Date Format" id="dateFmt" value={layout.dateFormat} onChange={setL('dateFormat')}
+            options={['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD']} />
+          <SelectField label="Timezone" id="tz" value={layout.timezone} onChange={setL('timezone')}
+            options={['UTC', 'US/Eastern', 'US/Pacific', 'Europe/London', 'Asia/Kolkata', 'Asia/Tokyo']} />
         </div>
       </SectionCard>
     </div>
   );
 }
 
-// ─── Main Settings Page ───────────────────────────────────────────────────────
-const TAB_COMPONENTS = {
-  Profile: ProfileTab,
-  Users: UsersTab,
-  Integrations: IntegrationsTab,
-  Alerts: AlertsTab,
-  Dashboard: DashboardTab,
-};
-
-const TAB_ICONS = {
-  Profile: '👤',
-  Users: '👥',
-  Integrations: '🔌',
-  Alerts: '🔔',
-  Dashboard: '⚙️',
-};
+// ─── Main Page ────────────────────────────────────────────────────────────────
+const TAB_COMPONENTS = { Profile: ProfileTab, Users: UsersTab, Integrations: IntegrationsTab, Alerts: AlertsTab, Dashboard: DashboardTab };
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('Profile');
   const ActiveComponent = TAB_COMPONENTS[activeTab];
+  const activeNav = NAV_ITEMS.find(n => n.id === activeTab);
+  const c = COLOR_MAP[activeNav?.color] || COLOR_MAP.indigo;
 
   return (
-    <div className="min-h-screen bg-slate-900 p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen pb-10">
+      {/* Page header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-black text-white tracking-tight">Settings</h1>
+        <p className="text-slate-400 text-sm mt-1">Manage your account, team, integrations and preferences.</p>
+      </div>
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">Settings</h1>
-          <p className="text-slate-400 text-sm mt-1">Manage your account, users, integrations and preferences.</p>
+      <div className="flex gap-6 items-start">
+        {/* ── Sidebar Nav ────────────────────────────────────────────────── */}
+        <div className="w-56 flex-shrink-0">
+          <div className="bg-slate-800/50 border border-white/6 rounded-2xl p-2 space-y-0.5 sticky top-4">
+            {NAV_ITEMS.map((item) => {
+              const ic = COLOR_MAP[item.color] || COLOR_MAP.indigo;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left
+                    ${isActive ? `${ic.bg} ${ic.text} ${ic.border} border` : 'text-slate-400 hover:text-white hover:bg-white/5 border border-transparent'}`}
+                >
+                  <div className={`p-1 rounded-lg ${isActive ? ic.bg : 'bg-transparent'} transition-colors`}>
+                    <item.icon style={{ fontSize: 16 }} />
+                  </div>
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 bg-slate-800/80 border border-slate-700/50 rounded-xl p-1 mb-6 overflow-x-auto">
-          {TABS.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-2 flex-1 min-w-max justify-center py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200
-                ${activeTab === tab
-                  ? 'bg-indigo-600 text-white shadow'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'}`}
-            >
-              <span>{TAB_ICONS[tab]}</span>
-              <span>{tab}</span>
-            </button>
-          ))}
-        </div>
+        {/* ── Content Area ────────────────────────────────────────────────── */}
+        <div className="flex-1 min-w-0">
+          {/* Section title bar */}
+          <div className={`flex items-center gap-3 mb-5 p-4 rounded-2xl border ${c.bg} ${c.border}`}>
+            <div className={`p-2 rounded-xl border ${c.bg} ${c.border}`}>
+              <activeNav.icon style={{ fontSize: 20 }} className={c.text} />
+            </div>
+            <div>
+              <h2 className={`text-base font-bold ${c.text}`}>{activeNav.label}</h2>
+              <p className="text-xs text-slate-500">
+                {activeTab === 'Profile'      && 'Update your personal information and security settings'}
+                {activeTab === 'Users'        && 'Manage team members, roles and access permissions'}
+                {activeTab === 'Integrations' && 'Connect third-party services and manage API keys'}
+                {activeTab === 'Alerts'       && 'Configure alert notifications, SLA thresholds and retention'}
+                {activeTab === 'Dashboard'    && 'Customize display preferences, refresh intervals and locale'}
+              </p>
+            </div>
+          </div>
 
-        {/* Tab Content */}
-        <div>
           <ActiveComponent />
         </div>
       </div>
