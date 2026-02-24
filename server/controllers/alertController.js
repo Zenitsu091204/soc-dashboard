@@ -72,6 +72,10 @@ const updateAlertStatus = async (req, res) => {
     });
     res.json(alert);
   } catch (error) {
+    // P2025 = Record to update not found
+    if (error.code === 'P2025') {
+      return res.status(404).json({ message: 'Alert not found' });
+    }
     console.error('Update alert error:', error);
     res.status(500).json({ message: 'Server error' });
   }

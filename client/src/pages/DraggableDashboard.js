@@ -19,7 +19,29 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import './DraggableDashboard.css';
 
-// Default layout configuration
+// WidgetWrapper defined OUTSIDE the component to avoid re-creation on every render
+const WidgetWrapper = ({ children, className, style, editMode, ...props }) => {
+  return (
+    <div
+      style={style}
+      className={`${className} widget-wrapper ${editMode ? 'edit-mode' : ''}`}
+      onMouseDown={props.onMouseDown}
+      onMouseUp={props.onMouseUp}
+      onTouchEnd={props.onTouchEnd}
+      ref={props.innerRef}
+      {...props}
+    >
+      {editMode && (
+        <Box className="drag-handle">
+          <DragIndicatorIcon fontSize="small" />
+        </Box>
+      )}
+      {children}
+    </div>
+  );
+};
+
+
 const defaultLayouts = {
   lg: [
     { i: 'stat1', x: 0, y: 0, w: 3, h: 2, minW: 2, minH: 2 },
@@ -57,6 +79,7 @@ const DraggableDashboard = () => {
   const [editMode, setEditMode] = useState(false);
   const [layouts, setLayouts] = useState(defaultLayouts);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   
@@ -93,9 +116,10 @@ const DraggableDashboard = () => {
           setLoading(false);
           setAnnouncement('Dashboard loaded successfully.');
         }
-      } catch (error) {
-        console.error("Failed to load dashboard:", error);
+      } catch (err) {
+        console.error('Failed to load dashboard:', err);
         if (isMounted) {
+          setError('Failed to load dashboard data. Please try again.');
           setLoading(false);
           setAnnouncement('Failed to load dashboard.');
         }
@@ -169,26 +193,6 @@ const DraggableDashboard = () => {
     ? Math.min(100, Math.round(((criticalAlerts * 10 + highAlerts * 5) / totalAlerts) * 10))
     : 0;
 
-  const WidgetWrapper = ({ children, className, style, ...props }) => {
-    return (
-      <div 
-        style={style} 
-        className={`${className} widget-wrapper ${editMode ? 'edit-mode' : ''}`}
-        onMouseDown={props.onMouseDown}
-        onMouseUp={props.onMouseUp}
-        onTouchEnd={props.onTouchEnd}
-        ref={props.innerRef} 
-        {...props}
-      >
-        {editMode && (
-          <Box className="drag-handle">
-            <DragIndicatorIcon fontSize="small" />
-          </Box>
-        )}
-        {children}
-      </div>
-    );
-  };
 
   if (loading) {
      return (
@@ -196,6 +200,21 @@ const DraggableDashboard = () => {
            <CircularProgress size={60} thickness={4} sx={{ color: '#6366F1' }} />
         </Box>
      );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '80vh', gap: 2 }}>
+        <Typography color="error" variant="h6">⚠ {error}</Typography>
+        <Button
+          variant="contained"
+          onClick={() => { setError(null); setLoading(true); }}
+          sx={{ background: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' }}
+        >
+          Retry
+        </Button>
+      </Box>
+    );
   }
 
   return (

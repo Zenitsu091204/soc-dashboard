@@ -9,7 +9,8 @@ const storage = {
   },
   getUser: () => {
     const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    if (!userStr) return null;
+    try { return JSON.parse(userStr); } catch { return null; }
   },
   setUser: (user, remember = false) => {
     const userStr = JSON.stringify(user);

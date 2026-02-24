@@ -13,16 +13,11 @@ const formatDate = (dateString) => {
   });
 };
 
-const getSeverityFromScore = (score) => {
-  if (score >= 90) return { label: 'Critical', color: 'bg-red-500/10 text-red-400 border-red-500/20' };
-  if (score >= 70) return { label: 'High', color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' };
-  if (score >= 40) return { label: 'Medium', color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' };
-  return { label: 'Low', color: 'bg-green-500/10 text-green-400 border-green-500/20' };
-};
 
 export default function IOCFeedPage() {
   const [iocs, setIocs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
 
@@ -31,13 +26,13 @@ export default function IOCFeedPage() {
       try {
         const { data } = await api.get('/intel/iocs');
         setIocs(data);
-      } catch (error) {
-        console.error('Failed to fetch IOCs', error);
+      } catch (err) {
+        console.error('Failed to fetch IOCs', err);
+        setError('Failed to load IOC feed. Please try again.');
       } finally {
         setLoading(false);
       }
     };
-
     fetchIocs();
   }, []);
 
@@ -50,9 +45,18 @@ export default function IOCFeedPage() {
     });
   }, [iocs, query, typeFilter]);
 
-  if (loading) {
-     return <div className="text-white/50 p-6">Loading IOC feed...</div>;
-  }
+  if (loading) return <div className="text-white/50 p-6">Loading IOC feed...</div>;
+
+  if (error) return (
+    <div className="flex flex-col items-center justify-center py-20 gap-3">
+      <div className="text-red-400 text-4xl">⚠</div>
+      <p className="text-red-400 font-semibold">{error}</p>
+      <button
+        onClick={() => { setError(null); setLoading(true); }}
+        className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"
+      >Retry</button>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -104,7 +108,6 @@ export default function IOCFeedPage() {
             <div className="p-8 text-center text-slate-500">No IOCs found</div>
           ) : (
             filtered.map((ioc) => {
-              const severity = getSeverityFromScore(ioc.reputation || 0);
               return (
                 <div key={ioc.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-white/5 transition-colors group">
                   <div className="col-span-2">

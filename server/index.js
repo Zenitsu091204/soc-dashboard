@@ -4,21 +4,43 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
+// ── Startup validation ────────────────────────────────────────────────────────
+if (!process.env.JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET is not set. Server will not start.');
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// ── Security middleware ───────────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors());
+
+// Restrict CORS to the frontend origin only
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:3000').split(',');
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow server-to-server requests (no origin) or listed origins
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin '${origin}' not allowed`));
+    }
+  },
+  credentials: true,
+}));
+
+// ── General middleware ────────────────────────────────────────────────────────
 app.use(morgan('dev'));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
+// ── Routes ────────────────────────────────────────────────────────────────────
 const authRoutes = require('./routes/authRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const intelRoutes = require('./routes/intelRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/intel', intelRoutes);
@@ -27,11 +49,37 @@ app.get('/', (req, res) => {
   res.json({ message: 'SOC Dashboard API is running' });
 });
 
-// Error Handling
+// ── Error handling ────────────────────────────────────────────────────────────
 app.use(notFound);
 app.use(errorHandler);
 
-// Start Server
-app.listen(PORT, () => {
+// ── Unhandled rejection guard ─────────────────────────────────────────────────
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Promise Rejection at:', promise, 'reason:', reason);
+  // Do NOT exit — let the current request fail gracefully
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1); // Uncaught exceptions leave the process in an unknown state
+});
+
+// ── Start server ──────────────────────────────────────────────────────────────
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// ── Graceful shutdown (SIGTERM / SIGINT) ──────────────────────────────────────
+const prisma = require('./utils/prisma');
+
+const shutdown = async (signal) => {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+  server.close(async () => {
+    await prisma.$disconnect();
+    console.log('Prisma disconnected. Process exiting.');
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

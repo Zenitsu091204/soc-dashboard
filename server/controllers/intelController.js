@@ -10,7 +10,7 @@ const getThreatActors = async (req, res) => {
     });
     res.json(actors);
   } catch (error) {
-    console.error(error);
+    console.error('Get threat actors error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -25,7 +25,7 @@ const getIocs = async (req, res) => {
     });
     res.json(iocs);
   } catch (error) {
-    console.error(error);
+    console.error('Get IOCs error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

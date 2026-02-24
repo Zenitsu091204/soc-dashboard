@@ -43,20 +43,27 @@ function buildAssetData(alerts) {
   return data.slice(0, 6);
 }
 
+/**
+ * Gradient defs rendered ONCE into the SVG — prevents per-bar re-definition
+ * which caused the blinking / flickering effect.
+ */
+const GradientDefs = () => (
+  <defs>
+    {Object.entries(SEV_COLORS).map(([sev, color]) => (
+      <linearGradient key={sev} id={`bar-grad-${sev}`} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor={color} stopOpacity={0.9} />
+        <stop offset="100%" stopColor={color} stopOpacity={0.4} />
+      </linearGradient>
+    ))}
+  </defs>
+);
+
+/** Bar shape — reads the already-defined gradient ID, does NOT redefine it */
 const CustomBar = (props) => {
   const { x, y, width, height, topSev } = props;
-  const color = SEV_COLORS[topSev] || '#6366f1';
-  const gradient = `bar-grad-${topSev}`;
+  const gradient = `bar-grad-${topSev || 'low'}`;
   return (
-    <g>
-      <defs>
-        <linearGradient id={gradient} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor={color} stopOpacity={0.9} />
-          <stop offset="100%" stopColor={color} stopOpacity={0.4} />
-        </linearGradient>
-      </defs>
-      <rect x={x} y={y} width={width} height={height} fill={`url(#${gradient})`} rx={4} ry={4} />
-    </g>
+    <rect x={x} y={y} width={width} height={height} fill={`url(#${gradient})`} rx={4} ry={4} />
   );
 };
 
@@ -65,7 +72,7 @@ const BarTooltip = ({ active, payload }) => {
   const d = payload[0]?.payload;
   return (
     <div className="bg-slate-900/95 border border-white/10 rounded-xl p-3 shadow-xl text-xs">
-      <p className="text-white font-semibold mb-1">{payload[0]?.payload?.entity}</p>
+      <p className="text-white font-semibold mb-1">{d?.entity}</p>
       <p className="text-slate-400">{payload[0]?.value} alerts</p>
       <span className="capitalize font-bold mt-1 block" style={{ color: SEV_COLORS[d?.topSev] }}>
         Peak: {d?.topSev}
@@ -101,6 +108,8 @@ export default function TopAssetsCard({ alerts = [] }) {
               data={data}
               margin={{ left: 0, right: 36, top: 0, bottom: 0 }}
             >
+              {/* Gradient definitions live here — rendered once, never re-created per bar */}
+              <GradientDefs />
               <XAxis type="number" hide />
               <YAxis
                 type="category"
@@ -116,6 +125,7 @@ export default function TopAssetsCard({ alerts = [] }) {
                 barSize={16}
                 shape={<CustomBar />}
                 background={{ fill: 'rgba(255,255,255,0.03)', radius: 4 }}
+                isAnimationActive={false}
               >
                 <LabelList
                   dataKey="count"

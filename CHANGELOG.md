@@ -7,6 +7,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.2.0] - 2026-02-24 | 17:44 IST
+
+### Fixed — Backend Security & Hardening Pass
+
+#### 🔴 Security Fix
+- **Privilege escalation via `/api/auth/register`** — The `role` field was accepted from the request body, allowing any user to self-register as `admin`. The field is now removed from the Zod schema entirely. All self-registered users are hardcoded to `analyst`. Admin accounts must be created via database seeding
+  - **File:** `controllers/authController.js`
+
+#### 🔴 Critical Fix
+- **`PATCH /api/alerts/:id` returned 500 on unknown ID** — Prisma throws error code `P2025` when a record to update is not found. This was falling through to a generic 500 handler. Now explicitly caught and returns **404** `"Alert not found"`
+  - **File:** `controllers/alertController.js`
+
+#### 🟠 Bug Fixes
+- **`authMiddleware.js` no-token path missing `return`** — The `if (!token)` branch sent a 401 response but had no `return`, causing implicit fall-through to undefined behaviour. Added `return` to the response call
+  - **File:** `middleware/authMiddleware.js`
+- **`cors()` allowed all origins** — `app.use(cors())` with no configuration accepted requests from any domain. Now reads `CLIENT_ORIGIN` from `.env` (default `http://localhost:3000`) and rejects all other origins
+  - **File:** `index.js`, `.env`
+- **No `JWT_SECRET` startup validation** — If `JWT_SECRET` was missing from `.env`, the server started fine but failed silently at the first token operation. Now validated at boot with `process.exit(1)` and a `FATAL` message if missing
+  - **File:** `index.js`
+
+#### 🟡 Quality Improvements
+- **Unhandled rejection / uncaught exception handlers** — Added `process.on('unhandledRejection')` and `process.on('uncaughtException')` to prevent invisible server crashes
+- **Graceful shutdown** — `SIGTERM` and `SIGINT` signals now close the HTTP server and call `prisma.$disconnect()` before exiting, preventing connection leaks
+- **`express.urlencoded({ extended: false })`** — Added alongside `express.json()` to correctly parse form-encoded request bodies
+- **`intelController.js` bare error logging** — `console.error(error)` calls replaced with descriptive context messages (`'Get threat actors error:'`, `'Get IOCs error:'`) matching the pattern used in other controllers
+  - **File:** `index.js`, `controllers/intelController.js`
+
+---
+
+## [3.1.0] - 2026-02-24 | 17:22 IST
+
+### Fixed — Comprehensive Bug-Fix & Hardening Pass
+
+#### 🐛 Critical Fixes (previously landed)
+- **`Math.random()` in render** — `OverviewPage` confidence calculation moved into `useMemo`; eliminated flicker on every re-render
+- **`key={index}` on lists** — `GlobalSearch` result items now keyed by unique field, fixing React reconciliation issues
+- **Unsafe `JSON.parse`** — `storage.js` now wraps `JSON.parse` in `try/catch`; prevents `AuthProvider` crash on malformed `localStorage` data
+- **Null `actor.id` crash** — `ThreatActorsPage` no longer crashes when `actor.id` is `null`
+- **Hardcoded API URL** — `services/api.js` now reads from `REACT_APP_API_URL` env variable with `localhost:5000` fallback
+- **`WidgetWrapper` inside render** — Component definition moved outside `DraggableDashboard` to prevent remount on every render
+
+#### 🛠️ Moderate Fixes & Quality Improvements
+- **User-facing error states** — All 5 data-fetching pages now show a styled error banner with a Retry button on API failure:
+  - `OverviewPage` — inline red error banner at the top; does not replace entire page
+  - `IOCFeedPage`, `SearchPage` — full-page error state with retry
+  - `ThreatActorsPage`, `DraggableDashboard` — full-page error state with retry
+- **Global Search caching** — Data fetched **once per dialog session** (was 3 full API calls per keystroke). `useRef` cache stores raw data; subsequent keystrokes filter client-side only. `AbortController` cancels previous in-flight requests
+- **Dead `react-loadable` removed** — All `Loadable()` exports deleted from `performanceUtils.js`; `App.js` already handles code-splitting via `React.lazy`. `LoadingComponent` exported for reuse
+- **Threat Actor View Profile modal** — Clicking "View Profile →" opens a detail modal showing description, origin, type, last seen, actor ID, and motive
+- **401 redirect upgraded** — Replaced `window.location.href = '/login'` (full page reload) with `window.dispatchEvent(new CustomEvent('auth:unauthorized'))`. `AuthContext` listens for this event, clears user state, and shows a `"Session Expired"` toast — navigation handled by React Router without reload
+- **Memoize cache capped** — `memoize()` utility now accepts `maxSize` (default 100) and evicts the oldest LRU entry to prevent unbounded memory growth
+- **`performance.timing` modernised** — Deprecated `window.performance.timing` replaced with `performance.getEntriesByType('navigation')` in `logPerformanceMetrics`
+
+#### ✨ Visual Fix
+- **Top Affected Assets blinking** — `TopAssetsCard` bar chart numbers no longer flicker/blink. Root cause: `<linearGradient>` definitions were recreated inside every `CustomBar` render, causing SVG `id` collisions. Fix: Gradient `<defs>` extracted into a single `GradientDefs` component rendered once at `BarChart` level. Also added `isAnimationActive={false}` to suppress redundant entrance re-renders
+
+#### 🧹 Code Quality
+- Removed all stale comments referencing dead code paths
+- Consistent `try/catch` error logging across all pages (`'Failed to load X', err` pattern)
+- `ThreatActorsPage` fully rewritten with clean JSX structure (was malformed — unclosed divs, misplaced empty state)
+- `AuthContext` `useEffect` now returns a cleanup function removing the `auth:unauthorized` event listener
+
+- **Files changed:** `GlobalSearch.js`, `ThreatActorsPage.js`, `OverviewPage.js`, `IOCFeedPage.js`, `SearchPage.js`, `DraggableDashboard.js`, `TopAssetsCard.js`, `AuthContext.js`, `services/api.js`, `utils/storage.js`, `utils/performanceUtils.js`
+
+---
+
 ## [3.0.0] - 2026-02-23 | 12:15 IST
 
 ### Added — Premium Settings Page Redesign

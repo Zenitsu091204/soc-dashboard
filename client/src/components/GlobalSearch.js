@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Box,
   TextField,
@@ -25,6 +25,9 @@ const GlobalSearch = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState({ alerts: [], iocs: [], threatActors: [] });
   const [loading, setLoading] = useState(false);
+  // Cache raw data so we only fetch once per dialog open, not per keystroke
+  const dataCache = useRef(null);
+  const abortControllerRef = useRef(null);
 
   // Keyboard shortcut handler (Cmd+K or Ctrl+K)
   useEffect(() => {
@@ -47,7 +50,7 @@ const GlobalSearch = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Search function using API
+  // Search function — fetches data once and filters client-side on subsequent searches
   const performSearch = useCallback(async (searchQuery) => {
     if (!searchQuery.trim()) {
       setResults({ alerts: [], iocs: [], threatActors: [] });
@@ -56,40 +59,45 @@ const GlobalSearch = () => {
 
     setLoading(true);
     try {
-      // Parallel fetch from different endpoints
-      // In a real app, you might have a dedicated /api/search endpoint
-      // Here we will fetch all and filter client side for now, OR fetch limited
-      
-      // Since we don't have a dedicated search endpoint, we'll just search alerts for now
-      // and maybe implement a real search endpoint later. 
-      // For now, let's fetch recent alerts that match.
-      const { data: alerts } = await api.get('/alerts');
-      const { data: iocs } = await api.get('/intel/iocs');
-      const { data: threatActors } = await api.get('/intel/threat-actors');
+      // Abort any previous in-flight request
+      if (abortControllerRef.current) abortControllerRef.current.abort();
+      abortControllerRef.current = new AbortController();
 
+      // Use cached data if available — only fetch once per dialog session
+      if (!dataCache.current) {
+        const [alertsRes, iocsRes, actorsRes] = await Promise.all([
+          api.get('/alerts'),
+          api.get('/intel/iocs'),
+          api.get('/intel/threat-actors'),
+        ]);
+        dataCache.current = {
+          alerts: alertsRes.data,
+          iocs: iocsRes.data,
+          threatActors: actorsRes.data,
+        };
+      }
+
+      const { alerts, iocs, threatActors } = dataCache.current;
       const lowerQuery = searchQuery.toLowerCase();
 
-      const filteredAlerts = alerts.filter(a => 
+      const filteredAlerts = alerts.filter(a =>
         (a.title && a.title.toLowerCase().includes(lowerQuery)) ||
         (a.entity && a.entity.toLowerCase().includes(lowerQuery))
       ).slice(0, 5);
 
-      const filteredIocs = iocs.filter(i => 
-        (i.value && i.value.toLowerCase().includes(lowerQuery))
+      const filteredIocs = iocs.filter(i =>
+        i.value && i.value.toLowerCase().includes(lowerQuery)
       ).slice(0, 5);
 
-      const filteredActors = threatActors.filter(t => 
-        (t.name && t.name.toLowerCase().includes(lowerQuery))
+      const filteredActors = threatActors.filter(t =>
+        t.name && t.name.toLowerCase().includes(lowerQuery)
       ).slice(0, 5);
 
-      setResults({
-        alerts: filteredAlerts,
-        iocs: filteredIocs,
-        threatActors: filteredActors
-      });
-
-    } catch (error) {
-      console.error("Search failed", error);
+      setResults({ alerts: filteredAlerts, iocs: filteredIocs, threatActors: filteredActors });
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Search failed', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -107,6 +115,8 @@ const GlobalSearch = () => {
     setOpen(false);
     setQuery('');
     setResults({ alerts: [], iocs: [], threatActors: [] });
+    // Clear the cache when dialog closes so next open gets fresh data
+    dataCache.current = null;
   };
 
   const totalResults = results.alerts.length + results.iocs.length + results.threatActors.length;
@@ -256,8 +266,8 @@ const GlobalSearch = () => {
                       INDICATORS OF COMPROMISE ({results.iocs.length})
                     </Typography>
                     <List dense>
-                      {results.iocs.map((ioc, index) => (
-                        <ListItem key={index} disablePadding>
+                      {results.iocs.map((ioc) => (
+                        <ListItem key={ioc.id || ioc.value} disablePadding>
                           <ListItemButton
                             sx={{
                               borderRadius: 1,

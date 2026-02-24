@@ -1,9 +1,8 @@
 import React from 'react';
-import Loadable from 'react-loadable';
 import { CircularProgress, Box } from '@mui/material';
 
-// Loading component for code splitting
-const LoadingComponent = () => (
+// Loading fallback component used by React.lazy (in App.js)
+export const LoadingComponent = () => (
   <Box
     sx={{
       display: 'flex',
@@ -15,33 +14,6 @@ const LoadingComponent = () => (
     <CircularProgress size={60} thickness={4} sx={{ color: '#6366F1' }} />
   </Box>
 );
-
-// Lazy load dashboard pages for better performance
-export const DraggableDashboardLazy = Loadable({
-  loader: () => import('../pages/DraggableDashboard'),
-  loading: LoadingComponent,
-});
-
-export const OverviewPageLazy = Loadable({
-  loader: () => import('../pages/OverviewPage'),
-  loading: LoadingComponent,
-});
-
-export const DashboardsPageLazy = Loadable({
-  loader: () => import('../pages/DashboardsPage'),
-  loading: LoadingComponent,
-});
-
-// Lazy load heavy chart components
-export const AlertsTrendCardLazy = Loadable({
-  loader: () => import('../components/AlertsTrendCard'),
-  loading: () => <div>Loading chart...</div>,
-});
-
-export const IocDistributionCardLazy = Loadable({
-  loader: () => import('../components/IocDistributionCard'),
-  loading: () => <div>Loading chart...</div>,
-});
 
 /**
  * Performance optimization utilities
@@ -72,15 +44,17 @@ export const throttle = (func, limit) => {
   };
 };
 
-// Memoization helper for expensive calculations
-export const memoize = (fn) => {
+// Memoize with bounded LRU cache (max 100 entries) to prevent memory leaks
+export const memoize = (fn, maxSize = 100) => {
   const cache = new Map();
   return (...args) => {
     const key = JSON.stringify(args);
-    if (cache.has(key)) {
-      return cache.get(key);
-    }
+    if (cache.has(key)) return cache.get(key);
     const result = fn(...args);
+    if (cache.size >= maxSize) {
+      // Evict the oldest entry
+      cache.delete(cache.keys().next().value);
+    }
     cache.set(key, result);
     return result;
   };
@@ -108,19 +82,18 @@ export const reportWebVitals = (onPerfEntry) => {
   }
 };
 
-// Log performance metrics
+// Log performance metrics using modern PerformanceNavigationTiming API
 export const logPerformanceMetrics = () => {
-  if (window.performance && window.performance.timing) {
-    const timing = window.performance.timing;
+  const [navEntry] = performance.getEntriesByType('navigation');
+  if (navEntry) {
     const metrics = {
-      'DNS Lookup': timing.domainLookupEnd - timing.domainLookupStart,
-      'TCP Connection': timing.connectEnd - timing.connectStart,
-      'Request Time': timing.responseStart - timing.requestStart,
-      'Response Time': timing.responseEnd - timing.responseStart,
-      'DOM Processing': timing.domComplete - timing.domLoading,
-      'Total Load Time': timing.loadEventEnd - timing.navigationStart,
+      'DNS Lookup': navEntry.domainLookupEnd - navEntry.domainLookupStart,
+      'TCP Connection': navEntry.connectEnd - navEntry.connectStart,
+      'Request Time': navEntry.responseStart - navEntry.requestStart,
+      'Response Time': navEntry.responseEnd - navEntry.responseStart,
+      'DOM Processing': navEntry.domComplete - navEntry.domInteractive,
+      'Total Load Time': navEntry.loadEventEnd - navEntry.startTime,
     };
-
     console.table(metrics);
     return metrics;
   }

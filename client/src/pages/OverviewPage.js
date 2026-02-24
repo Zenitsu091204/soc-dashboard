@@ -65,12 +65,26 @@ export default function OverviewPage() {
   const [iocs, setIocs] = useState([]);
   const [threatActors, setThreatActors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [countdown, setCountdown] = useState(REFRESH_INTERVAL);
   const [lastUpdated, setLastUpdated] = useState(null);
   const countdownRef = useRef(null);
 
+  // Pre-compute stable random confidence values once per threatActors load
+  const actorMatches = React.useMemo(() =>
+    threatActors.slice(0, 5).map((t) => ({
+      id: t.id,
+      actor: t.name,
+      type: t.type,
+      risk: 'Critical',
+      confidence: Math.floor(Math.random() * 20) + 80,
+    })),
+    [threatActors] // only re-computed when threatActors data changes
+  );
+
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
+    setError(null);
     try {
       const [statsRes, alertsRes, iocsRes, actorsRes] = await Promise.all([
         api.get('/alerts/stats'),
@@ -83,11 +97,12 @@ export default function OverviewPage() {
       setIocs(iocsRes.data);
       setThreatActors(actorsRes.data);
       setLastUpdated(new Date());
-    } catch (error) {
-      console.error('Failed to fetch dashboard data', error);
+    } catch (err) {
+      console.error('Failed to fetch dashboard data', err);
+      setError('Failed to load dashboard data. Please try refreshing.');
     } finally {
       setLoading(false);
-      setCountdown(REFRESH_INTERVAL); // reset countdown
+      setCountdown(REFRESH_INTERVAL);
     }
   }, []);
 
@@ -144,6 +159,16 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-5">
+      {/* Error banner */}
+      {error && (
+        <div className="flex items-center gap-3 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          <span>⚠ {error}</span>
+          <button
+            onClick={() => fetchData(true)}
+            className="ml-auto text-xs underline hover:text-red-300"
+          >Retry</button>
+        </div>
+      )}
       {/* Header row */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
         <PageHeader
@@ -194,19 +219,11 @@ export default function OverviewPage() {
             id: i.id,
             type: i.type,
             value: i.value,
-            time: new Date(i.created_at || Date.now()).toLocaleTimeString(),
+            time: new Date(i.createdAt || i.created_at || Date.now()).toLocaleTimeString(),
             severity: i.severity || 'low',
           }))}
         />
-        <OpenCtiMatchesCard
-          matches={threatActors.slice(0, 5).map((t) => ({
-            id: t.id,
-            actor: t.name,
-            type: t.type,
-            risk: 'Critical',
-            confidence: Math.floor(Math.random() * 20) + 80,
-          }))}
-        />
+        <OpenCtiMatchesCard matches={actorMatches} />
       </div>
     </div>
   );

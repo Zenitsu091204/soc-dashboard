@@ -13,7 +13,8 @@ const registerSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
   email: z.string().email({ message: 'Invalid email address' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters' }),
-  role: z.enum(['admin', 'analyst'], { message: 'Role must be admin or analyst' }).optional(),
+  // Note: role is intentionally NOT accepted from the request body.
+  // Self-registered users are always 'analyst'. Admins are created via seeding only.
 });
 
 // @desc    Auth user & get token
@@ -56,7 +57,7 @@ const registerUser = async (req, res) => {
     return res.status(400).json({ message: parse.error.errors[0].message });
   }
 
-  const { name, email, password, role } = parse.data;
+  const { name, email, password } = parse.data;
 
   try {
     const userExists = await prisma.user.findUnique({ where: { email } });
@@ -73,7 +74,7 @@ const registerUser = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        role: role || 'analyst',
+        role: 'analyst', // Always analyst for self-registration
       },
     });
 

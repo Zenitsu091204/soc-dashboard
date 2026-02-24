@@ -21,9 +21,8 @@ export default function SearchPage() {
   const [query, setQuery] = useState('');
   const [data, setData] = useState({ alerts: [], iocs: [], threatActors: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Fetch all data for global search context
-  // In a real app, this would be a backend search endpoint
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -37,8 +36,9 @@ export default function SearchPage() {
           iocs: iocsRes.data,
           threatActors: actorsRes.data
         });
-      } catch (error) {
-        console.error("Failed to fetch search data", error);
+      } catch (err) {
+        console.error('Failed to fetch search data', err);
+        setError('Failed to load search index. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -62,9 +62,17 @@ export default function SearchPage() {
     };
   }, [query, data]);
 
-  if (loading) {
-    return <div className="p-6 text-slate-500">Loading search index...</div>;
-  }
+  if (loading) return <div className="p-6 text-slate-500">Loading search index...</div>;
+
+  if (error) return (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 2 }}>
+      <Typography color="error">⚠ {error}</Typography>
+      <button
+        onClick={() => { setError(null); setLoading(true); }}
+        style={{ padding: '8px 16px', background: '#6366F1', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}
+      >Retry</button>
+    </Box>
+  );
 
   return (
     <Box>

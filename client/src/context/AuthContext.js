@@ -9,6 +9,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLocked, setIsLocked] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
 
   // Check for stored token/user on mount
   useEffect(() => {
@@ -18,7 +20,6 @@ export const AuthProvider = ({ children }) => {
 
       if (token && storedUser) {
         setUser(storedUser);
-        // Optional: Verify token with backend /profile endpoint
         try {
           const { data } = await api.get('/auth/profile');
           setUser(data);
@@ -33,7 +34,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     initAuth();
+
+    // Listen for 401 events dispatched by the Axios interceptor in api.js
+    // This avoids window.location.href (full reload) and lets React Router handle navigation
+    const handleUnauthorized = () => {
+      setUser(null);
+      showToast.error('Session Expired', 'Please log in again.');
+    };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
   }, []);
+
 
   const login = async (email, password, remember = false) => {
     setLoading(true);
@@ -50,6 +61,16 @@ export const AuthProvider = ({ children }) => {
       console.error('Login failed:', err);
       const msg = err.response?.data?.message || 'Login failed';
       setError(msg);
+      const newAttempts = failedAttempts + 1;
+      setFailedAttempts(newAttempts);
+      if (newAttempts >= 5) {
+        setIsLocked(true);
+        setTimeout(() => {
+          setIsLocked(false);
+          setFailedAttempts(0);
+          setError(null);
+        }, 30000);
+      }
       return { success: false, error: msg };
     } finally {
       setLoading(false);
@@ -63,7 +84,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, error, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, error, isAuthenticated: !!user, isLocked }}>
       {children}
     </AuthContext.Provider>
   );

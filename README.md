@@ -2,7 +2,7 @@
 
 A production-ready **Security Operations Center (SOC) Dashboard** built with the PERN stack (PostgreSQL, Express, React, Node.js). Designed for real-time threat monitoring, intelligence analysis, and analyst workflow management.
 
-> **Current Version:** 3.0.0 — Last updated 2026-02-23 12:15 IST
+> **Current Version:** 3.2.0 — Last updated 2026-02-24 17:44 IST
 
 ---
 
@@ -10,13 +10,23 @@ A production-ready **Security Operations Center (SOC) Dashboard** built with the
 
 ### **Operations**
 - **Live Monitor** — Real-time alerts trend, recent activity feed, and system health status.
-- **Global Search** (`Ctrl+K`) — Instant search across Alerts, IOCs, and Threat Actors.
+- **Global Search** (`Ctrl+K`) — Instant search across Alerts, IOCs, and Threat Actors. Data cached per session for zero extra API calls per keystroke.
 - **Draggable Dashboard** — Custom dashboard builder with drag-and-drop widgets and persisted layouts.
 
 ### **Intelligence**
 - **Campaign Timeline** — Track complex security campaigns with interactive timelines and MITRE ATT&CK mapping.
-- **Threat Actor Profiles** — Detailed profiles with known TTPs and associated IOCs.
+- **Threat Actor Profiles** — Detailed profiles with View Profile modal, known TTPs, and associated IOCs.
 - **IOC Workbench** — Feed of Indicators of Compromise with filtering and export.
+
+### **Reliability & Performance** _(v3.1.0 + v3.2.0)_
+- **User-facing error states** — All data pages show styled error banners with Retry buttons on API failure.
+- **Session-safe 401 handling** — Token expiry dispatches a `CustomEvent`; `AuthContext` shows a toast and React Router redirects without a full page reload.
+- **Bounded memoize cache** — LRU eviction at 100 entries prevents memory leaks in long sessions.
+- **TopAssetsCard blink fix** — SVG gradient IDs defined once per chart, eliminating flickering numbers.
+- **Backend role hardening** — Public `/register` no longer accepts `role` from body; privilege escalation prevented.
+- **Backend P2025 → 404** — `PATCH /alerts/:id` returns 404 (not 500) when alert not found.
+- **CORS restricted** — Server only accepts requests from `CLIENT_ORIGIN` (default `localhost:3000`).
+- **Graceful shutdown** — SIGTERM/SIGINT properly disconnect Prisma before process exit.
 
 ### **Configuration**
 - **Settings Page** — Premium multi-section settings UI with sidebar navigation:
@@ -26,11 +36,36 @@ A production-ready **Security Operations Center (SOC) Dashboard** built with the
   - 🔔 **Alert Rules** — Notification channels, SLA thresholds, retention policies
   - 🎛️ **Dashboard** — Display preferences, refresh interval, date format, timezone
 
-### **Architecture**
-- **Frontend** — React 19, Tailwind CSS, Recharts, Framer Motion, MUI Icons
-- **Backend** — Node.js, Express, Prisma ORM
-- **Database** — PostgreSQL
-- **Authentication** — JWT-based secure auth flow
+### **Architecture & Technologies**
+
+#### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| React | ^19 | UI framework |
+| React Router DOM | ^6 | Client-side routing |
+| Tailwind CSS | v3 | Utility-first styling |
+| Material-UI + Icons | ^7 | Component library & icon set |
+| Recharts | latest | Data visualisation charts |
+| Framer Motion | latest | Animations & transitions |
+| react-hot-toast | ^2 | Toast notifications |
+| react-grid-layout | ^2 | Draggable / resizable widget grid |
+| Axios | latest | HTTP client with interceptors |
+| Zod (client-side) | — | via API contracts |
+
+#### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| Node.js | v16+ | Server runtime |
+| Express | ^4 | HTTP framework |
+| Prisma ORM | ^5 | Database access & migrations |
+| PostgreSQL | v13+ | Primary database |
+| jsonwebtoken | ^9 | JWT generation & verification |
+| bcryptjs | ^2 | Password hashing |
+| Zod | ^3 | Request body validation |
+| Helmet | ^7 | HTTP security headers |
+| Morgan | ^1 | HTTP request logging |
+| CORS | ^2 | Cross-origin control (origin-locked) |
+| dotenv | ^16 | Environment variable loading |
 
 ---
 
@@ -129,14 +164,30 @@ The dashboard uses a **Glassmorphism** design system:
 
 ---
 
-## 📦 Key Dependencies (Client)
+## 📦 Key Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| `react` ^19 | UI framework |
-| `@mui/icons-material` | Icon set |
-| `recharts` | Data visualization |
-| `react-router-dom` ^6 | Client-side routing |
-| `react-grid-layout` | Draggable dashboard widgets |
-| `react-hot-toast` | Toast notifications |
-| `framer-motion` | Animations |
+### Frontend (`client/`)
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `react` | ^19 | UI framework |
+| `react-router-dom` | ^6 | Client-side routing |
+| `@mui/material` + icons | ^7 | Component library & icons |
+| `recharts` | latest | Data visualisation |
+| `react-grid-layout` | ^2 | Draggable dashboard widgets |
+| `react-hot-toast` | ^2 | Toast notifications |
+| `framer-motion` | latest | Animations |
+| `axios` | latest | HTTP client |
+
+### Backend (`server/`)
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `express` | ^4 | HTTP framework |
+| `@prisma/client` | ^5 | Database ORM |
+| `jsonwebtoken` | ^9 | JWT auth |
+| `bcryptjs` | ^2 | Password hashing |
+| `zod` | ^3 | Request validation |
+| `helmet` | ^7 | Security headers |
+| `cors` | ^2 | Origin-locked CORS |
+| `morgan` | ^1 | Request logging |
