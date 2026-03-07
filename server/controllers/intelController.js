@@ -15,11 +15,27 @@ const getThreatActors = async (req, res) => {
   }
 };
 
-// @desc    Get all IOCs
+// @desc    Get all IOCs (with optional pagination)
 // @route   GET /api/intel/iocs
 // @access  Private
 const getIocs = async (req, res) => {
   try {
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+
+    if (page && limit) {
+      const skip = (page - 1) * limit;
+      const [iocs, total] = await Promise.all([
+        prisma.ioc.findMany({
+          skip,
+          take: limit,
+          orderBy: { seenAt: 'desc' },
+        }),
+        prisma.ioc.count(),
+      ]);
+      return res.json({ data: iocs, meta: { total, page, limit } });
+    }
+
     const iocs = await prisma.ioc.findMany({
       orderBy: { seenAt: 'desc' },
     });

@@ -68,14 +68,6 @@ const navItems = [
   },
   {
     type: 'item',
-    id: 'custom-dashboard',
-    label: 'Custom Dashboard',
-    icon: <TuneRoundedIcon fontSize="small" />,
-    to: '/custom-dashboard',
-    heading: 'Custom Dashboard',
-  },
-  {
-    type: 'item',
     id: 'campaign-timeline',
     label: 'Campaign timeline',
     to: '/campaign-timeline',
@@ -176,12 +168,12 @@ export default function SOCLayout() {
     const fetchRisk = async () => {
       try {
         const { data } = await api.get('/alerts/stats');
-        // Simple risk calculation based on stats
-        const total = data.total || 1;
-        const critical = data.bySeverity?.critical || 0;
-        const high = data.bySeverity?.high || 0;
-        const score = Math.min(100, Math.round(((critical * 10 + high * 5) / total) * 100)); // Normalized
-        setRiskScore(score || 25); // Default to low if no data
+        // Use the correct fields returned by alertController: totalAlerts, criticalAlerts
+        const total = data.totalAlerts || 1;
+        const critical = data.criticalAlerts || 0;
+        const high = data.highAlerts || 0; // may be 0 if not in stats, that's fine
+        const score = Math.min(100, Math.round(((critical * 10 + high * 5) / total) * 10));
+        setRiskScore(score || 10); // Default to low if no data
       } catch (e) {
         console.error("Failed to fetch risk stats", e);
       }

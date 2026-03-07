@@ -22,8 +22,11 @@ export default function SearchPage() {
   const [data, setData] = useState({ alerts: [], iocs: [], threatActors: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     const fetchData = async () => {
       try {
         const [alertsRes, iocsRes, actorsRes] = await Promise.all([
@@ -44,20 +47,22 @@ export default function SearchPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [retryKey]);
 
   const results = useMemo(() => {
     if (!query.trim()) return { alerts: [], iocs: [], threatActors: [] };
 
     return {
       alerts: data.alerts.filter((a) =>
-        matchesText([a.title, a.entity, a.severity].join(' '), query)
+        matchesText([a.title, a.entity, a.severity, a.source, a.description].join(' '), query)
       ),
+      // Only filter on fields that exist in the Ioc schema: type, value
       iocs: data.iocs.filter((i) =>
-        matchesText([i.type, i.value, i.source, ...(i.tags || [])].join(' '), query)
+        matchesText([i.type, i.value].join(' '), query)
       ),
+      // Only filter on fields that exist in the ThreatActor schema: name, type, origin, description
       threatActors: data.threatActors.filter((t) =>
-        matchesText([t.name, t.region, t.motive, ...(t.knownFor || [])].join(' '), query)
+        matchesText([t.name, t.type, t.origin, t.description].join(' '), query)
       ),
     };
   }, [query, data]);
@@ -68,7 +73,7 @@ export default function SearchPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 10, gap: 2 }}>
       <Typography color="error">⚠ {error}</Typography>
       <button
-        onClick={() => { setError(null); setLoading(true); }}
+        onClick={() => setRetryKey((k) => k + 1)}
         style={{ padding: '8px 16px', background: '#6366F1', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer' }}
       >Retry</button>
     </Box>

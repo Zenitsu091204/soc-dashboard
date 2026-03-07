@@ -1,8 +1,8 @@
-# SOC Dashboard — Features Documentation
-
+# SOC Dashboard Features
+**Current Version:** 4.0.0 (Comprehensive Capability Release)
 Complete documentation of every feature, page, component, and utility in the SOC Dashboard.
 
-**Last Updated:** 2026-02-24 | 17:44 IST — v3.2.0
+**Last Updated:** 2026-03-07 | 16:34 IST — v3.3.0
 
 ---
 
@@ -708,6 +708,7 @@ npm test
 
 ---
 
+**Version 3.3** — Removed Docker Support _(2026-03-07)_
 **Version 3.2** — Backend Security & Hardening _(2026-02-24)_
 **Version 3.1** — Comprehensive Bug-Fix & Hardening Pass _(2026-02-24)_
 **Version 3.0** — Premium Settings Page _(2026-02-23)_

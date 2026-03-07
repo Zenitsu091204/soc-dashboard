@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -29,6 +31,29 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// Setup HTTP server and WebSockets
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    credentials: true,
+  }
+});
+
+// Inject io instance into every request object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+io.on('connection', (socket) => {
+  console.log(`🔌 WebSocket Client connected: ${socket.id}`);
+  socket.on('disconnect', () => {
+    console.log(`🔌 WebSocket Client disconnected: ${socket.id}`);
+  });
+});
 
 // ── General middleware ────────────────────────────────────────────────────────
 app.use(morgan('dev'));
@@ -65,8 +90,8 @@ process.on('uncaughtException', (err) => {
 });
 
 // ── Start server ──────────────────────────────────────────────────────────────
-const server = app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+const server = httpServer.listen(PORT, () => {
+  console.log(`🚀 Server & WebSockets running on port ${PORT}`);
 });
 
 // ── Graceful shutdown (SIGTERM / SIGINT) ──────────────────────────────────────

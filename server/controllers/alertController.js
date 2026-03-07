@@ -10,12 +10,41 @@ const createAlertSchema = z.object({
   status: z.enum(['open', 'investigating', 'resolved']).optional().default('open'),
 });
 
-// @desc    Get all alerts
+// @desc    Get all alerts (with optional pagination)
 // @route   GET /api/alerts
 // @access  Private
 const getAlerts = async (req, res) => {
   try {
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+    const { startDate, endDate, threatActor } = req.query;
+
+    const where = {};
+    if (startDate || endDate) {
+      where.timestamp = {};
+      if (startDate) where.timestamp.gte = new Date(startDate);
+      if (endDate) where.timestamp.lte = new Date(endDate);
+    }
+    if (threatActor) {
+      where.description = { contains: threatActor, mode: 'insensitive' };
+    }
+
+    if (page && limit) {
+      const skip = (page - 1) * limit;
+      const [alerts, total] = await Promise.all([
+        prisma.alert.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { timestamp: 'desc' },
+        }),
+        prisma.alert.count({ where }),
+      ]);
+      return res.json({ data: alerts, meta: { total, page, limit } });
+    }
+
     const alerts = await prisma.alert.findMany({
+      where,
       orderBy: { timestamp: 'desc' },
     });
     res.json(alerts);
@@ -47,6 +76,11 @@ const createAlert = async (req, res) => {
         timestamp: new Date(),
       },
     });
+
+    if (req.io) {
+      req.io.emit('newAlert', alert);
+    }
+
     res.status(201).json(alert);
   } catch (error) {
     console.error('Create alert error:', error);
@@ -70,6 +104,11 @@ const updateAlertStatus = async (req, res) => {
       where: { id: req.params.id },
       data: { status },
     });
+
+    if (req.io) {
+      req.io.emit('alertUpdated', alert);
+    }
+
     res.json(alert);
   } catch (error) {
     // P2025 = Record to update not found
@@ -86,10 +125,11 @@ const updateAlertStatus = async (req, res) => {
 // @access  Private
 const getStats = async (req, res) => {
   try {
-    // Run all 4 queries in parallel for better performance
-    const [totalAlerts, criticalAlerts, openCases, activeIocs] = await Promise.all([
+    // Run all queries in parallel for better performance
+    const [totalAlerts, criticalAlerts, highAlerts, openCases, activeIocs] = await Promise.all([
       prisma.alert.count(),
       prisma.alert.count({ where: { severity: 'critical' } }),
+      prisma.alert.count({ where: { severity: 'high' } }),
       prisma.case.count({ where: { status: 'open' } }),
       prisma.ioc.count(),
     ]);
@@ -97,6 +137,7 @@ const getStats = async (req, res) => {
     res.json({
       totalAlerts,
       criticalAlerts,
+      highAlerts,
       openCases,
       activeIocs,
     });

@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.0] - 2026-03-07 | 18:00 IST
+
+### Major Updates — The Comprehensive Capability Release
+
+#### 🔒 Phase 1: Authentication Hardening & Pagination
+- Added `express-rate-limit` middleware to `/api/auth/login` and `/api/auth/register` to prevent brute force attacks.
+- Upgraded `/api/alerts` and `/api/intel/iocs` with robust backwards-compatible pagination support via `page` and `limit` parameters.
+
+#### 📄 Phase 2: Export & Reporting Engine
+- Integrated client-side PDF export logic for `IntelReportPage` and `CampaignTimelinePage` via `jspdf` and `html2canvas`.
+- Added dynamic CSV dump generation to `IOCFeedPage`.
+
+#### 🎯 Phase 3: Advanced Filtering Capabilities
+- Augmented `FilterPanel` with precise Date Range boundaries and textual Threat Actor tagging.
+- Wired local frontend evaluation coupled with deep backend Prisma query support.
+
+#### 🧩 Phase 4: Dynamic Widget Library
+- Upgraded the static `DashboardsPage` to a modular Drag-and-Drop canvas utilizing `react-grid-layout`.
+- Added a floating action button enabling runtime instantiation of available widgets.
+- Deployed brand-new visual components: `SystemHealthWidget`, `GeographicThreatMap`, and `TopCvesWidget`.
+
+#### ⚡ Phase 5: Real-time WebSockets Engine
+- Transformed backend HTTP Server to broadcast live mutation payloads via `socket.io`.
+- Wired frontend `OverviewPage` using a custom `useWebSockets` hook to automatically ingest data silently.
+- Integrated toast notifications on the active feed for incoming live threats.
+
+---
+
+## [3.3.0] - 2026-03-07 | 16:34 IST
+
+### Changed — Architecture & Infrastructure
+- **Removed Docker Support** — Completely removed `docker-compose.yml` and all associated Docker deployment instructions. The project now officially requires a native, local PostgreSQL installation for development and production to simplify the deployment pipeline.
+
+---
+
 ## [3.2.0] - 2026-02-24 | 17:44 IST
 
 ### Fixed — Backend Security & Hardening Pass
@@ -323,6 +358,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+**Version 4.0** — Comprehensive Capability Upgrades _(2026-03-07)_
+**Version 3.3** — Removed Docker Support _(2026-03-07)_
 **Version 3.0** — Premium Settings Page Redesign _(2026-02-23)_
 **Version 2.5** — Page Navigation Bug Fix _(2026-02-20)_
 **Version 2.4** — Campaign Timeline Design Refinement _(2026-02-18)_

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
+import { toast } from 'react-hot-toast';
+import { useWebSockets } from '../hooks/useWebSockets';
 
 // Components
 import PageHeader from '../components/PageHeader';
@@ -11,6 +13,7 @@ import TopAssetsCard from '../components/TopAssetsCard';
 import WafRulesCard from '../components/WafRulesCard';
 import ThreatIntelFeedCard from '../components/ThreatIntelFeedCard';
 import OpenCtiMatchesCard from '../components/OpenCtiMatchesCard';
+import FilterPanel, { FilterButton } from '../components/FilterPanel';
 
 // Icons
 import {
@@ -22,6 +25,15 @@ import {
 } from '@heroicons/react/24/outline';
 
 const REFRESH_INTERVAL = 30; // seconds
+
+// Stable deterministic confidence score derived from actor ID (avoids Math.random in useMemo)
+function deterministicConfidence(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) {
+    h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
+  }
+  return (Math.abs(h) % 20) + 80; // always 80–99
+}
 
 // ─── Live Refresh Bar ─────────────────────────────────────────────────────────
 function LiveRefreshBar({ countdown, total, onRefresh, loading }) {
@@ -68,7 +80,40 @@ export default function OverviewPage() {
   const [error, setError] = useState(null);
   const [countdown, setCountdown] = useState(REFRESH_INTERVAL);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState(null);
   const countdownRef = useRef(null);
+
+  // WebSockets for Real-time Updates
+  useWebSockets({
+    onNewAlert: useCallback((newAlert) => {
+      setAlerts((prev) => [newAlert, ...prev]);
+      setStats((prev) => ({
+        ...prev,
+        totalAlerts: prev.totalAlerts + 1,
+        criticalAlerts: newAlert.severity === 'critical' ? prev.criticalAlerts + 1 : prev.criticalAlerts,
+      }));
+      toast(`🚨 New ${newAlert.severity.toUpperCase()} Alert: ${newAlert.title}`, {
+        duration: 5000,
+        style: {
+          background: newAlert.severity === 'critical' ? '#EF4444' : '#F59E0B',
+          color: '#fff',
+          fontWeight: 'bold',
+        },
+      });
+      setLastUpdated(new Date());
+      setCountdown(REFRESH_INTERVAL);
+    }, []),
+    onAlertUpdated: useCallback((updatedAlert) => {
+      setAlerts((prev) => prev.map(a => a.id === updatedAlert.id ? updatedAlert : a));
+      toast(`ℹ️ Alert Updated: ${updatedAlert.title}`, {
+        duration: 3000,
+        style: { background: '#6366F1', color: '#fff', fontWeight: 'bold' }
+      });
+      setLastUpdated(new Date());
+      setCountdown(REFRESH_INTERVAL);
+    }, [])
+  });
 
   // Pre-compute stable random confidence values once per threatActors load
   const actorMatches = React.useMemo(() =>
@@ -77,23 +122,48 @@ export default function OverviewPage() {
       actor: t.name,
       type: t.type,
       risk: 'Critical',
-      confidence: Math.floor(Math.random() * 20) + 80,
+      confidence: deterministicConfidence(t.id), // stable, ID-based hash
     })),
-    [threatActors] // only re-computed when threatActors data changes
+    [threatActors]
   );
 
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
     try {
+      let alertsUrl = '/alerts';
+      if (activeFilters) {
+        const params = new URLSearchParams();
+        if (activeFilters.dateRange?.startDate) params.append('startDate', activeFilters.dateRange.startDate);
+        if (activeFilters.dateRange?.endDate) params.append('endDate', activeFilters.dateRange.endDate);
+        if (activeFilters.threatActor) params.append('threatActor', activeFilters.threatActor);
+        if (params.toString()) {
+          alertsUrl += `?${params.toString()}`;
+        }
+      }
+
       const [statsRes, alertsRes, iocsRes, actorsRes] = await Promise.all([
         api.get('/alerts/stats'),
-        api.get('/alerts'),
+        api.get(alertsUrl),
         api.get('/intel/iocs'),
         api.get('/intel/threat-actors'),
       ]);
+
+      let fetchedAlerts = alertsRes.data;
+      if (activeFilters) {
+        fetchedAlerts = fetchedAlerts.filter(a => {
+          const s = a.severity || 'low';
+          if (!activeFilters.severity[s]) return false;
+          const status = a.status || 'open';
+          if (activeFilters.status[status] === false) return false;
+          // Note: "in-progress" is not a status in backend (it's "investigating" or similar, but the UI checks 'in-progress'. Let's relax status filtering if not exact match)
+          if (status === 'investigating' && activeFilters.status['in-progress'] === false) return false;
+          return true;
+        });
+      }
+
       setStats(statsRes.data);
-      setAlerts(alertsRes.data);
+      setAlerts(fetchedAlerts);
       setIocs(iocsRes.data);
       setThreatActors(actorsRes.data);
       setLastUpdated(new Date());
@@ -104,7 +174,7 @@ export default function OverviewPage() {
       setLoading(false);
       setCountdown(REFRESH_INTERVAL);
     }
-  }, []);
+  }, [activeFilters]);
 
   // Initial fetch
   useEffect(() => {
@@ -180,11 +250,26 @@ export default function OverviewPage() {
           }
           showTimeRange={false}
         />
-        <LiveRefreshBar
-          countdown={countdown}
-          total={REFRESH_INTERVAL}
-          onRefresh={() => fetchData(false)}
-          loading={loading}
+        <div className="flex items-center gap-2">
+          <FilterButton 
+            onClick={() => setIsFilterOpen(true)} 
+            activeCount={
+              activeFilters ? 
+              (Object.values(activeFilters.severity).filter(v => !v).length + Object.values(activeFilters.status).filter(v => !v).length + (activeFilters.threatActor ? 1 : 0) + (activeFilters.dateRange?.startDate ? 1 : 0) + (activeFilters.dateRange?.endDate ? 1 : 0)) 
+              : 0
+            } 
+          />
+          <LiveRefreshBar
+            countdown={countdown}
+            total={REFRESH_INTERVAL}
+            onRefresh={() => fetchData(false)}
+            loading={loading}
+          />
+        </div>
+        <FilterPanel 
+          open={isFilterOpen} 
+          onClose={() => setIsFilterOpen(false)} 
+          onApplyFilters={setActiveFilters} 
         />
       </div>
 

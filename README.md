@@ -2,7 +2,7 @@
 
 A production-ready **Security Operations Center (SOC) Dashboard** built with the PERN stack (PostgreSQL, Express, React, Node.js). Designed for real-time threat monitoring, intelligence analysis, and analyst workflow management.
 
-> **Current Version:** 3.2.0 — Last updated 2026-02-24 17:44 IST
+> **Current Version:** 3.3.0 — Last updated 2026-03-07 16:34 IST
 
 ---
 
@@ -85,7 +85,6 @@ A production-ready **Security Operations Center (SOC) Dashboard** built with the
 soc-dashboard/
 ├── client/          # React Frontend (Tailwind CSS, Recharts, MUI Icons)
 ├── server/          # Node.js / Express Backend API + Prisma ORM
-├── docker-compose.yml
 ├── README.md
 ├── CHANGELOG.md     # Version history with dates & times
 └── FEATURES.md      # Detailed feature documentation
@@ -97,13 +96,7 @@ soc-dashboard/
 
 ### 1. Database Setup (PostgreSQL)
 
-**Option A — Docker (Recommended)**
-```powershell
-docker-compose up -d
-```
-
-**Option B — Local Install**
-Ensure PostgreSQL is running and update `server/.env`:
+Ensure PostgreSQL is running locally and update `server/.env`:
 ```env
 DATABASE_URL="postgresql://postgres:admin123@localhost:5432/soc_dashboard?schema=public"
 ```

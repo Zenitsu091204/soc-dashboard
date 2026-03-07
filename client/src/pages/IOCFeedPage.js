@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
-import { FunnelIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { FunnelIcon, MagnifyingGlassIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
 
 // Utility to safely format dates
 const formatDate = (dateString) => {
@@ -20,8 +20,11 @@ export default function IOCFeedPage() {
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     const fetchIocs = async () => {
       try {
         const { data } = await api.get('/intel/iocs');
@@ -34,7 +37,7 @@ export default function IOCFeedPage() {
       }
     };
     fetchIocs();
-  }, []);
+  }, [retryKey]);
 
   const filtered = useMemo(() => {
     return iocs.filter((ioc) => {
@@ -45,6 +48,21 @@ export default function IOCFeedPage() {
     });
   }, [iocs, query, typeFilter]);
 
+  const exportToCSV = () => {
+    if (filtered.length === 0) return;
+    const headers = ['Type', 'Value', 'Reputation', 'First Seen'];
+    const csvContent = [
+      headers.join(','),
+      ...filtered.map(ioc => `"${ioc.type}","${ioc.value}","${ioc.reputation}","${formatDate(ioc.seenAt || ioc.createdAt)}"`)
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `ioc_feed_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+  };
+
   if (loading) return <div className="text-white/50 p-6">Loading IOC feed...</div>;
 
   if (error) return (
@@ -52,7 +70,7 @@ export default function IOCFeedPage() {
       <div className="text-red-400 text-4xl">⚠</div>
       <p className="text-red-400 font-semibold">{error}</p>
       <button
-        onClick={() => { setError(null); setLoading(true); }}
+        onClick={() => setRetryKey((k) => k + 1)}
         className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"
       >Retry</button>
     </div>
@@ -67,6 +85,13 @@ export default function IOCFeedPage() {
         </div>
         
         <div className="flex gap-2 w-full md:w-auto">
+           <button 
+             onClick={exportToCSV}
+             className="px-4 py-2 bg-indigo-600/20 text-indigo-400 font-medium hover:bg-indigo-600/30 border border-indigo-500/30 rounded-lg flex items-center gap-2 transition-colors text-sm"
+           >
+             <ArrowDownTrayIcon className="w-4 h-4" />
+             Export CSV
+           </button>
            <div className="relative flex-1 md:w-64">
              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
              <input

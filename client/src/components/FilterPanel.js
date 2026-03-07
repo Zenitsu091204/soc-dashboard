@@ -33,7 +33,16 @@ const FilterPanel = ({ open, onClose, onApplyFilters }) => {
       resolved: false,
       'false-positive': false,
     },
+    dateRange: { startDate: '', endDate: '' },
+    threatActor: '',
   });
+
+  const handleDateChange = (field, value) => {
+    setFilters({ ...filters, dateRange: { ...filters.dateRange, [field]: value } });
+  };
+  const handleActorChange = (e) => {
+    setFilters({ ...filters, threatActor: e.target.value });
+  };
 
   const handleSeverityChange = (severity) => {
     setFilters({
@@ -69,6 +78,8 @@ const FilterPanel = ({ open, onClose, onApplyFilters }) => {
         resolved: false,
         'false-positive': false,
       },
+      dateRange: { startDate: '', endDate: '' },
+      threatActor: '',
     });
   };
 
@@ -260,6 +271,45 @@ const FilterPanel = ({ open, onClose, onApplyFilters }) => {
               label={<Typography variant="body2">False Positive</Typography>}
             />
           </FormGroup>
+        </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* Date Filters */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: 'text.secondary' }}>
+            DATE RANGE
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <input 
+              type="date" 
+              value={filters.dateRange.startDate}
+              onChange={(e) => handleDateChange('startDate', e.target.value)}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+            />
+            <input 
+              type="date" 
+              value={filters.dateRange.endDate}
+              onChange={(e) => handleDateChange('endDate', e.target.value)}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+            />
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 3 }} />
+
+        {/* Threat Actor Filter */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 2, color: 'text.secondary' }}>
+            TROUBLESHOOTING TAG
+          </Typography>
+          <input 
+            type="text" 
+            placeholder="e.g. APT29"
+            value={filters.threatActor}
+            onChange={handleActorChange}
+            style={{ width: '100%', padding: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
+          />
         </Box>
 
         <Divider sx={{ my: 3 }} />

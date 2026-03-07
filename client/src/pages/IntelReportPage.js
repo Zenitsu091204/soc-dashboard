@@ -16,8 +16,12 @@ import {
   Tooltip,
   Card,
   CardContent,
+  Button,
 } from '@mui/material';
 import PageHeader from '../components/PageHeader';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import DownloadIcon from '@mui/icons-material/Download';
 import WarningIcon from '@mui/icons-material/Warning';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import SecurityIcon from '@mui/icons-material/Security';
@@ -168,14 +172,37 @@ export default function IntelReportPage() {
     return '#F97316';
   };
 
+  const handleExportPDF = async () => {
+    const element = document.getElementById('report-content');
+    if (!element) return;
+    const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#0B1120' });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save('Threat_Intel_Report.pdf');
+  };
+
   return (
     <Box sx={{ p: 3 }}>
-      <PageHeader
-        title="Threat Intelligence Reports"
-        subtitle="Real-time threat intelligence, active campaigns, and emerging threats"
-      />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+        <PageHeader
+          title="Threat Intelligence Reports"
+          subtitle="Real-time threat intelligence, active campaigns, and emerging threats"
+        />
+        <Button 
+          variant="contained" 
+          startIcon={<DownloadIcon />} 
+          onClick={handleExportPDF}
+          sx={{ bgcolor: '#6366F1', '&:hover': { bgcolor: '#4F46E5' }, mt: 2 }}
+        >
+          Download PDF
+        </Button>
+      </Box>
 
-      {/* Summary Cards */}
+      <Box id="report-content" sx={{ backgroundColor: 'transparent' }}>
+        {/* Summary Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} md={3}>
           <Card
@@ -506,6 +533,7 @@ export default function IntelReportPage() {
           </Paper>
         </Grid>
       </Grid>
+      </Box>
     </Box>
   );
 }

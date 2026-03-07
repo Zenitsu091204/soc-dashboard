@@ -8,7 +8,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 // Lazy-loaded components for performance (Code Splitting)
 const SOCLayout = React.lazy(() => import('./layout/SOCLayout.js'));
 const OverviewPage = React.lazy(() => import('./pages/OverviewPage.js'));
-const DraggableDashboard = React.lazy(() => import('./pages/DraggableDashboard.js'));
 const IOCFeedPage = React.lazy(() => import('./pages/IOCFeedPage.js'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage.js'));
 const ThreatActorsPage = React.lazy(() => import('./pages/ThreatActorsPage.js'));
@@ -81,7 +80,6 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route path="/custom-dashboard" element={<DraggableDashboard />} />
               <Route path="/" element={<OverviewPage />} />
               <Route path="/ioc-feed" element={<IOCFeedPage />} />
               <Route path="/search" element={<SearchPage />} />
