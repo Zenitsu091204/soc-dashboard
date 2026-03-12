@@ -16,6 +16,24 @@ const getThreatActors = async (req, res) => {
   }
 };
 
+// @desc    Get individual Threat Actor by ID
+// @route   GET /api/intel/actors/:id
+// @access  Private
+const getThreatActorById = async (req, res) => {
+  try {
+    const actor = await prisma.threatActor.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!actor) {
+      return res.status(404).json({ message: 'Threat Actor not found' });
+    }
+    res.json(actor);
+  } catch (error) {
+    console.error('Get threat actor by ID error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // @desc    Get all IOCs (with optional pagination)
 // @route   GET /api/intel/iocs
 // @access  Private
@@ -47,6 +65,24 @@ const getIocs = async (req, res) => {
   }
 };
 
+// @desc    Get individual IOC by ID
+// @route   GET /api/intel/iocs/:id
+// @access  Private
+const getIocById = async (req, res) => {
+  try {
+    const ioc = await prisma.ioc.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!ioc) {
+      return res.status(404).json({ message: 'IOC not found' });
+    }
+    res.json(ioc);
+  } catch (error) {
+    console.error('Get IOC by ID error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 // @desc    Get OpenCTI correlations/matches
 // @route   GET /api/intel/opencti-matches
 // @access  Private
@@ -62,6 +98,8 @@ const getOpenCtiMatches = async (req, res) => {
 
 module.exports = {
   getThreatActors,
+  getThreatActorById,
   getIocs,
+  getIocById,
   getOpenCtiMatches,
 };
