@@ -1,82 +1,59 @@
 import * as React from 'react';
-import { Box, LinearProgress, Paper, Stack, Typography } from '@mui/material';
 
 function getRiskColor(score) {
-  if (score < 40) return 'success.main';
-  if (score < 70) return 'warning.main';
-  return 'error.main';
+  if (score < 40) return 'text-emerald-400';
+  if (score < 70) return 'text-amber-400';
+  return 'text-red-500';
+}
+
+function getRiskGradient(score) {
+  if (score < 40) return 'from-emerald-500 to-cyan-500';
+  if (score < 70) return 'from-amber-400 to-orange-500';
+  return 'from-red-500 to-rose-600';
 }
 
 export default function RiskScoreCard({ score = 72, trend = 5 }) {
   const rounded = Math.round(score);
   const barValue = Math.min(Math.max(score, 0), 100);
   const trendLabel = `${trend > 0 ? '+' : ''}${trend}%`;
-  const trendColor = trend >= 0 ? 'error.main' : 'success.main';
+  const trendColor = trend >= 0 ? 'text-red-400' : 'text-emerald-400';
 
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 2,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        transition: 'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 24px 48px rgba(15, 23, 42, 0.95)',
-          borderColor: 'primary.main',
-        },
-      }}
-    >
-      <Typography variant="caption" sx={{ fontWeight: 700, letterSpacing: 0.6 }}>
-        OVERALL RISK SCORE
-      </Typography>
+    <div className="p-5 h-full flex flex-col justify-between border border-white/5 bg-gradient-to-br from-slate-900/90 to-slate-800/70 rounded-2xl backdrop-blur-md shadow-lg transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_8px_32px_rgba(99,102,241,0.15)]">
+      <div className="flex justify-between items-start">
+        <h3 className="text-xs font-bold tracking-wider text-slate-400 uppercase">
+          OVERALL RISK SCORE
+        </h3>
+      </div>
 
-      <Stack direction="row" alignItems="baseline" spacing={1} sx={{ mt: 1 }}>
-        <Typography
-          variant="h3"
-          sx={{
-            fontWeight: 900,
-            color: getRiskColor(score),
-          }}
-        >
+      <div className="flex items-baseline gap-2 mt-4">
+        <span className={`text-5xl font-black ${getRiskColor(score)}`}>
           {rounded}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          / 100
-        </Typography>
-      </Stack>
+        </span>
+        <span className="text-sm text-slate-500 font-medium">/ 100</span>
+      </div>
 
-      <Box sx={{ mt: 1 }}>
-        <LinearProgress
-          variant="determinate"
-          value={barValue}
-          sx={{
-            height: 6,
-            borderRadius: 999,
-            backgroundColor: 'rgba(148, 163, 184, 0.3)',
-            '& .MuiLinearProgress-bar': {
-              borderRadius: 999,
-              background: 'linear-gradient(90deg, #22c55e, #6366f1)',
-            },
-          }}
-        />
-        <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.75 }}>
-          <Typography variant="caption" color="text.secondary">
-            Trend (7 days)
-          </Typography>
-          <Typography variant="caption" sx={{ fontWeight: 700, color: trendColor }}>
+      <div className="mt-6 mb-2">
+        {/* Progress Bar Background */}
+        <div className="h-2 w-full bg-slate-700/50 rounded-full overflow-hidden">
+          {/* Progress Bar Fill */}
+          <div
+            className={`h-full bg-gradient-to-r ${getRiskGradient(score)} rounded-full shadow-[0_0_10px_rgba(255,255,255,0.2)] transition-all duration-1000 ease-out`}
+            style={{ width: `${barValue}%` }}
+          />
+        </div>
+        
+        <div className="flex justify-between items-center mt-3">
+          <span className="text-xs text-slate-400 font-medium">Trend (7 days)</span>
+          <span className={`text-xs font-bold ${trendColor}`}>
             {trendLabel}
-          </Typography>
-        </Stack>
-      </Box>
+          </span>
+        </div>
+      </div>
 
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-        Mock score based on alert volume and severity. Replace with your own logic later.
-      </Typography>
-    </Paper>
+      <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+        Composite score based on current active threat volume, unmitigated critical alerts, and OpenCTI intelligence matches.
+      </p>
+    </div>
   );
 }
-

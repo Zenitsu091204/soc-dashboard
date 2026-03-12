@@ -31,7 +31,7 @@ export default function ThreatIntelFeedCard({ feed = [] }) {
         <RssFeedIcon className="text-purple-500" />
         <div>
           <h3 className="font-black text-lg text-white">
-            Threat Intelligence Feed (MISP)
+            Recent Indicators
           </h3>
           <p className="text-white/60 text-sm mt-0.5">
             New IOCs synced automatically from MISP

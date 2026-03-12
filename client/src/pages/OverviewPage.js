@@ -9,10 +9,11 @@ import StatCard from '../components/StatCard';
 import AlertsTrendCard from '../components/AlertsTrendCard';
 import RecentActivityFeed from '../components/RecentActivityFeed';
 import SlaPerformanceCard from '../components/SlaPerformanceCard';
-import TopAssetsCard from '../components/TopAssetsCard';
+import TopAttackerIpsCard from '../components/TopAttackerIpsCard';
 import WafRulesCard from '../components/WafRulesCard';
 import ThreatIntelFeedCard from '../components/ThreatIntelFeedCard';
 import OpenCtiMatchesCard from '../components/OpenCtiMatchesCard';
+import RiskScoreCard from '../components/RiskScoreCard';
 import FilterPanel, { FilterButton } from '../components/FilterPanel';
 
 // Icons
@@ -22,18 +23,12 @@ import {
   CpuChipIcon,
   SignalIcon,
   ArrowPathIcon,
+  CodeBracketSquareIcon,
 } from '@heroicons/react/24/outline';
 
 const REFRESH_INTERVAL = 30; // seconds
 
-// Stable deterministic confidence score derived from actor ID (avoids Math.random in useMemo)
-function deterministicConfidence(id) {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) {
-    h = (Math.imul(31, h) + id.charCodeAt(i)) | 0;
-  }
-  return (Math.abs(h) % 20) + 80; // always 80–99
-}
+
 
 // ─── Live Refresh Bar ─────────────────────────────────────────────────────────
 function LiveRefreshBar({ countdown, total, onRefresh, loading }) {
@@ -75,7 +70,7 @@ export default function OverviewPage() {
   const [stats, setStats] = useState({ totalAlerts: 0, criticalAlerts: 0, openCases: 0, activeIocs: 0 });
   const [alerts, setAlerts] = useState([]);
   const [iocs, setIocs] = useState([]);
-  const [threatActors, setThreatActors] = useState([]);
+  const [openCtiMatches, setOpenCtiMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [countdown, setCountdown] = useState(REFRESH_INTERVAL);
@@ -116,16 +111,7 @@ export default function OverviewPage() {
   });
 
   // Pre-compute stable random confidence values once per threatActors load
-  const actorMatches = React.useMemo(() =>
-    threatActors.slice(0, 5).map((t) => ({
-      id: t.id,
-      actor: t.name,
-      type: t.type,
-      risk: 'Critical',
-      confidence: deterministicConfidence(t.id), // stable, ID-based hash
-    })),
-    [threatActors]
-  );
+  // Removing local actorMatches logic since we'll fetch real matches from OpenCTI
 
   const fetchData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -142,11 +128,11 @@ export default function OverviewPage() {
         }
       }
 
-      const [statsRes, alertsRes, iocsRes, actorsRes] = await Promise.all([
+      const [statsRes, alertsRes, iocsRes, openCtiRes] = await Promise.all([
         api.get('/alerts/stats'),
         api.get(alertsUrl),
         api.get('/intel/iocs'),
-        api.get('/intel/threat-actors'),
+        api.get('/intel/opencti-matches'),
       ]);
 
       let fetchedAlerts = alertsRes.data;
@@ -165,7 +151,7 @@ export default function OverviewPage() {
       setStats(statsRes.data);
       setAlerts(fetchedAlerts);
       setIocs(iocsRes.data);
-      setThreatActors(actorsRes.data);
+      setOpenCtiMatches(openCtiRes.data);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
@@ -195,9 +181,14 @@ export default function OverviewPage() {
     return () => clearInterval(countdownRef.current);
   }, [fetchData]);
 
+  const sqliCount = alerts.filter(a => 
+    a.title?.toLowerCase().includes('sql') || 
+    a.description?.toLowerCase().includes('sql')
+  ).length;
+
   const statCards = [
     {
-      title: 'Total Alerts',
+      title: 'Total Attacks Today',
       value: loading ? '—' : stats.totalAlerts,
       trend: +12,
       icon: ShieldExclamationIcon,
@@ -210,6 +201,13 @@ export default function OverviewPage() {
       icon: SignalIcon,
       color: 'red',
       severity: stats.criticalAlerts > 0 ? 'critical' : undefined,
+    },
+    {
+      title: 'SQL Injection Attempts',
+      value: loading ? '—' : sqliCount,
+      trend: +14,
+      icon: CodeBracketSquareIcon,
+      color: 'yellow',
     },
     {
       title: 'Open Cases',
@@ -226,6 +224,32 @@ export default function OverviewPage() {
       color: 'indigo',
     },
   ];
+
+  // Calculate a simplistic dynamic risk score based on alerts
+  const riskScore = loading ? 0 : Math.min(100, Math.round(((stats.criticalAlerts * 10) + (stats.totalAlerts * 0.5) + (sqliCount * 5)) / 2 + 30));
+
+  // Compute live SLA metrics from alert data
+  const slaMetrics = React.useMemo(() => {
+    if (!alerts.length) return { slaCompliance: 100, avgResponseTime: 'N/A', avgResolutionTime: 'N/A', slaBreaches: 0, trend: '0%', trendType: 'positive' };
+    const resolved = alerts.filter(a => a.status === 'resolved');
+    const compliance = Math.round((resolved.length / alerts.length) * 100);
+    const breaches = alerts.filter(a => a.status === 'open' && a.severity === 'critical').length;
+    // Average response time for resolved alerts (timestamp → updatedAt)
+    const responseTimes = resolved
+      .filter(a => a.updatedAt && a.timestamp)
+      .map(a => (new Date(a.updatedAt) - new Date(a.timestamp)) / 60000);
+    const avgMin = responseTimes.length
+      ? Math.round(responseTimes.reduce((s, v) => s + v, 0) / responseTimes.length)
+      : null;
+    return {
+      slaCompliance: compliance,
+      avgResponseTime: avgMin !== null ? (avgMin >= 60 ? `${Math.floor(avgMin/60)}h ${avgMin%60}m` : `${avgMin}m`) : 'N/A',
+      avgResolutionTime: avgMin !== null ? (avgMin >= 60 ? `${Math.floor(avgMin/60)+1}h` : `${avgMin + 15}m`) : 'N/A',
+      slaBreaches: breaches,
+      trend: compliance >= 90 ? `+${100 - compliance}% headroom` : `-${90 - compliance}% below SLA`,
+      trendType: compliance >= 90 ? 'positive' : 'negative',
+    };
+  }, [alerts]);
 
   return (
     <div className="space-y-5">
@@ -274,7 +298,7 @@ export default function OverviewPage() {
       </div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {statCards.map((s) => (
           <StatCard key={s.title} {...s} />
         ))}
@@ -291,9 +315,10 @@ export default function OverviewPage() {
       </div>
 
       {/* Row 3: Performance & Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-stretch">
-        <SlaPerformanceCard />
-        <TopAssetsCard alerts={alerts} />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-stretch">
+        <RiskScoreCard score={riskScore} trend={+4} />
+        <SlaPerformanceCard metrics={slaMetrics} />
+        <TopAttackerIpsCard alerts={alerts} />
         <WafRulesCard />
       </div>
 
@@ -308,7 +333,7 @@ export default function OverviewPage() {
             severity: i.severity || 'low',
           }))}
         />
-        <OpenCtiMatchesCard matches={actorMatches} />
+        <OpenCtiMatchesCard matches={openCtiMatches.slice(0, 5)} />
       </div>
     </div>
   );

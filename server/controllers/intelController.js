@@ -1,4 +1,5 @@
 const prisma = require('../utils/prisma');
+const openCtiService = require('../services/openctiService');
 
 // @desc    Get all Threat Actors
 // @route   GET /api/intel/actors
@@ -46,7 +47,21 @@ const getIocs = async (req, res) => {
   }
 };
 
+// @desc    Get OpenCTI correlations/matches
+// @route   GET /api/intel/opencti-matches
+// @access  Private
+const getOpenCtiMatches = async (req, res) => {
+  try {
+    const data = await openCtiService.fetchOpenCtiMatches();
+    res.json(data);
+  } catch (error) {
+    console.error('Get OpenCTI matches error:', error.message);
+    res.status(500).json({ message: 'Failed to fetch OpenCTI correlations' });
+  }
+};
+
 module.exports = {
   getThreatActors,
   getIocs,
+  getOpenCtiMatches,
 };

@@ -60,12 +60,8 @@ export default function OpenCtiMatchesCard({ matches = [] }) {
 
       <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
         {matches.map((match) => {
-          const isCritical = match.risk === 'Critical';
-          const riskStyles = isCritical 
-            ? 'bg-rose-500/10 text-rose-500' 
-            : 'bg-orange-300/10 text-orange-200';
 
-          return (
+        return (
             <div key={match.id} className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <ConfidenceGauge value={match.confidence} />
@@ -80,7 +76,12 @@ export default function OpenCtiMatchesCard({ matches = [] }) {
               </div>
               
               <div className="text-right">
-                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[0.7rem] font-bold ${riskStyles}`}>
+                 <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[0.7rem] font-bold ${
+                   match.risk === 'Critical' ? 'bg-rose-500/10 text-rose-500' :
+                   match.risk === 'High'     ? 'bg-orange-500/10 text-orange-400' :
+                   match.risk === 'Medium'   ? 'bg-yellow-500/10 text-yellow-400' :
+                                              'bg-blue-500/10 text-blue-400'
+                 }`}>
                    <VerifiedUserIcon style={{ fontSize: 12 }} /> {match.risk} Risk
                  </span>
               </div>

@@ -8,7 +8,7 @@ export default function WafRulesCard({ rules = [] }) {
         <WarningIcon className="text-cyan-400" />
         <div>
           <h3 className="font-black text-lg text-white">
-            Top Triggered WAF Rules
+            Most Triggered WAF Rules
           </h3>
           <p className="text-white/60 text-sm mt-0.5">
             Most common blocked attack patterns in last 7 days

@@ -125,11 +125,16 @@ const updateAlertStatus = async (req, res) => {
 // @access  Private
 const getStats = async (req, res) => {
   try {
+    // Scope attack counts to today (midnight UTC → now)
+    const startOfToday = new Date();
+    startOfToday.setUTCHours(0, 0, 0, 0);
+    const todayFilter = { timestamp: { gte: startOfToday } };
+
     // Run all queries in parallel for better performance
     const [totalAlerts, criticalAlerts, highAlerts, openCases, activeIocs] = await Promise.all([
-      prisma.alert.count(),
-      prisma.alert.count({ where: { severity: 'critical' } }),
-      prisma.alert.count({ where: { severity: 'high' } }),
+      prisma.alert.count({ where: todayFilter }),
+      prisma.alert.count({ where: { severity: 'critical', ...todayFilter } }),
+      prisma.alert.count({ where: { severity: 'high', ...todayFilter } }),
       prisma.case.count({ where: { status: 'open' } }),
       prisma.ioc.count(),
     ]);

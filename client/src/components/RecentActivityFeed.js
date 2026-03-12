@@ -101,7 +101,7 @@ export default function RecentActivityFeed({ alerts: propAlerts = [] }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-3 flex-shrink-0">
         <div>
-          <h2 className="text-sm font-bold text-white">Activity Feed</h2>
+          <h2 className="text-sm font-bold text-white">Threat Intelligence Alerts</h2>
           <p className="text-[11px] text-slate-500">{sorted.length} recent events</p>
         </div>
         <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-full">

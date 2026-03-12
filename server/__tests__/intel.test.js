@@ -2,8 +2,11 @@ const request = require('supertest');
 const express = require('express');
 const { prismaMock } = require('../utils/singleton');
 const intelRoutes = require('../routes/intelRoutes');
+const openCtiService = require('../services/openctiService');
 const { errorHandler, notFound } = require('../middleware/errorMiddleware');
 const generateToken = require('../utils/generateToken');
+
+jest.mock('../services/openctiService');
 
 process.env.JWT_SECRET = 'testsecret';
 
@@ -69,6 +72,24 @@ describe('Intel API Endpoints', () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body.length).toEqual(2);
       expect(prismaMock.ioc.findMany).toHaveBeenCalled();
+    });
+  });
+
+  describe('GET /api/intel/opencti-matches', () => {
+    it('should get all OpenCTI matches', async () => {
+      const mockMatches = [
+        { id: 'oc1', actor: 'APT29', type: 'Domain', value: 'x.com', confidence: 90, risk: 'Critical' }
+      ];
+
+      openCtiService.fetchOpenCtiMatches.mockResolvedValue(mockMatches);
+
+      const res = await request(app)
+        .get('/api/intel/opencti-matches')
+        .set('Authorization', `Bearer ${analystToken}`);
+
+      expect(res.statusCode).toEqual(200);
+      expect(res.body.length).toEqual(1);
+      expect(openCtiService.fetchOpenCtiMatches).toHaveBeenCalled();
     });
   });
 });
