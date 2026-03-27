@@ -3,13 +3,7 @@ import { Box, Typography } from '@mui/material';
 import PublicIcon from '@mui/icons-material/Public';
 
 export default function GeographicThreatMap() {
-  const mockThreats = [
-    { id: 1, top: '30%', left: '20%', severity: 'critical' },
-    { id: 2, top: '45%', left: '50%', severity: 'high' },
-    { id: 3, top: '25%', left: '70%', severity: 'medium' },
-    { id: 4, top: '60%', left: '80%', severity: 'critical' },
-    { id: 5, top: '40%', left: '30%', severity: 'low' },
-  ];
+  const mockThreats = [];
 
   return (
     <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 2 }}>

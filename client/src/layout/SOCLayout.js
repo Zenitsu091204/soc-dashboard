@@ -177,11 +177,9 @@ export default function SOCLayout() {
       try {
         const { data } = await api.get('/alerts/stats');
         // Use the correct fields returned by alertController: totalAlerts, criticalAlerts
-        const total = data.totalAlerts || 1;
-        const critical = data.criticalAlerts || 0;
-        const high = data.highAlerts || 0; // may be 0 if not in stats, that's fine
-        const score = Math.min(100, Math.round(((critical * 10 + high * 5) / total) * 10));
-        setRiskScore(score || 10); // Default to low if no data
+        const { totalAlerts: total = 0, criticalAlerts: critical = 0, highAlerts: high = 0 } = data;
+        const score = total > 0 ? Math.min(100, Math.round(((critical * 10 + high * 5) / total) * 10)) : 0;
+        setRiskScore(score);
       } catch (e) {
         console.error("Failed to fetch risk stats", e);
       }

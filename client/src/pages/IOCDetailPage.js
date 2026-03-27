@@ -32,31 +32,17 @@ const SEV_STYLES = {
 };
 
 function getEnrichment(ioc) {
-  if (!ioc) return {};
-  let h = 0;
-  for (let i = 0; i < (ioc.value || '').length; i++) {
-    h = (Math.imul(31, h) + ioc.value.charCodeAt(i)) | 0;
-  }
-  const abs = Math.abs(h);
-  const countries = ['Russia', 'China', 'North Korea', 'Iran', 'United States', 'Netherlands', 'Germany', 'Ukraine'];
-  const cities    = ['Moscow', 'Beijing', 'Pyongyang', 'Tehran', 'New York', 'Amsterdam', 'Berlin', 'Kyiv'];
-  const asns      = ['AS15169 Google', 'AS3356 Lumen', 'AS1299 Telia', 'AS6939 Hurricane Electric', 'AS7922 Comcast'];
-  const orgs      = ['Hosting Ltd', 'CloudFlare Inc', 'Digital Ocean', 'Linode LLC', 'AWS'];
-  const threats   = ['C2 Server', 'Botnet Node', 'Phishing Host', 'Malware Dropper', 'Proxy Node', 'Ransomware C2'];
-  const malware   = ['Emotet', 'TrickBot', 'Cobalt Strike', 'Lokibot', 'RedLine Stealer', 'AsyncRAT'];
-
-  const idx = abs % countries.length;
   return {
-    country: countries[idx],
-    city: cities[idx],
-    asn: asns[abs % asns.length],
-    org: orgs[abs % orgs.length],
-    threat: threats[abs % threats.length],
-    malwareFamily: ioc.reputation > 60 ? malware[abs % malware.length] : null,
-    reportCount: (abs % 28) + 2,
-    lastReported: new Date(Date.now() - (abs % 7) * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-    confidence: 50 + (abs % 45),
-    tags: [threats[abs % threats.length], countries[idx], ioc.type?.toUpperCase()].filter(Boolean),
+    country: 'Unknown',
+    city: 'Unknown',
+    asn: 'N/A',
+    org: 'N/A',
+    threat: 'Unclassified',
+    malwareFamily: null,
+    reportCount: 0,
+    lastReported: 'Never',
+    confidence: 0,
+    tags: [],
   };
 }
 

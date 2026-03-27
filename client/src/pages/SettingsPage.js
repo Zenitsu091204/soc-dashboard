@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import PowerRoundedIcon from '@mui/icons-material/PowerRounded';
@@ -169,9 +170,12 @@ function GhostBtn({ onClick, children, danger }) {
 
 // ─── Profile Tab ──────────────────────────────────────────────────────────────
 function ProfileTab() {
+  const { user } = useAuth();
   const [form, setForm] = useState({
-    name: 'Alex Johnson', email: 'alex.johnson@soc.internal',
-    role: 'SOC Analyst', phone: '+1 (555) 234-5678',
+    name: user?.name || '',
+    email: user?.email || '',
+    role: user?.role || '',
+    phone: '',
     currentPassword: '', newPassword: '', confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
@@ -252,12 +256,8 @@ function ProfileTab() {
 }
 
 // ─── Users Tab ────────────────────────────────────────────────────────────────
-const INITIAL_USERS = [
-  { id: 1, name: 'Alex Johnson', email: 'alex.johnson@soc.internal',  role: 'Analyst', status: 'Active' },
-  { id: 2, name: 'Sarah Chen',   email: 'sarah.chen@soc.internal',    role: 'Admin',   status: 'Active' },
-  { id: 3, name: 'Mike Torres',  email: 'mike.torres@soc.internal',   role: 'Analyst', status: 'Inactive' },
-  { id: 4, name: 'Priya Nair',   email: 'priya.nair@soc.internal',    role: 'Analyst', status: 'Active' },
-];
+const INITIAL_USERS = [];
+
 
 const AVATAR_COLORS = ['from-indigo-500 to-cyan-500','from-violet-500 to-pink-500','from-amber-500 to-orange-500','from-emerald-500 to-teal-500'];
 

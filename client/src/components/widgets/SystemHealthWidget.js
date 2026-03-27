@@ -5,17 +5,10 @@ import StorageIcon from '@mui/icons-material/Storage';
 import CloudQueueIcon from '@mui/icons-material/CloudQueue';
 
 export default function SystemHealthWidget() {
-  const [metrics, setMetrics] = useState({ cpu: 45, memory: 62, disk: 80 });
+  const [metrics, setMetrics] = useState({ cpu: 0, memory: 0, disk: 0 });
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics(prev => ({
-        cpu: Math.min(100, Math.max(0, prev.cpu + (Math.random() * 10 - 5))),
-        memory: Math.min(100, Math.max(0, prev.memory + (Math.random() * 5 - 2.5))),
-        disk: prev.disk // Static
-      }));
-    }, 3000);
-    return () => clearInterval(interval);
+    // interval removed for empty state
   }, []);
 
   return (

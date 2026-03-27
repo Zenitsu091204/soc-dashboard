@@ -1,11 +1,11 @@
 import * as React from 'react';
 import { Box, Chip, Paper, Typography } from '@mui/material';
 
-const riskColors = {
-  Critical: { bg: 'rgba(239, 68, 68, 0.15)', border: '#EF4444', text: '#EF4444' },
-  High: { bg: 'rgba(249, 115, 22, 0.15)', border: '#F97316', text: '#F97316' },
-  Medium: { bg: 'rgba(234, 179, 8, 0.15)', border: '#EAB308', text: '#EAB308' },
-  Low: { bg: 'rgba(34, 197, 94, 0.15)', border: '#22C55E', text: '#22C55E' },
+const typeColors = {
+  'State-sponsored': { bg: 'rgba(239, 68, 68, 0.15)', border: '#EF4444', text: '#EF4444' },
+  'Cybercrime': { bg: 'rgba(249, 115, 22, 0.15)', border: '#F97316', text: '#F97316' },
+  'Hacktivist': { bg: 'rgba(234, 179, 8, 0.15)', border: '#EAB308', text: '#EAB308' },
+  'Unknown': { bg: 'rgba(34, 197, 94, 0.15)', border: '#22C55E', text: '#22C55E' },
 };
 
 export default function TopThreatActorsCard({ threatActors = [] }) {
@@ -63,7 +63,7 @@ export default function TopThreatActorsCard({ threatActors = [] }) {
           },
         }}>
           {threatActors.map((actor) => {
-            const colors = riskColors[actor.riskLevel] || riskColors.Low;
+            const colors = typeColors[actor.type] || typeColors.Unknown;
             return (
               <Box
                 key={actor.id}
@@ -86,7 +86,7 @@ export default function TopThreatActorsCard({ threatActors = [] }) {
                     {actor.name}
                   </Typography>
                   <Chip
-                    label={actor.riskLevel}
+                    label={actor.type || 'Unknown'}
                     size="small"
                     sx={{
                       bgcolor: colors.bg,
@@ -101,12 +101,12 @@ export default function TopThreatActorsCard({ threatActors = [] }) {
 
                 <Box sx={{ display: 'flex', gap: 2, mb: 0.5 }}>
                   <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    <strong>Sophistication:</strong> {actor.sophistication}
+                    <strong>Origin:</strong> {actor.origin || 'Unknown'}
                   </Typography>
                 </Box>
 
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                  Last seen: <strong>{actor.lastSeen}</strong>
+                  Last seen: <strong>{actor.lastSeen ? new Date(actor.lastSeen).toLocaleDateString() : 'Never'}</strong>
                 </Typography>
               </Box>
             );

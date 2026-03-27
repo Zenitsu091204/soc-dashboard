@@ -43,12 +43,14 @@ export default function RiskScoreCard({ score = 72, trend = 5 }) {
           />
         </div>
         
-        <div className="flex justify-between items-center mt-3">
-          <span className="text-xs text-slate-400 font-medium">Trend (7 days)</span>
-          <span className={`text-xs font-bold ${trendColor}`}>
-            {trendLabel}
-          </span>
-        </div>
+        {trend !== null && trend !== undefined && (
+          <div className="flex justify-between items-center mt-3">
+            <span className="text-xs text-slate-400 font-medium">Trend (7 days)</span>
+            <span className={`text-xs font-bold ${trendColor}`}>
+              {trendLabel}
+            </span>
+          </div>
+        )}
       </div>
 
       <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">

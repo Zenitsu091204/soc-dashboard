@@ -190,14 +190,14 @@ export default function OverviewPage() {
     {
       title: 'Total Attacks Today',
       value: loading ? '—' : stats.totalAlerts,
-      trend: +12,
+      trend: null,
       icon: ShieldExclamationIcon,
       color: 'blue',
     },
     {
       title: 'Critical Threats',
       value: loading ? '—' : stats.criticalAlerts,
-      trend: +5,
+      trend: null,
       icon: SignalIcon,
       color: 'red',
       severity: stats.criticalAlerts > 0 ? 'critical' : undefined,
@@ -205,28 +205,28 @@ export default function OverviewPage() {
     {
       title: 'SQL Injection Attempts',
       value: loading ? '—' : sqliCount,
-      trend: +14,
+      trend: null,
       icon: CodeBracketSquareIcon,
       color: 'yellow',
     },
     {
       title: 'Open Cases',
       value: loading ? '—' : stats.openCases,
-      trend: -2,
+      trend: null,
       icon: TicketIcon,
       color: 'yellow',
     },
     {
       title: 'Active IOCs',
       value: loading ? '—' : stats.activeIocs,
-      trend: +8,
+      trend: null,
       icon: CpuChipIcon,
       color: 'indigo',
     },
   ];
 
   // Calculate a simplistic dynamic risk score based on alerts
-  const riskScore = loading ? 0 : Math.min(100, Math.round(((stats.criticalAlerts * 10) + (stats.totalAlerts * 0.5) + (sqliCount * 5)) / 2 + 30));
+  const riskScore = loading ? 0 : Math.min(100, Math.round(((stats.criticalAlerts * 10) + (stats.totalAlerts * 0.5) + (sqliCount * 5)) / 2));
 
   // Compute live SLA metrics from alert data
   const slaMetrics = React.useMemo(() => {
@@ -316,7 +316,7 @@ export default function OverviewPage() {
 
       {/* Row 3: Performance & Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-stretch">
-        <RiskScoreCard score={riskScore} trend={+4} />
+        <RiskScoreCard score={riskScore} trend={null} />
         <SlaPerformanceCard metrics={slaMetrics} />
         <TopAttackerIpsCard alerts={alerts} />
         <WafRulesCard />

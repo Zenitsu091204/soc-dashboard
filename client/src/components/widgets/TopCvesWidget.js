@@ -3,12 +3,7 @@ import { Box, Typography, Chip, Table, TableBody, TableCell, TableRow, TableHead
 import BugReportIcon from '@mui/icons-material/BugReport';
 
 export default function TopCvesWidget() {
-  const cves = [
-    { cve: 'CVE-2026-0001', score: 9.8, product: 'Apache Struts' },
-    { cve: 'CVE-2026-0124', score: 8.5, product: 'OpenSSL' },
-    { cve: 'CVE-2025-4521', score: 7.2, product: 'Confluence' },
-    { cve: 'CVE-2025-9981', score: 6.5, product: 'Nginx' },
-  ];
+  const cves = [];
 
   return (
     <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'rgba(15,23,42,0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 2 }}>

@@ -40,13 +40,13 @@ const getCampaigns = async (req, res) => {
         activeCampaigns: statusCounts['Active'] || 0,
         severityDistribution,
         trendData,
-        mitreTechniques: [
-          { name: 'Phishing', value: severityCounts.Critical * 20 + 25 },
-          { name: 'Command & Control', value: severityCounts.High * 15 + 20 },
-          { name: 'Lateral Movement', value: severityCounts.Medium * 10 + 15 },
-          { name: 'Data Exfiltration', value: (campaigns.length * 3) + 5 },
-          { name: 'Privilege Escalation', value: (campaigns.length * 2) + 3 },
-        ],
+        mitreTechniques: campaigns.length > 0 ? [
+          { name: 'Phishing', value: severityCounts.Critical * 20 },
+          { name: 'Command & Control', value: severityCounts.High * 15 },
+          { name: 'Lateral Movement', value: severityCounts.Medium * 10 },
+          { name: 'Data Exfiltration', value: (campaigns.length * 3) },
+          { name: 'Privilege Escalation', value: (campaigns.length * 2) },
+        ] : [],
       },
     });
   } catch (error) {
