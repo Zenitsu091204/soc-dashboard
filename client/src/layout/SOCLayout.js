@@ -3,6 +3,8 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   Tooltip,
   Fade,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -156,7 +158,13 @@ function SidebarNavItem({ label, to, icon, open }) {
 
 export default function SOCLayout() {
   const layoutRef = React.useRef(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [open, setOpen] = React.useState(true);
+
+  React.useEffect(() => {
+    setOpen(!isMobile);
+  }, [isMobile]);
   const [timeRange, setTimeRange] = React.useState('24h');
   const [fullscreen, setFullscreen] = React.useState(false);
   const [riskScore, setRiskScore] = React.useState(0);

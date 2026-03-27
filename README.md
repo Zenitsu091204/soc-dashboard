@@ -2,7 +2,7 @@
 
 A production-ready **Security Operations Center (SOC) Dashboard** built with the PERN stack (PostgreSQL, Express, React, Node.js). Designed for real-time threat monitoring, intelligence analysis, and analyst workflow management.
 
-> **Current Version:** 3.3.0 — Last updated 2026-03-07 16:34 IST
+> **Current Version:** 4.0.1 — Last updated 2026-03-27 16:17 IST
 
 ---
 

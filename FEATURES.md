@@ -1,8 +1,8 @@
 # SOC Dashboard Features
-**Current Version:** 4.0.0 (Comprehensive Capability Release)
+**Current Version:** 4.0.1 (Responsive Capability Release)
 Complete documentation of every feature, page, component, and utility in the SOC Dashboard.
 
-**Last Updated:** 2026-03-07 | 16:34 IST — v3.3.0
+**Last Updated:** 2026-03-27 | 16:17 IST — v4.0.1
 
 ---
 
@@ -48,7 +48,7 @@ Complete documentation of every feature, page, component, and utility in the SOC
 31. [Global Search](#-global-search) _(v2.0.0)_
 32. [Toast Notifications](#-toast-notifications) _(v2.0.0)_
 33. [Advanced Filter Panel](#-advanced-filter-panel) _(v2.0.0)_
-34. [Collapsible Sidebar](#-collapsible-sidebar) _(v2.1.0)_
+34. [Collapsible Sidebar](#-collapsible-sidebar) _(fixed v4.0.1)_
 
 ### Layout & App Shell
 35. [SOCLayout](#-soclayout)
@@ -477,11 +477,12 @@ import FilterPanel, { FilterButton } from '../components/FilterPanel';
 
 ### 📌 Collapsible Sidebar
 
-> **Added:** v2.1.0 — 2026-02-16 | 07:41 IST
+> **Added:** v2.1.0 | **Fixed:** v4.0.1 — 2026-03-27 | 16:17 IST
 
 **Location:** `src/layout/SOCLayout.js`
 
 **Features:**
+- **Auto-collapses** on mobile/narrow viewports (`< 900px`) via `useMediaQuery` (fixed v4.0.1)
 - Toggle button to expand / collapse the sidebar
 - Smooth CSS width transition
 - Main content area adapts layout width automatically
@@ -708,6 +709,8 @@ npm test
 
 ---
 
+**Version 4.0.1** — Responsive Layout Fix _(2026-03-27)_
+**Version 4.0.0** — Comprehensive Capability Upgrades _(2026-03-07)_
 **Version 3.3** — Removed Docker Support _(2026-03-07)_
 **Version 3.2** — Backend Security & Hardening _(2026-02-24)_
 **Version 3.1** — Comprehensive Bug-Fix & Hardening Pass _(2026-02-24)_

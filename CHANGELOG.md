@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.1] - 2026-03-27 | 16:17 IST
+
+### Fixed — Responsive Design
+- **Sidebar Mobile Overflow Defect** — The sidebar navigation drawer did not collapse automatically on mobile viewports (e.g., <900px widths), causing significant horizontal testing overflow. Fixed by implementing Material-UI's `useMediaQuery` to dynamically bind the `open` state to the `md` breakpoint, ensuring an automatic collapse to an icon-only drawer on smaller screens.
+  - **File:** `client/src/layout/SOCLayout.js`
+
+---
+
 ## [4.0.0] - 2026-03-07 | 18:00 IST
 
 ### Major Updates — The Comprehensive Capability Release
@@ -358,7 +366,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-**Version 4.0** — Comprehensive Capability Upgrades _(2026-03-07)_
+**Version 4.0.1** — Responsive Layout Fix _(2026-03-27)_
+**Version 4.0.0** — Comprehensive Capability Upgrades _(2026-03-07)_
 **Version 3.3** — Removed Docker Support _(2026-03-07)_
 **Version 3.0** — Premium Settings Page Redesign _(2026-02-23)_
 **Version 2.5** — Page Navigation Bug Fix _(2026-02-20)_
