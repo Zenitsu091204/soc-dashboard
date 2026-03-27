@@ -63,3 +63,16 @@ model Ioc {
   seenAt      DateTime @default(now())
   createdAt   DateTime @default(now())
 }
+
+model Campaign {
+  id          String   @id @default(uuid())
+  title       String
+  status      String   @default("Active")   // Active, Investigating, Contained, Resolved
+  severity    String   @default("Medium")   // Critical, High, Medium, Low
+  description String?
+  actor       String?                        // linked threat actor name
+  indicators  Int      @default(0)
+  startDate   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

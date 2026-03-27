@@ -69,7 +69,7 @@ export const AuthProvider = ({ children }) => {
           setIsLocked(false);
           setFailedAttempts(0);
           setError(null);
-        }, 30000);
+        }, 15 * 60 * 1000);
       }
       return { success: false, error: msg };
     } finally {

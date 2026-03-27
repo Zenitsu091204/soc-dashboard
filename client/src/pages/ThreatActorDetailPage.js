@@ -33,35 +33,7 @@ const THREAT_LEVELS = {
   Low: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.2)]' },
 };
 
-// Expanded Mock Data Generator (Deterministic)
-function getExtendedActorData(actor) {
-  if (!actor) return {};
-  let h = 0;
-  for (let i = 0; i < (actor.name || '').length; i++) {
-    h = (Math.imul(31, h) + actor.name.charCodeAt(i)) | 0;
-  }
-  const abs = Math.abs(h);
-  
-  const origins = ['Russia', 'China', 'North Korea', 'Iran', 'Eastern Europe', 'Vietnam', 'Unknown'];
-  const motives = ['Espionage', 'Financial Gain', 'Disruption', 'Political Influence', 'State Sponsored'];
-  const sectors = ['Financial', 'Government', 'Healthcare', 'Energy', 'Telecommunications', 'Defense'];
-  const vectors = ['Spear Phishing', 'Supply Chain Attack', 'Zero-day Exploits', 'Credential Stuffing', 'Ransomware-as-a-Service'];
-  const malwares = ['Cobalt Strike', 'Mimikatz', 'PlugX', 'ShadowPad', 'Emotet', 'Qakbot'];
-  const techniques = ['T1566.001', 'T1190', 'T1071.001', 'T1059.001', 'T1003.001'];
-
-  return {
-    origin: origins[abs % origins.length],
-    motive: motives[abs % motives.length],
-    sectors: sectors.slice(abs % 3, (abs % 3) + 3),
-    vectors: vectors.slice(abs % 2, (abs % 2) + 3),
-    malware: malwares.slice(abs % 4, (abs % 4) + 2),
-    techniques: techniques.slice(abs % 3, (abs % 3) + 4),
-    campaignCount: (abs % 15) + 5,
-    iocCount: (abs % 200) + 45,
-    activityPeriod: `201${abs % 9} - Present`,
-    intensity: Array.from({ length: 12 }, (_, i) => Math.sin(abs + i) * 10 + 20),
-  };
-}
+// No mock data generators — all data comes from the live database via the API.
 
 // ── Page Component ───────────────────────────────────────────────────────────
 export default function ThreatActorDetailPage() {
@@ -91,7 +63,6 @@ export default function ThreatActorDetailPage() {
     fetchData();
   }, [id]);
 
-  const extended = useMemo(() => actor ? getExtendedActorData(actor) : {}, [actor]);
   const ctiMatches = useMemo(() => 
     actor ? openCtiMatches.filter(m => m.actor?.toLowerCase().includes(actor.name?.toLowerCase())) : [],
     [actor, openCtiMatches]
@@ -99,6 +70,8 @@ export default function ThreatActorDetailPage() {
   
   const levelKey = actor?.threatLevel || 'Medium';
   const level = THREAT_LEVELS[levelKey] || THREAT_LEVELS.Medium;
+  const origin = actor?.origin || 'Unknown';
+  const actorType = actor?.type || 'Advanced Threat';
 
   if (loading) {
     return (
@@ -158,25 +131,27 @@ export default function ThreatActorDetailPage() {
 
           <div className="flex-1 text-center md:text-left">
             <div className="flex flex-wrap justify-center md:justify-start items-center gap-3 mb-2">
-               <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-widest">{actor.type || 'ADVANCED THREAT'}</span>
+               <span className="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black text-slate-400 uppercase tracking-widest">{actorType}</span>
                <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${level.bg} ${level.color} ${level.border}`}>{levelKey} THREAT LEVEL</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-1">{actor.name}</h1>
-            <p className="text-slate-500 text-sm font-bold flex items-center justify-center md:justify-start gap-2 italic">
-               <GlobeAltIcon className="w-4 h-4" /> Origin: {extended.origin} • Active Since {extended.activityPeriod.split('-')[0]}
-            </p>
+             <p className="text-slate-500 text-sm font-bold flex items-center justify-center md:justify-start gap-2 italic">
+               <GlobeAltIcon className="w-4 h-4" /> Origin: {origin}{actor.lastSeen ? ` • Last seen ${new Date(actor.lastSeen).toLocaleDateString()}` : ''}
+             </p>
           </div>
 
-          <div className="hidden lg:grid grid-cols-2 gap-4 px-8 border-l border-white/5">
-             <div className="text-center">
-                <p className="text-[10px] text-slate-500 font-bold uppercase">Campaigns</p>
-                <p className="text-2xl font-black text-white">{extended.campaignCount}</p>
+             <div className="hidden lg:grid grid-cols-2 gap-4 px-8 border-l border-white/5">
+               {actor.lastSeen && (
+                 <div className="text-center">
+                   <p className="text-[10px] text-slate-500 font-bold uppercase">Last Seen</p>
+                   <p className="text-sm font-black text-white">{new Date(actor.lastSeen).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                 </div>
+               )}
+               <div className="text-center">
+                 <p className="text-[10px] text-slate-500 font-bold uppercase">Type</p>
+                 <p className="text-sm font-black text-white">{actorType}</p>
+               </div>
              </div>
-             <div className="text-center">
-                <p className="text-[10px] text-slate-500 font-bold uppercase">Linked IOCs</p>
-                <p className="text-2xl font-black text-white">{extended.iocCount}</p>
-             </div>
-          </div>
         </div>
       </div>
 
@@ -191,107 +166,60 @@ export default function ThreatActorDetailPage() {
                   <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
                     <DescriptionRoundedIcon className="text-lg" /> Operational Profile
                   </h3>
-                  <div className="bg-slate-950/60 rounded-2xl p-6 border border-white/5">
-                     <p className="text-slate-300 leading-relaxed text-sm italic">
-                        "{actor.description || `Highly organized and resource-rich threat group primarily focused on ${extended.motive?.toLowerCase()} campaigns against critical infrastructure.`}"
-                     </p>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Primary Motive</p>
-                        <p className="text-sm font-black text-indigo-400">{extended.motive}</p>
-                     </div>
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Operational Area</p>
-                        <p className="text-sm font-black text-slate-200">{extended.origin}</p>
-                     </div>
-                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Active Window</p>
-                        <p className="text-sm font-black text-slate-200">{extended.activityPeriod}</p>
-                     </div>
-                  </div>
+                 <div className="bg-slate-950/60 rounded-2xl p-6 border border-white/5">
+                    <p className="text-slate-300 leading-relaxed text-sm italic">
+                       "{actor.description || 'No description available for this threat actor.'}"
+                    </p>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Origin</p>
+                       <p className="text-sm font-black text-indigo-400">{origin}</p>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                       <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1">Type</p>
+                       <p className="text-sm font-black text-slate-200">{actorType}</p>
+                    </div>
+                 </div>
                </div>
            </section>
 
-           {/* Capabilities Matrix */}
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <section className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 space-y-6">
-                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-                    <ServerIcon className="w-5 h-5 text-orange-400" /> Attack Vectors
-                 </h3>
-                 <div className="space-y-3">
-                    {extended.vectors.map(v => (
-                       <div key={v} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
-                          <span className="text-xs font-bold text-slate-300">{v}</span>
-                       </div>
-                    ))}
+           {/* Capabilities — shown from real DB type/origin fields */}
+           <div className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 space-y-4">
+             <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
+               <ServerIcon className="w-5 h-5 text-orange-400" /> Actor Details
+             </h3>
+             <div className="space-y-3">
+               {[actor.type, actor.origin].filter(Boolean).map(v => (
+                 <div key={v} className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                   <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                   <span className="text-xs font-bold text-slate-300">{v}</span>
                  </div>
-              </section>
-
-              <section className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 space-y-6">
-                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-                    <GlobeAltIcon className="w-5 h-5 text-rose-400" /> Target Sectors
-                 </h3>
-                 <div className="flex flex-wrap gap-3">
-                    {extended.sectors.map(s => (
-                       <div key={s} className="flex items-center gap-2 px-4 py-2 bg-rose-500/10 border border-rose-500/20 rounded-xl">
-                          <span className="text-rose-400">{SECTOR_ICONS[s] || <ServerIcon className="w-4 h-4" />}</span>
-                          <span className="text-[10px] font-black text-rose-200 uppercase">{s}</span>
-                       </div>
-                    ))}
-                 </div>
-              </section>
+               ))}
+               {!actor.type && !actor.origin && (
+                 <p className="text-xs text-slate-600 italic">No additional detail stored in database.</p>
+               )}
+             </div>
            </div>
-
-           {/* Campaign Intensity History */}
-           <section className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 space-y-6">
-              <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-                 <TimelineRoundedIcon className="text-lg" /> Campaign Intensity (12 Months)
-              </h3>
-              <div className="h-32 flex items-end justify-between gap-2 px-4">
-                 {extended.intensity.map((val, i) => (
-                    <div 
-                       key={i} 
-                       className="flex-1 bg-gradient-to-t from-indigo-600/40 to-indigo-400/80 rounded-t-sm hover:from-indigo-500 transition-all cursor-crosshair group relative"
-                       style={{ height: `${val * 2}%` }}
-                    >
-                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-[8px] text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                          Month {i + 1}: {Math.round(val)} Evt
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </section>
 
         </div>
 
         {/* Right Column: Toolkit & Intel (Span 4) */}
         <div className="col-span-12 lg:col-span-4 space-y-8">
            
-           {/* Adversary Toolbox */}
+           {/* Adversary Toolbox — replaced with static guidance since toolbox data isn't in DB */}
            <section className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 space-y-6">
               <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-                 <TuneRoundedIcon className="text-lg" /> Adversary Toolbox
+                 <TuneRoundedIcon className="text-lg" /> Additional Information
               </h3>
-              <div className="space-y-6">
-                 <div>
-                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-3">Malware & Utilities</p>
-                    <div className="flex flex-wrap gap-2">
-                       {extended.malware.map(m => (
-                          <span key={m} className="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black rounded-lg uppercase">{m}</span>
-                       ))}
-                    </div>
+              <div className="space-y-4">
+                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Actor ID</p>
+                    <p className="text-xs font-mono text-slate-400">{actor.id}</p>
                  </div>
-                 <div>
-                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] mb-3">MITRE ATT&CK® Techniques</p>
-                    <div className="grid grid-cols-2 gap-2">
-                       {extended.techniques.map(t => (
-                          <div key={t} className="p-2 bg-slate-950/80 border border-white/5 rounded-lg text-center">
-                             <span className="text-[10px] font-mono font-bold text-slate-400">{t}</span>
-                          </div>
-                       ))}
-                    </div>
+                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
+                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-2">Created</p>
+                    <p className="text-xs font-mono text-slate-400">{new Date(actor.createdAt).toLocaleDateString()}</p>
                  </div>
               </div>
            </section>

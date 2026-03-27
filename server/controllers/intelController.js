@@ -1,11 +1,27 @@
 const prisma = require('../utils/prisma');
 const openCtiService = require('../services/openctiService');
 
-// @desc    Get all Threat Actors
+// @desc    Get all Threat Actors (with optional pagination)
 // @route   GET /api/intel/actors
 // @access  Private
 const getThreatActors = async (req, res) => {
   try {
+    const page = parseInt(req.query.page);
+    const limit = parseInt(req.query.limit);
+
+    if (page && limit) {
+      const skip = (page - 1) * limit;
+      const [actors, total] = await Promise.all([
+        prisma.threatActor.findMany({
+          skip,
+          take: limit,
+          orderBy: { lastSeen: 'desc' },
+        }),
+        prisma.threatActor.count(),
+      ]);
+      return res.json({ data: actors, meta: { total, page, limit } });
+    }
+
     const actors = await prisma.threatActor.findMany({
       orderBy: { lastSeen: 'desc' },
     });
@@ -83,12 +99,19 @@ const getIocById = async (req, res) => {
   }
 };
 
+let openCtiCache = { data: null, timestamp: 0 };
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 // @desc    Get OpenCTI correlations/matches
 // @route   GET /api/intel/opencti-matches
 // @access  Private
 const getOpenCtiMatches = async (req, res) => {
   try {
+    if (openCtiCache.data && (Date.now() - openCtiCache.timestamp < CACHE_TTL_MS)) {
+      return res.json(openCtiCache.data);
+    }
     const data = await openCtiService.fetchOpenCtiMatches();
+    openCtiCache = { data, timestamp: Date.now() };
     res.json(data);
   } catch (error) {
     console.error('Get OpenCTI matches error:', error.message);

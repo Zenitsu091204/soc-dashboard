@@ -64,11 +64,13 @@ app.use(express.urlencoded({ extended: false }));
 const authRoutes = require('./routes/authRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const intelRoutes = require('./routes/intelRoutes');
+const campaignRoutes = require('./routes/campaignRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/intel', intelRoutes);
+app.use('/api/campaigns', campaignRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'SOC Dashboard API is running' });

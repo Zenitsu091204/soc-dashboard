@@ -27,23 +27,36 @@ export default function ThreatActorsPage() {
   const [error, setError] = useState(null);
   const [query, setQuery] = useState('');
   const [retryKey, setRetryKey] = useState(0);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
-  const fetchThreatActors = useCallback(async () => {
-    setLoading(true);
+  const fetchThreatActors = useCallback(async (pageNum = 1, isLoadMore = false) => {
+    if (!isLoadMore) setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get('/intel/threat-actors');
-      setThreatActors(data);
+      const { data } = await api.get(`/intel/threat-actors?page=${pageNum}&limit=12`);
+      
+      let newActors = [];
+      if (data.data && data.meta) {
+        newActors = data.data;
+        setHasMore((pageNum * data.meta.limit) < data.meta.total);
+      } else {
+        newActors = data;
+        setHasMore(false);
+      }
+      
+      setThreatActors(prev => isLoadMore ? [...prev, ...newActors] : newActors);
     } catch (err) {
       console.error('Failed to fetch threat actors', err);
       setError('Failed to load threat actor data. Please try again.');
     } finally {
-      setLoading(false);
+      if (!isLoadMore) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchThreatActors();
+    setPage(1);
+    fetchThreatActors(1, false);
   }, [fetchThreatActors, retryKey]);
 
   const filtered = useMemo(() => {
@@ -164,6 +177,22 @@ export default function ThreatActorsPage() {
           </div>
         ))}
       </div>
+
+      {/* Load More Button */}
+      {hasMore && !query && (
+        <div className="flex justify-center pt-8 mb-4">
+          <button
+            onClick={() => {
+              const nextPage = page + 1;
+              setPage(nextPage);
+              fetchThreatActors(nextPage, true);
+            }}
+            className="px-6 py-2 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white text-sm font-bold rounded-full transition-colors border border-indigo-500/30 shadow-lg"
+          >
+            Load More Adversaries
+          </button>
+        </div>
+      )}
 
       {/* Empty state */}
       {filtered.length === 0 && (
