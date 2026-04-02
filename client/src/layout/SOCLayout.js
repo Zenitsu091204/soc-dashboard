@@ -13,6 +13,8 @@ import GroupWorkRoundedIcon from '@mui/icons-material/GroupWorkRounded';
 import RuleFolderRoundedIcon from '@mui/icons-material/RuleFolderRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
+import GavelRoundedIcon from '@mui/icons-material/GavelRounded';
+import AssignmentLateRoundedIcon from '@mui/icons-material/AssignmentLateRounded';
 
 import LanRoundedIcon from '@mui/icons-material/LanRounded';
 import TuneRoundedIcon from '@mui/icons-material/TuneRounded';
@@ -33,61 +35,38 @@ const navItems = [
   {
     type: 'item',
     id: 'live-monitor',
-    label: 'Live monitor',
+    label: 'Dashboard',
     to: '/',
     icon: <LanRoundedIcon fontSize="small" />,
   },
   {
     type: 'item',
-    id: 'investigations',
-    label: 'Investigations',
-    to: '/search',
-    icon: <TravelExploreRoundedIcon fontSize="small" />,
+    id: 'incidents',
+    label: 'Incidents',
+    to: '/incident-management',
+    icon: <AssignmentLateRoundedIcon fontSize="small" />,
   },
   {
     type: 'item',
-    id: 'ioc-workbench',
-    label: 'IOC workbench',
-    to: '/ioc-feed',
+    id: 'rule-management',
+    label: 'Rule Management',
+    to: '/rule-management',
+    icon: <GavelRoundedIcon fontSize="small" />,
+  },
+  {
+    type: 'item',
+    id: 'intelligence',
+    label: 'Intelligence',
+    to: '/intelligence',
     icon: <RuleFolderRoundedIcon fontSize="small" />,
-  },
-
-  // Intelligence
-  { type: 'section', id: 'intel', label: 'INTELLIGENCE' },
-  {
-    type: 'item',
-    id: 'actors',
-    label: 'Actor profiles',
-    to: '/threat-actors',
-    icon: <GroupWorkRoundedIcon fontSize="small" />,
-  },
-  {
-    type: 'item',
-    id: 'intel-reports',
-    label: 'Intel reports',
-    to: '/intel-reports',
-    icon: <DescriptionRoundedIcon fontSize="small" />,
-  },
-  {
-    type: 'item',
-    id: 'campaign-timeline',
-    label: 'Campaign timeline',
-    to: '/campaign-timeline',
-    icon: <TimelineRoundedIcon fontSize="small" />,
   },
 
   // Workspace
   { type: 'section', id: 'workspace', label: 'WORKSPACE' },
   {
     type: 'item',
-    id: 'assets',
-    label: 'Assets',
-    icon: <LanRoundedIcon fontSize="small" />,
-  },
-  {
-    type: 'item',
     id: 'settings',
-    label: 'Workspace settings',
+    label: 'Settings',
     to: '/settings',
     icon: <TuneRoundedIcon fontSize="small" />,
   },

@@ -29,6 +29,8 @@ model Alert {
   sourceIp      String?
   destIp        String?
   assignedTo    String?  // User ID
+  caseId        String?  // The case this alert belongs to
+  case          Case?    @relation(fields: [caseId], references: [id])
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -40,8 +42,27 @@ model Case {
   status      String   @default("open")
   priority    String   @default("medium")
   assignedTo  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  alerts      Alert[]
+  incidentIocs CaseIoc[]
+  incidentRules CaseRule[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model CaseIoc {
+  caseId String
+  iocId  String
+  case   Case @relation(fields: [caseId], references: [id])
+  ioc    Ioc  @relation(fields: [iocId], references: [id])
+  @@id([caseId, iocId])
+}
+
+model CaseRule {
+  caseId String
+  ruleId String
+  case   Case @relation(fields: [caseId], references: [id])
+  rule   Rule @relation(fields: [ruleId], references: [id])
+  @@id([caseId, ruleId])
 }
 
 model ThreatActor {
@@ -59,9 +80,50 @@ model Ioc {
   id          String   @id @default(uuid())
   type        String   // ip, domain, hash
   value       String   @unique
-  reputation  Int?     // 0-100 score
+  confidence  Int?     // 0-100 score from OpenCTI
+  severity    String?  // low, medium, high, critical
+  lastEnriched   DateTime?
+  rules        Rule[]
+  cases        CaseIoc[]
   seenAt      DateTime @default(now())
   createdAt   DateTime @default(now())
+}
+
+model Rule {
+  id          String   @id @default(uuid())
+  indicatorId String?
+  indicator   Ioc?     @relation(fields: [indicatorId], references: [id])
+  type        String   // NAXSI_MAIN, NAXSI_BASIC
+  content     String   // The actual rule string
+  status      String   @default("pending") // pending, active, disabled, rejected, failed, rolled_back
+  source      String   // OpenCTI, Manual
+  lastVerified DateTime?
+  verificationStatus String? // success, failed
+  cases        CaseRule[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  action      String   // e.g., "RULE_APPROVED", "SYNC_MANUAL", "LOGIN"
+  entityType  String?  // e.g., "Rule", "Case", "Ioc"
+  entityId    String?
+  details     String?  // JSON stringified
+  timestamp   DateTime @default(now())
+}
+
+model SyncStatus {
+  id          String   @id @default(uuid())
+  serviceName String   @unique
+  lastSync    DateTime @default(now())
+  status      String   // success, error
+  message     String?
+  iocCount    Int      @default(0)
+  freshness   Int?     // indicators updated in last sync
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model Campaign {

@@ -6,22 +6,41 @@ const MOCK_OPENCTI = process.env.MOCK_OPENCTI === 'true' || !OPENCTI_TOKEN;
 
 
 /**
- * Fetch correlation matches from OpenCTI.
- * In a real scenario, this would execute a GraphQL query to fetch Stix-Cyber-Observable
- * or Indicator relationships with Threat Actors.
+ * Fetch detailed threat intelligence from OpenCTI.
  */
-const fetchOpenCtiMatches = async () => {
+const fetchAllIntel = async () => {
   if (MOCK_OPENCTI) {
-    // OpenCTI not configured — return empty until real instance is connected
-    return [];
+    return { indicators: [], campaigns: [], actors: [] };
   }
 
   try {
-    // Example GraphQL Query to fetch Threat Actors and some relationships
-    // This is a simplified query; adjust based on actual OpenCTI data model needed.
     const query = `
       query {
-        stixThreatActors {
+        indicators(first: 50, orderBy: created_at, orderMode: desc) {
+          edges {
+            node {
+              id
+              name
+              description
+              indicator_types
+              pattern
+              confidence
+              revoked
+            }
+          }
+        }
+        stixCampaigns(first: 20) {
+          edges {
+            node {
+              id
+              name
+              description
+              confidence
+              status
+            }
+          }
+        }
+        stixThreatActors(first: 20) {
           edges {
             node {
               id
@@ -42,29 +61,41 @@ const fetchOpenCtiMatches = async () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${OPENCTI_TOKEN}`,
         },
-        timeout: 10000,
+        timeout: 15000,
       }
     );
 
-    // Transform OpenCTI raw GraphQL response into the format our Dashboard expects
-    const rawData = response.data?.data?.stixThreatActors?.edges || [];
+    const data = response.data?.data;
     
-    return rawData.map(edge => ({
-      id: edge.node.id,
-      actor: edge.node.name,
-      type: 'Threat Actor', // Ideally mapped from OpenCTI relationships
-      value: 'N/A', // Link to specific indicator if queried
-      confidence: edge.node.confidence || 50,
-      risk: edge.node.confidence > 80 ? 'Critical' : edge.node.confidence > 50 ? 'High' : 'Medium',
-    }));
+    return {
+      indicators: (data?.indicators?.edges || []).map(edge => ({
+        id: edge.node.id,
+        name: edge.node.name,
+        type: edge.node.indicator_types?.[0] || 'Unknown',
+        pattern: edge.node.pattern,
+        confidence: edge.node.confidence || 0,
+        description: edge.node.description,
+      })),
+      campaigns: (data?.stixCampaigns?.edges || []).map(edge => ({
+        id: edge.node.id,
+        name: edge.node.name,
+        description: edge.node.description,
+        status: edge.node.status,
+        confidence: edge.node.confidence,
+      })),
+      actors: (data?.stixThreatActors?.edges || []).map(edge => ({
+        id: edge.node.id,
+        name: edge.node.name,
+        confidence: edge.node.confidence,
+      })),
+    };
 
   } catch (error) {
     console.error('OpenCTI fetch error:', error.message);
-    // Return empty — do not fall back to mock data
-    return [];
+    return { indicators: [], campaigns: [], actors: [] };
   }
 };
 
 module.exports = {
-  fetchOpenCtiMatches,
+  fetchAllIntel,
 };

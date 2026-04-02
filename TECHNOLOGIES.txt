@@ -1,5 +1,5 @@
 TECHNOLOGIES / PLATFORM SPECIFICATIONS
-Last Updated: 2026-02-24 | v3.2.0
+Last Updated: 2026-04-02 | v4.3.0
 ======================================
 
 1. FRONT END
@@ -43,6 +43,7 @@ Last Updated: 2026-02-24 | v3.2.0
    - Node.js (v16+)              Server runtime
    - Express 4                   HTTP framework (REST API)
    - nodemon 3                   Auto-reload in development
+   - node-cron 3                 Scheduled intelligence synchronization
 
    Authentication & Security
    - jsonwebtoken 9              JWT generation (24 h expiry) and verification
@@ -50,6 +51,11 @@ Last Updated: 2026-02-24 | v3.2.0
    - Helmet 7                    HTTP security headers (XSS, HSTS, etc.)
    - CORS 2                      Origin-locked — reads CLIENT_ORIGIN from .env
    - Zod 3                       Request body validation on all POST/PATCH routes
+
+   Threat Intelligence & SOAR
+   - OpenCTI (Support)           GraphQL integration for external threat feeds
+   - NAXSI (Firewall)            WAF policy generation and automated reloading
+   - Audit Logger                Internal action tracking and compliance metrics
 
    Database & ORM
    - PostgreSQL (v13+)           Primary relational database
@@ -60,13 +66,12 @@ Last Updated: 2026-02-24 | v3.2.0
    - Morgan 1                    HTTP request logging (dev format)
    - console.error               Contextual error logging in all controllers
 
-   Reliability (v3.2.0)
+   Reliability (v4.2.0)
+   - Post-Deployment Verify      Automated verification of firewall rule status
+   - RBAC Middleware             Fined-grained permission control (Admin/Analyst)
    - JWT_SECRET startup guard    Server exits (process.exit 1) if secret is missing
    - Prisma P2025 handling       PATCH /alerts/:id returns 404 (not 500) on missing record
-   - Role hardening              /register does not accept role from body; always 'analyst'
    - Graceful shutdown           SIGTERM / SIGINT close HTTP server and disconnect Prisma
-   - unhandledRejection handler  Logs async errors without crashing the process
-   - uncaughtException handler   Logs synchronous errors and exits safely
 
    API Endpoints
    POST   /api/auth/register     Create analyst account (public)
@@ -74,33 +79,29 @@ Last Updated: 2026-02-24 | v3.2.0
    GET    /api/auth/profile      Authenticated user profile (private)
    GET    /api/alerts            All alerts, ordered by timestamp (private)
    POST   /api/alerts            Create alert (admin only)
-   GET    /api/alerts/stats      Aggregate stats — total, critical, open cases, IOCs (private)
-   PATCH  /api/alerts/:id        Update alert status — 404 on unknown ID (private)
-   GET    /api/intel/threat-actors  All threat actors, ordered by lastSeen (private)
-   GET    /api/intel/iocs           All IOCs, ordered by seenAt (private)
+   GET    /api/alerts/stats      Aggregate stats (total, critical, open cases, IOCs)
+   PATCH  /api/alerts/:id        Update alert status (private)
+   GET    /api/intel/threat-actors  All threat actors (synchronized from OpenCTI)
+   GET    /api/intel/iocs           All Indicators (synchronized from OpenCTI)
+   POST   /api/rules/deploy         Deploy production rules to NAXSI (Admin)
+   POST   /api/rules/:id/approve    Approve protection rule (Admin)
+   GET    /api/incidents            Manageable cases and threat timeline (private)
 
 
 3. ENVIRONMENT VARIABLES
    Server (.env)
    - PORT                        Server port (default: 5000)
    - DATABASE_URL                PostgreSQL connection string (required)
-   - JWT_SECRET                  Token signing secret (required — server exits if missing)
-   - CLIENT_ORIGIN               Allowed CORS origin (default: http://localhost:3000)
+   - JWT_SECRET                  Token signing secret (required)
+   - NAXSI_RULES_PATH            Path to production configuration file
+   - OPENCTI_TOKEN               API key for intelligence synchronization
 
    Client (.env)
    - REACT_APP_API_URL           Backend base URL (default: http://localhost:5000)
 
 
 4. HARDWARE / DEPLOYMENT
-   Development
-   - Standard PC / Laptop with Node.js v16+ and PostgreSQL v13+ installed
-   - Both client (port 3000) and server (port 5000) run concurrently
-
-   Deployment
-   - Frontend: Any static host (Vercel, Netlify, AWS S3 + CloudFront)
-   - Backend:  Any Node.js host (Railway, Render, AWS EC2, DigitalOcean)
-   - Database: Managed PostgreSQL (Supabase, Neon, AWS RDS, etc.)
-
-   Client Requirements
-   - Modern web browser (Chrome 90+, Firefox 90+, Edge 90+, Safari 14+)
-   - No specialised hardware required
+   Requirements
+   - Linux VM (Ubuntu Recommended) for NAXSI/Nginx firewall integration
+   - Node.js v16+, PostgreSQL v13+
+   - Client Requirements: Modern web browser (Chrome 90+, Firefox 90+)

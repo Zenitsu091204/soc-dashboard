@@ -1,5 +1,5 @@
 PROJECT MODULES
-Last Updated: 2026-02-24 | v3.2.0
+Last Updated: 2026-04-02 | v4.3.0
 ====================================
 
 1. CORE INFRASTRUCTURE
@@ -18,6 +18,13 @@ Last Updated: 2026-02-24 | v3.2.0
               Server-side: authMiddleware verifies JWT on protected routes;
               admin middleware gates admin-only endpoints.
    - v3.2.0:  Role hardening — self-registration always assigns 'analyst' role.
+
+   RBAC & Audit Module
+   - File:    server/middleware/rbacMiddleware.js
+   - File:    server/services/auditService.js
+   - Purpose: Enforces role-based access for Admin, Analyst, and Read-only
+              users. Global audit system records all critical security and
+              administrative actions in the database for compliance.
 
    Layout Module
    - File:    client/src/layout/SOCLayout.js
@@ -104,8 +111,9 @@ Last Updated: 2026-02-24 | v3.2.0
    - File:    client/src/pages/ThreatActorsPage.js
    - File:    client/src/components/TopThreatActorsCard.js
    - File:    server/controllers/intelController.js  (getThreatActors)
+   - File:    server/services/syncService.js         (syncThreatActors)
    - Route:   GET /api/intel/threat-actors
-   - Purpose: Full-page list of threat actor profiles fetched from API.
+   - Purpose: Full-page list of threat actor profiles synchronized from OpenCTI.
               View Profile modal shows description, origin, type, last seen,
               actor ID, and motive. Null-safe (handles missing actor.id).
               Error state with Retry on API failure.
@@ -113,9 +121,11 @@ Last Updated: 2026-02-24 | v3.2.0
    IOC Workbench Module
    - File:    client/src/pages/IOCFeedPage.js
    - File:    server/controllers/intelController.js  (getIocs)
+   - File:    server/services/syncService.js         (syncIndicators)
    - Route:   GET /api/intel/iocs
    - Purpose: Paginated / filterable list of Indicators of Compromise.
-              Error state with Retry on API failure.
+              Intelligence is synchronized from OpenCTI with per-IOC
+              confidence and severity tracking.
 
    Campaign Timeline Module
    - File:    client/src/pages/CampaignTimelinePage.js
@@ -136,7 +146,25 @@ Last Updated: 2026-02-24 | v3.2.0
    - Purpose: Full-page search results interface. Error state with Retry.
 
 
-5. CONFIGURATION
+5. SOAR & INCIDENT MANAGEMENT
+
+   Incident Management Module
+   - File:    server/controllers/incidentController.js
+   - File:    client/src/pages/IncidentManagementPage.js
+   - Purpose: Manages the full lifecycle of security incidents. Correlates
+              alerts into cases, tracks assignment, and visualizes historical
+              progression via the Threat Timeline.
+
+   SOAR & Firewall Module
+   - File:    server/services/naxsiService.js
+   - File:    server/services/ruleService.js
+   - File:    client/src/pages/RuleManagementPage.js
+   - Purpose: Converts threat intelligence into active firewall rules.
+              Supports manual and automated rule generation, approval
+              workflows, and post-deployment configuration verification.
+
+
+6. CONFIGURATION
 
    Settings Module
    - File:    client/src/pages/SettingsPage.js
@@ -145,7 +173,7 @@ Last Updated: 2026-02-24 | v3.2.0
               Security, Alert Rules, and Dashboard preferences.
 
 
-6. BACKEND API
+7. BACKEND API
 
    Alert Module (server)
    - File:    server/controllers/alertController.js
@@ -167,8 +195,8 @@ Last Updated: 2026-02-24 | v3.2.0
    Intel Module (server)
    - File:    server/controllers/intelController.js
    - File:    server/routes/intelRoutes.js
-   - Routes:  GET /api/intel/threat-actors  — ordered by lastSeen desc
-              GET /api/intel/iocs           — ordered by seenAt desc
+   - Routes:  GET /api/intel/threat-actors  — ordered by lastSeen desc (OpenCTI)
+              GET /api/intel/iocs           — ordered by seenAt desc   (OpenCTI)
 
    Database Module
    - File:    server/prisma/schema.prisma
@@ -177,7 +205,12 @@ Last Updated: 2026-02-24 | v3.2.0
               across hot-reloads. Models: User, Alert, IOC, ThreatActor, Case.
 
 
-7. UTILITIES
+8. UTILITIES
+
+   Audit System
+   - File:    server/services/auditService.js
+   - Purpose: Global audit provider recording system events, administrative
+              changes, and security alerts for compliance.
 
    Notification System
    - File:    client/src/utils/toast.js

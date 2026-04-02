@@ -20,7 +20,7 @@ const formatDate = (dateString) => {
   });
 };
 
-export default function ThreatActorsPage() {
+export default function ThreatActorsPage({ hideHeader = false }) {
   const navigate = useNavigate();
   const [threatActors, setThreatActors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -96,37 +96,38 @@ export default function ThreatActorsPage() {
 
   return (
     <div className="p-6 pb-20 space-y-6">
-      {/* Header with Breadcrumbs */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-             <Link to="/" className="hover:text-indigo-400 transition-colors">Dashboard</Link>
-             <span>/</span>
-             <span className="text-slate-300">Threat Actors</span>
+      {!hideHeader && (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+               <Link to="/" className="hover:text-indigo-400 transition-colors">Dashboard</Link>
+               <span>/</span>
+               <span className="text-slate-300">Threat Actors</span>
+            </div>
+            <h1 className="text-2xl font-black text-white tracking-tight leading-none mb-1">Adversary Intelligence</h1>
+            <p className="text-slate-400 text-xs font-medium">Global threat profiles and attribution data</p>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight leading-none mb-1">Adversary Intelligence</h1>
-          <p className="text-slate-400 text-xs font-medium">Global threat profiles and attribution data</p>
-        </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <button 
-            onClick={() => setRetryKey(prev => prev + 1)}
-            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors border border-white/5"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-          <div className="relative flex-1 md:w-80">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Search actors, origins, type..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
-            />
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <button 
+              onClick={() => setRetryKey(prev => prev + 1)}
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors border border-white/5"
+            >
+              <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+            <div className="relative flex-1 md:w-80">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search actors, origins, type..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full bg-slate-900/50 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Actor Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

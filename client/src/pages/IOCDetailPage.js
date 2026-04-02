@@ -31,21 +31,6 @@ const SEV_STYLES = {
   low: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.2)]' },
 };
 
-function getEnrichment(ioc) {
-  return {
-    country: 'Unknown',
-    city: 'Unknown',
-    asn: 'N/A',
-    org: 'N/A',
-    threat: 'Unclassified',
-    malwareFamily: null,
-    reportCount: 0,
-    lastReported: 'Never',
-    confidence: 0,
-    tags: [],
-  };
-}
-
 // ── Page Component ───────────────────────────────────────────────────────────
 export default function IOCDetailPage() {
   const { id } = useParams();
@@ -69,9 +54,9 @@ export default function IOCDetailPage() {
     fetchIoc();
   }, [id]);
 
-  const enrich = useMemo(() => ioc ? getEnrichment(ioc) : {}, [ioc]);
   const sevKey = (ioc?.severity || 'low').toLowerCase();
   const sev = SEV_STYLES[sevKey] || SEV_STYLES.low;
+  const enrich = ioc?.enrichment || {};
 
   if (loading) {
     return (
@@ -157,31 +142,30 @@ export default function IOCDetailPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                    <RadarRoundedIcon className="text-indigo-400" />
-                   <span className="text-lg font-bold text-slate-200">{enrich.threat}</span>
+                   <span className="text-lg font-bold text-slate-200">Threat Intelligence Data</span>
                 </div>
                 <p className="text-slate-400 leading-relaxed text-sm">
-                  This indicator has been correlated with <span className="text-indigo-400 font-bold">{enrich.malwareFamily || 'persistent threat'}</span> campaigns. 
-                  Behavioral analysis suggests it is used for <span className="text-slate-200 font-semibold">{enrich.threat?.toLowerCase()}</span> activity across critical infrastructure sectors.
+                  This indicator has been synchronized from OpenCTI. 
+                  It is currently classified as a <span className="text-indigo-400 font-bold">{ioc.severity || 'classified'}</span> threat.
                 </p>
                 <div className="flex flex-wrap gap-2 pt-2">
-                  {enrich.tags.map(t => (
-                    <span key={t} className="px-3 py-1 bg-slate-800 text-slate-400 text-[10px] font-black rounded-lg border border-white/5 uppercase">#{t}</span>
-                  ))}
+                  <span className="px-3 py-1 bg-slate-800 text-slate-400 text-[10px] font-black rounded-lg border border-white/5 uppercase">#threat-intel</span>
+                  <span className="px-3 py-1 bg-slate-800 text-slate-400 text-[10px] font-black rounded-lg border border-white/5 uppercase">#opencti</span>
                 </div>
               </div>
 
               <div className="bg-slate-950/60 rounded-2xl p-6 border border-white/5 space-y-4">
                  <div className="flex justify-between items-center pb-3 border-b border-white/5">
                     <span className="text-xs font-bold text-slate-500">Confidence Score</span>
-                    <span className="text-xl font-black text-white">{enrich.confidence}%</span>
+                    <span className="text-xl font-black text-white">{ioc.confidence}%</span>
                  </div>
                  <div className="flex justify-between items-center pb-3 border-b border-white/5">
-                    <span className="text-xs font-bold text-slate-500">Known Malware</span>
-                    <span className="text-xs font-black text-indigo-400">{enrich.malwareFamily || 'NONE'}</span>
+                    <span className="text-xs font-bold text-slate-500">Last Synced</span>
+                    <span className="text-xs font-black text-indigo-400">{new Date(ioc.updatedAt || ioc.createdAt).toLocaleDateString()}</span>
                  </div>
                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-500">Report Frequency</span>
-                    <span className="text-xs font-black text-slate-200">{enrich.reportCount} Global Feeds</span>
+                    <span className="text-xs font-bold text-slate-500">Source Platform</span>
+                    <span className="text-xs font-black text-slate-200">OpenCTI Community</span>
                  </div>
               </div>
             </div>
@@ -230,16 +214,16 @@ export default function IOCDetailPage() {
           {/* Reputation Radial Chart Mock */}
           <section className="bg-indigo-950/20 border border-indigo-500/20 rounded-3xl p-8 text-center relative overflow-hidden backdrop-blur-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6">Reputation Pulse</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6">Intelligence Confidence</p>
             
             <div className="relative inline-flex items-center justify-center">
                 <svg className="w-40 h-40 transform -rotate-90">
                   <circle className="text-slate-800/50" strokeWidth="12" stroke="currentColor" fill="transparent" r="74" cx="80" cy="80" />
                   <circle 
-                    className={`${ioc.reputation > 70 ? 'text-red-500' : ioc.reputation > 40 ? 'text-orange-500' : 'text-emerald-500'}`} 
+                    className={`${ioc.confidence > 80 ? 'text-red-500' : ioc.confidence > 50 ? 'text-orange-500' : 'text-emerald-500'}`} 
                     strokeWidth="12" 
                     strokeDasharray={464.7} 
-                    strokeDashoffset={464.7 - (464.7 * ioc.reputation) / 100} 
+                    strokeDashoffset={464.7 - (464.7 * ioc.confidence) / 100} 
                     strokeLinecap="round" 
                     stroke="currentColor" 
                     fill="transparent" 
@@ -247,7 +231,7 @@ export default function IOCDetailPage() {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-black text-white">{ioc.reputation}</span>
+                  <span className="text-4xl font-black text-white">{ioc.confidence}</span>
                   <span className="text-[10px] font-black text-slate-500 uppercase">Points</span>
                 </div>
             </div>
@@ -255,13 +239,13 @@ export default function IOCDetailPage() {
             <div className="mt-8 grid grid-cols-2 gap-4">
               <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5">
                 <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Status</p>
-                <p className={`text-xs font-black ${ioc.reputation > 60 ? 'text-red-400' : 'text-emerald-400'}`}>
-                  {ioc.reputation > 60 ? 'BLACKLIST' : 'CLEAN'}
+                <p className={`text-xs font-black ${ioc.confidence > 70 ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {ioc.confidence > 70 ? 'HIGH THREAT' : 'LOW RISK'}
                 </p>
               </div>
               <div className="p-4 bg-slate-900/60 rounded-2xl border border-white/5">
-                <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Reports</p>
-                <p className="text-xs font-black text-slate-200">{enrich.reportCount}</p>
+                <p className="text-[10px] font-black text-slate-500 uppercase mb-1">Source</p>
+                <p className="text-xs font-black text-slate-200">OPENCTI</p>
               </div>
             </div>
           </section>
@@ -282,8 +266,8 @@ export default function IOCDetailPage() {
               <div className="flex gap-4">
                  <div className="w-3 h-3 rounded-full bg-slate-700 mt-1" />
                  <div className="space-y-1">
-                    <p className="text-[10px] font-black text-slate-500 uppercase">Last Reported Match</p>
-                    <p className="text-xs font-bold text-slate-400 font-mono tracking-tight">{enrich.lastReported}</p>
+                    <p className="text-[10px] font-black text-slate-500 uppercase">Synchronization Profile</p>
+                    <p className="text-xs font-bold text-slate-400 font-mono tracking-tight text-emerald-400">ESTABLISHED</p>
                  </div>
               </div>
             </div>

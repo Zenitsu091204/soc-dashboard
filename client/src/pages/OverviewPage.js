@@ -15,6 +15,9 @@ import ThreatIntelFeedCard from '../components/ThreatIntelFeedCard';
 import OpenCtiMatchesCard from '../components/OpenCtiMatchesCard';
 import RiskScoreCard from '../components/RiskScoreCard';
 import FilterPanel, { FilterButton } from '../components/FilterPanel';
+import GeographicThreatMap from '../components/widgets/GeographicThreatMap';
+import SystemHealthWidget from '../components/widgets/SystemHealthWidget';
+import TopCvesWidget from '../components/widgets/TopCvesWidget';
 
 // Icons
 import {
@@ -323,7 +326,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Row 4: Threat Intel */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pb-6 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
         <ThreatIntelFeedCard
           feed={iocs.slice(0, 5).map((i) => ({
             id: i.id,
@@ -334,6 +337,17 @@ export default function OverviewPage() {
           }))}
         />
         <OpenCtiMatchesCard matches={openCtiMatches.slice(0, 5)} />
+      </div>
+
+      {/* Row 5: System & Geography */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pb-6 items-stretch">
+        <div className="lg:col-span-2 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+            <GeographicThreatMap />
+        </div>
+        <div className="flex flex-col gap-5">
+            <SystemHealthWidget />
+            <TopCvesWidget />
+        </div>
       </div>
     </div>
   );

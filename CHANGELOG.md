@@ -7,6 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.3.0] - 2026-04-02 | 16:30 IST
+
+### Added — Architecture Optimization & SOAR Hardening
+- **Automated Configuration Rollback** — Enhanced `naxsiService.js` with automatic backup and restoration of firewall configs on deployment failure.
+- **Unified Intelligence Hub** — Consolidated "IOC Feed" and "Threat Actors" into a single, high-performance tabbed interface (`IntelligencePage.js`).
+- **Real-time Sync Visibility** — Added `SyncStatusWidget` showing live OpenCTI synchronization health and volume metrics.
+- **Deep Incident Hydration** — Incident detail views now automatically link and display associated IOCs and Protection Rules for full-context investigations.
+- **Global Sidebar Refactor** — Drastically simplified navigation from 11 items to 5 core operational pillars (Dashboard, Incidents, Rule Management, Intelligence, Settings).
+
+### Changed — Front End Consolidation
+- **Dashboard Merge** — Merged `DashboardsPage` into the primary `OverviewPage` (Live Monitor).
+- **Integrated Widgets** — `GeographicThreatMap`, `SystemHealthWidget`, and `TopCvesWidget` are now core components of the main dashboard.
+
+### Fixed
+- **NaxsiService Reliability** — Fixed missing `prisma` import and added directory recursive creation for rule backups.
+- **Audit Consistency** — Manual sync trigger in `intelController.js` now correctly attributes the performing analyst.
+
+---
+
+## [4.2.0] - 2026-04-02 | 21:00 IST
+
+### Added — SOAR, RBAC & Incident Management (Hardening Release)
+
+- **SOAR Framework (NAXSI)** — Implemented automated firewall rule generation and deployment for NAXSI.
+  - **Auto-Deployment**: Tiered logic (Confidence > 90: Auto-active; > 70: Pending approval).
+  - **Verification**: Post-deployment status checks to confirm firewall reload success.
+  - **Files:** `server/services/naxsiService.js`, `server/services/ruleService.js`, `client/src/pages/RuleManagementPage.js`
+- **Role-Based Access Control (RBAC)** — Introduced three distinct roles (`admin`, `analyst`, `read-only`) with granular route protection.
+  - **Files:** `server/middleware/rbacMiddleware.js`
+- **Incident Management Lifecycle** — Centralized incident hub to convert correlated alerts into manageable cases with status tracking, analyst assignment, and investigation notes.
+  - **Threat Timeline**: Visual audit trail mapping the entire lifecycle of an incident.
+  - **Files:** `server/controllers/incidentController.js`, `client/src/pages/IncidentManagementPage.js`
+- **Comprehensive Audit Logging** — Global logging system tracking all critical security and administrative actions (rule deployments, status changes, credentials access).
+  - **Files:** `server/services/auditService.js`
+- **OpenCTI Multi-Object Sync** — Fully integrated synchronization of Indicators, Campaigns, and Threat Actors directly from OpenCTI Knowledge Base.
+  - **Files:** `server/services/syncService.js`, `server/services/openctiService.js`
+
+### Changed — Architecture Modernization
+
+- **Unified Intelligence Scoring** — Standardized on "Confidence" (0-100) across all UI and backend components, retiring the legacy mock reputation system.
+- **Database Hardening** — Purged deprecated `reputation` and `enrichmentData` fields from the Prisma schema to streamline the data model.
+
+### Removed
+
+- **Legacy EnrichmentService** — Removed the mock enrichment pipeline in favor of authoritative OpenCTI synchronization.
+- **Mock OpenCTI Matches** — Deleted static mock matches from the frontend overview; now pulls live detected matches from the local synchronized database.
+
+---
+
+## [4.1.0] - 2026-04-02 | 16:00 IST
+
+### Added — Intelligent Operations & Enrichment
+
+- **Alert Correlation Engine** — Implemented `CorrelationService` that automatically groups related alerts into cases within a 30-minute sliding window. Grouping occurs by shared entity, source IP, or destination IP.
+  - **File:** `server/services/correlationService.js`, `server/controllers/alertController.js`
+- **Automated IOC Enrichment** — New IOCs are now automatically enriched with reputation data from external threat intelligence providers (mocked for VT, AlienVault, and AbuseIPDB).
+  - **File:** `server/services/enrichmentService.js`, `server/controllers/intelController.js`
+- **Prisma Schema Upgrade** — Augmented `Alert` and `Ioc` models to support case relationships and enrichment metadata storage.
+  - **File:** `server/prisma/schema.prisma`
+
+---
+
 ## [4.0.1] - 2026-03-27 | 16:17 IST
 
 ### Fixed — Responsive Design
@@ -365,6 +427,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mobile app version
 
 ---
+
+**Version 4.2.0** — SOAR, RBAC & Hardening Release _(2026-04-02)_
+
+**Version 4.1.0** — Intelligent Operations & Enrichment _(2026-04-02)_
 
 **Version 4.0.1** — Responsive Layout Fix _(2026-03-27)_
 **Version 4.0.0** — Comprehensive Capability Upgrades _(2026-03-07)_

@@ -1,5 +1,5 @@
 PROJECT DIRECTORY STRUCTURE
-Last Updated: 2026-02-24 | v3.2.0
+Last Updated: 2026-04-02 | v4.3.0
 ====================================
 
 soc-dashboard/
@@ -27,6 +27,7 @@ soc-dashboard/
 │   │   │   ├── OpenCtiMatchesCard.js    # OpenCTI threat intelligence matches
 │   │   │   ├── PageHeader.js            # Consistent page title / breadcrumb
 │   │   │   ├── RecentActivityFeed.js    # Live scrollable alert feed
+│   │   │   ├── SyncStatusWidget.js      # Real-time synchronization metrics
 │   │   │   ├── RiskPulseBar.js          # Animated risk level bar
 │   │   │   ├── RiskScoreCard.js         # Calculated risk score widget
 │   │   │   ├── SeverityChip.js          # Colour-coded severity badge
@@ -38,6 +39,7 @@ soc-dashboard/
 │   │   │   ├── ThreatIntelFeedCard.js   # Threat intelligence feed widget
 │   │   │   ├── TopAssetsCard.js         # Most-affected assets bar chart (blink-fixed)
 │   │   │   ├── TopThreatActorsCard.js   # Top threat actor list widget
+│   │   │   ├── ThreatTimeline.js        # Incident history visualization component
 │   │   │   └── WafRulesCard.js          # WAF rule activity card
 │   │   ├── context/                 # React context providers
 │   │   │   └── AuthContext.js       # Auth state + auth:unauthorized event listener
@@ -47,17 +49,19 @@ soc-dashboard/
 │   │   │   └── SOCLayout.js         # Sidebar + header + main content wrapper
 │   │   ├── pages/                   # Route-level page components
 │   │   │   ├── CampaignTimelinePage.js  # Campaign tracking with MITRE ATT&CK
-│   │   │   ├── DashboardsPage.js        # Dashboard selection/listing
+│   │   │   ├── IntelligencePage.js      # Unified Intelligence Hub (IOCs + Actors)
 │   │   │   ├── DraggableDashboard.js    # Drag-and-drop custom dashboard
 │   │   │   ├── DraggableDashboard.css   # Grid layout styles
 │   │   │   ├── DraggableDashboard.test.js  # Integration tests
-│   │   │   ├── IOCFeedPage.js           # IOC Workbench with error state + retry
+│   │   │   ├── IOCFeedPage.js           # IOC Feed (embedded in Hub)
 │   │   │   ├── IntelReportPage.js       # Threat intelligence report page
 │   │   │   ├── LoginPage.js             # JWT auth login form
-│   │   │   ├── OverviewPage.js          # Live monitor dashboard (error banner)
+│   │   │   ├── OverviewPage.js          # Unified Live Monitor dashboard
+│   │   │   ├── RuleManagementPage.js    # SOAR rule oversight and deployment UI
+│   │   │   ├── IncidentManagementPage.js # Case tracking and threat timeline
 │   │   │   ├── SearchPage.js            # Full-page search with error state + retry
 │   │   │   ├── SettingsPage.js          # Premium settings with sidebar nav
-│   │   │   └── ThreatActorsPage.js      # Actor profiles + View Profile modal
+│   │   │   └── ThreatActorsPage.js      # Actor profiles (embedded in Hub)
 │   │   ├── services/                # API communication layer
 │   │   │   └── api.js               # Axios instance (JWT interceptor, 401 event)
 │   │   ├── utils/                   # Shared utility functions
@@ -80,9 +84,11 @@ soc-dashboard/
 │   ├── controllers/                 # Route handler logic
 │   │   ├── alertController.js       # Alerts CRUD + stats (P2025 → 404 handled)
 │   │   ├── authController.js        # Login, register (role hardened), profile
+│   │   ├── incidentController.js     # Case lifecycle and investigation notes
 │   │   └── intelController.js       # Threat actors and IOCs
 │   ├── middleware/                  # Express middleware
 │   │   ├── authMiddleware.js        # JWT protect + admin role gate
+│   │   ├── rbacMiddleware.js        # Multi-role permission enforcement
 │   │   └── errorMiddleware.js       # 404 handler + global error formatter
 │   ├── prisma/                      # Database schema and migrations
 │   │   └── schema.prisma            # Prisma schema (User, Alert, IOC, ThreatActor)
@@ -92,7 +98,13 @@ soc-dashboard/
 │   │   └── intelRoutes.js           # /api/intel
 │   ├── utils/                       # Server-side utilities
 │   │   ├── generateToken.js         # JWT signing helper (24 h expiry)
-│   │   └── prisma.js                # Singleton PrismaClient
+│   │   ├── prisma.js                # Singleton PrismaClient
+│   │   ├── openctiService.js        # GraphQL client for threat intelligence
+│   │   ├── syncService.js           # Automated intelligence synchronization
+│   │   ├── correlationService.js    # Alert-to-incident grouping logic
+│   │   ├── naxsiService.js          # Firewall configuration and reloading
+│   │   ├── ruleService.js           # Business logic for rule generation
+│   │   └── auditService.js          # Global action tracking and logging
 │   ├── .env                         # Environment variables (PORT, DB, JWT, CORS)
 │   ├── check-users.js               # Dev script: inspect user records
 │   ├── index.js                     # Server entry (JWT guard, CORS, graceful shutdown)

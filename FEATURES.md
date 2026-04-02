@@ -1,24 +1,37 @@
 # SOC Dashboard Features
-**Current Version:** 4.0.1 (Responsive Capability Release)
+**Current Version:** 4.3.0 (Architecture Optimization Release)
 Complete documentation of every feature, page, component, and utility in the SOC Dashboard.
 
-**Last Updated:** 2026-03-27 | 16:17 IST — v4.0.1
+**Last Updated:** 2026-04-02 | 16:35 IST — v4.3.0
 
 ---
 
 ## Table of Contents
 
+### Architecture & Optimization (v4.3.0)
+1. [Automated Rollback & Verification](#-automated-rollback--verification)
+2. [Unified Intelligence Hub](#-unified-intelligence-hub)
+3. [Consolidated Dashboard Interface](#-consolidated-dashboard-interface)
+
+### SOAR & Hardening (v4.2.0)
+4. [SOAR Automation (NAXSI)](#-soar-automation-naxsi)
+5. [Role-Based Access Control (RBAC)](#-role-based-access-control-rbac)
+6. [Incident Management Module](#-incident-management-module)
+7. [Global Audit Logging](#-global-audit-logging)
+
+### Core Intelligence (v4.1.0)
+8. [Alert Correlation Engine](#-alert-correlation-engine)
+9. [OpenCTI Multi-Object Sync](#-opencti-multi-object-sync)
+
 ### Pages
-1. [Login Page](#-login-page) _(v1.0.0)_
-2. [Overview / Live Monitor](#-overview--live-monitor) _(v1.0.0)_
-3. [Dashboards Page](#-dashboards-page) _(v1.0.0)_
-4. [Draggable Dashboard](#-draggable-dashboard) _(v2.0.0)_
-5. [IOC Feed Page](#-ioc-feed-page) _(v1.0.0)_
-6. [Search Page](#-search-page) _(v1.0.0)_
-7. [Threat Actors Page](#-threat-actors-page) _(v1.0.0)_
-8. [Campaign Timeline Page](#-campaign-timeline-page) _(v1.0.0, updated v2.4.0)_
-9. [Intel Report Page](#-intel-report-page) _(v2.0.0)_
-10. [Settings Page](#-settings-page) _(v3.0.0)_
+2. [Login Page](#-login-page)
+2. [Overview / Live Monitor (Consolidated)](#-overview--live-monitor)
+3. [Intelligence Hub](#-intelligence-hub)
+4. [Draggable Dashboard](#-draggable-dashboard)
+5. [Rule Management Page](#-rule-management-page)
+6. [Incident Management Page](#-incident-management-page)
+7. [Settings Page](#-settings-page)
+
 
 ### Dashboard Cards / Components
 11. [StatCard](#-statcard)
@@ -154,6 +167,7 @@ rowHeight: 30
 
 **Features:**
 - Table of Indicators of Compromise (IP, Domain, Hash, URL types)
+- **Confidence Scoring** (v4.2.0) — Direct visualization of OpenCTI confidence metrics
 - Filtering by IOC type and severity
 - Search within the IOC table
 - Export-ready layout
@@ -693,6 +707,88 @@ All pages and components adapt to screen size:
 
 ---
 
+## 🛡️ SOAR & Hardening (v4.2.0)
+
+---
+
+### 🔒 SOAR Automation (NAXSI)
+
+**Location:** `server/services/naxsiService.js`, `server/services/ruleService.js`
+
+**Features:**
+- **Automated Rule Generation**: Converts OpenCTI indicators into production-ready NAXSI protection rules.
+- **Tiered Automation Logic**:
+    - **Confidence > 90**: Rules are deployed as `active` automatically.
+    - **Confidence > 70**: Rules are created as `pending` for analyst review.
+- **Post-Deployment Verification**: System-level checks compare the firewall configuration state against the database records after every reload.
+- **Rule Management UI**: Centralized dashboard to approve, reject, manually edit, or deploy rules.
+
+---
+
+### 🔑 Role-Based Access Control (RBAC)
+
+**Location:** `server/middleware/rbacMiddleware.js`
+
+**Roles:**
+- **Admin**: Full system access, including rule deployment and user management.
+- **Analyst**: Management of alerts and incidents, rule reviews (cannot deploy to firewall).
+- **Read-only**: View-only access to dashboards and intelligence.
+
+---
+
+### 📑 Incident Management Module
+
+**Location:** `client/src/pages/IncidentManagementPage.js`, `server/controllers/incidentController.js`
+
+**Features:**
+- **Correlation Mapping**: Automatically links related alerts into high-context legal cases (Incidents).
+- **Full Lifecycle Tracking**: Transition incidents through status phases (New -> Investigating -> Resolved).
+- **Threat Timeline**: Interactive visual component displaying every event in an incident's history, including detection and analyst actions.
+- **Collaborative Notes**: Secure storage for analyst investigation notes and findings.
+
+---
+
+### 📝 Global Audit Logging
+
+**Location:** `server/services/auditService.js`
+
+**Features:**
+- **Accountability Trail**: Records every sensitive action (approvals, deployments, status changes).
+- **Event Context**: Captures the performing user, timestamp, action type, and target resource.
+- **Immutable Log Store**: Logs are stored in a dedicated `AuditLog` table for compliance and forensic review.
+
+---
+
+## 🧠 Core Intelligence
+
+---
+
+### 🧬 Alert Correlation Engine
+
+> **Added:** v4.1.0 | 2026-04-02 | 16:00 IST
+
+**Location:** `server/services/correlationService.js`
+
+**Features:**
+- **Automated Incident Grouping**: Automatically groups related alerts into "Cases" (Incidents) using a 30-minute sliding time window.
+- **Pivot Clustering**: Correlates alerts based on shared `entity`, `sourceIp`, or `destIp`.
+- **Noise Reduction**: Designed to reduce analyst fatigue by Rolling up thousands of atomic alerts into manageable incidents.
+
+---
+
+### 🔍 OpenCTI Multi-Object Sync
+
+> **Updated:** v4.2.0 | 2026-04-02 | 21:00 IST
+
+**Location:** `server/services/syncService.js`
+
+**Features:**
+- **Knowledge Base Sync**: Direct ingestion of Indicators, Campaigns, and Threat Actor metadata from OpenCTI.
+- **Scheduled Ingestion**: Background cron job ensures local intelligence is never older than 60 minutes.
+- **Health Monitoring**: Real-time `SyncStatus` tracking visible on the administrator dashboard.
+
+---
+
 ## 🧪 Testing
 
 | Test File | Covers |
@@ -709,6 +805,8 @@ npm test
 
 ---
 
+**Version 4.2.0** — SOAR, RBAC & Hardening Release _(2026-04-02)_
+**Version 4.1.0** — Intelligent Operations & Enrichment _(2026-04-02)_
 **Version 4.0.1** — Responsive Layout Fix _(2026-03-27)_
 **Version 4.0.0** — Comprehensive Capability Upgrades _(2026-03-07)_
 **Version 3.3** — Removed Docker Support _(2026-03-07)_

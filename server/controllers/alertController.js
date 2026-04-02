@@ -76,6 +76,10 @@ const createAlert = async (req, res) => {
         timestamp: new Date(),
       },
     });
+    
+    // Asynchronously call correlation service to avoid blocking the response
+    const CorrelationService = require('../services/correlationService');
+    CorrelationService.correlate(alert).catch(err => console.error('Correlation error after alert creation:', err));
 
     if (req.io) {
       req.io.emit('newAlert', alert);

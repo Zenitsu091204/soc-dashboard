@@ -65,12 +65,18 @@ const authRoutes = require('./routes/authRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const intelRoutes = require('./routes/intelRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
+const ruleRoutes = require('./routes/ruleRoutes');
+const incidentRoutes = require('./routes/incidentRoutes');
+const syncService = require('./services/syncService');
+const cron = require('node-cron');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/intel', intelRoutes);
 app.use('/api/campaigns', campaignRoutes);
+app.use('/api/rules', ruleRoutes);
+app.use('/api/incidents', incidentRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'SOC Dashboard API is running' });
@@ -94,6 +100,12 @@ process.on('uncaughtException', (err) => {
 // ── Start server ──────────────────────────────────────────────────────────────
 const server = httpServer.listen(PORT, () => {
   console.log(`🚀 Server & WebSockets running on port ${PORT}`);
+  
+  // Initialize OpenCTI Sync Cron (Every hour)
+  cron.schedule('0 * * * *', () => {
+    console.log('⏰ Scheduled sync starting...');
+    syncService.syncIntelligence().catch(err => console.error('Cron sync error:', err));
+  });
 });
 
 // ── Graceful shutdown (SIGTERM / SIGINT) ──────────────────────────────────────

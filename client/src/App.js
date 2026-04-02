@@ -7,15 +7,13 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy-loaded components for performance (Code Splitting)
 const SOCLayout = React.lazy(() => import('./layout/SOCLayout.js'));
-const OverviewPage = React.lazy(() => import('./pages/OverviewPage.js'));
-const IOCFeedPage = React.lazy(() => import('./pages/IOCFeedPage.js'));
-const SearchPage = React.lazy(() => import('./pages/SearchPage.js'));
-const ThreatActorsPage = React.lazy(() => import('./pages/ThreatActorsPage.js'));
-const ThreatActorDetailPage = React.lazy(() => import('./pages/ThreatActorDetailPage.js'));
-const IOCDetailPage = React.lazy(() => import('./pages/IOCDetailPage.js'));
-const IntelReportPage = React.lazy(() => import('./pages/IntelReportPage.js'));
-const CampaignTimelinePage = React.lazy(() => import('./pages/CampaignTimelinePage.js'));
 const LoginPage = React.lazy(() => import('./pages/LoginPage.js'));
+const OverviewPage = React.lazy(() => import('./pages/OverviewPage.js'));
+const IntelligencePage = React.lazy(() => import('./pages/IntelligencePage.js'));
+const IOCDetailPage = React.lazy(() => import('./pages/IOCDetailPage.js'));
+const ThreatActorDetailPage = React.lazy(() => import('./pages/ThreatActorDetailPage.js'));
+const RuleManagementPage = React.lazy(() => import('./pages/RuleManagementPage.js'));
+const IncidentManagementPage = React.lazy(() => import('./pages/IncidentManagementPage.js'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage.js'));
 
 // Loading component
@@ -83,13 +81,11 @@ function App() {
               }
             >
               <Route path="/" element={<OverviewPage />} />
-              <Route path="/ioc-feed" element={<IOCFeedPage />} />
+              <Route path="/intelligence" element={<IntelligencePage />} />
               <Route path="/ioc-feed/:id" element={<IOCDetailPage />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/threat-actors" element={<ThreatActorsPage />} />
               <Route path="/threat-actors/:id" element={<ThreatActorDetailPage />} />
-              <Route path="/intel-reports" element={<IntelReportPage />} />
-              <Route path="/campaign-timeline" element={<CampaignTimelinePage />} />
+              <Route path="/rule-management" element={<RuleManagementPage />} />
+              <Route path="/incident-management" element={<IncidentManagementPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

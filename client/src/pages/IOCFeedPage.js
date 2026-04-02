@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function IOCFeedPage() {
+export default function IOCFeedPage({ hideHeader = false }) {
   const navigate = useNavigate();
   const [iocs, setIocs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -68,25 +68,26 @@ export default function IOCFeedPage() {
 
   return (
     <div className="p-6 pb-20 space-y-6">
-      {/* Header with Breadcrumbs */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-             <Link to="/" className="hover:text-indigo-400 transition-colors">Dashboard</Link>
-             <span>/</span>
-             <span className="text-slate-300">Threat Intel Feed</span>
+      {!hideHeader && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+               <Link to="/" className="hover:text-indigo-400 transition-colors">Dashboard</Link>
+               <span>/</span>
+               <span className="text-slate-300">Threat Intel Feed</span>
+            </div>
+            <h1 className="text-2xl font-black text-white tracking-tight">Indicators of Compromise</h1>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">Indicators of Compromise</h1>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setRetryKey(prev => prev + 1)}
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors border border-white/5"
+            >
+              <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => setRetryKey(prev => prev + 1)}
-            className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition-colors border border-white/5"
-          >
-            <ArrowPathIcon className={`w-5 h-5 ${loading ? 'animate-spin text-indigo-400' : ''}`} />
-          </button>
-        </div>
-      </div>
+      )}
 
       <div className="flex flex-col md:flex-row gap-4">
         {/* Search */}
@@ -125,7 +126,7 @@ export default function IOCFeedPage() {
             <thead>
               <tr className="bg-slate-900/60 border-b border-white/5">
                 <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Indicator</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Reputation</th>
+                <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Confidence</th>
                 <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">First Seen</th>
                 <th className="px-6 py-4 w-10"></th>
               </tr>
@@ -159,14 +160,14 @@ export default function IOCFeedPage() {
                       <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden border border-white/5">
                         <div 
                           className={`h-full rounded-full transition-all duration-1000 ${
-                            ioc.reputation > 70 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 
-                            ioc.reputation > 40 ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]' : 
+                            ioc.confidence > 70 ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 
+                            ioc.confidence > 40 ? 'bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]' : 
                             'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'
                           }`}
-                          style={{ width: `${ioc.reputation}%` }}
+                          style={{ width: `${ioc.confidence}%` }}
                         />
                       </div>
-                      <span className="text-[10px] font-black text-slate-500">{ioc.reputation} / 100</span>
+                      <span className="text-[10px] font-black text-slate-500">{ioc.confidence} / 100</span>
                     </div>
                   </td>
                   <td className="px-6 py-5 text-right">

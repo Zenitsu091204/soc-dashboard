@@ -1,5 +1,6 @@
 const prisma = require('../utils/prisma');
 const openCtiService = require('../services/openctiService');
+const syncService = require('../services/syncService');
 
 // @desc    Get all Threat Actors (with optional pagination)
 // @route   GET /api/intel/actors
@@ -107,15 +108,80 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 // @access  Private
 const getOpenCtiMatches = async (req, res) => {
   try {
-    if (openCtiCache.data && (Date.now() - openCtiCache.timestamp < CACHE_TTL_MS)) {
-      return res.json(openCtiCache.data);
-    }
-    const data = await openCtiService.fetchOpenCtiMatches();
-    openCtiCache = { data, timestamp: Date.now() };
-    res.json(data);
+    // Fetch high-confidence indicators from our local database (populated by sync)
+    const matches = await prisma.ioc.findMany({
+      where: { confidence: { gt: 0 } },
+      orderBy: { confidence: 'desc' },
+      take: 20,
+    });
+
+    const formattedMatches = matches.map(m => ({
+      id: m.id,
+      actor: 'OpenCTI Source',
+      type: m.type,
+      value: m.value,
+      confidence: m.confidence,
+      risk: m.confidence > 80 ? 'Critical' : m.confidence > 50 ? 'High' : 'Medium',
+    }));
+
+    res.json(formattedMatches);
   } catch (error) {
     console.error('Get OpenCTI matches error:', error.message);
     res.status(500).json({ message: 'Failed to fetch OpenCTI correlations' });
+  }
+};
+
+// @desc    Create a new IOC
+// @route   POST /api/intel/iocs
+// @access  Private
+const createIoc = async (req, res) => {
+  const { type, value } = req.body;
+
+  if (!type || !value) {
+    return res.status(400).json({ message: 'Type and value are required' });
+  }
+
+  try {
+    const ioc = await prisma.ioc.create({
+      data: { type, value },
+    });
+
+    res.status(201).json(ioc);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ message: 'IOC already exists' });
+    }
+    console.error('Create IOC error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Trigger manual sync with OpenCTI
+// @route   POST /api/intel/sync
+// @access  Private
+const triggerSync = async (req, res) => {
+  try {
+    const userId = req.user?.id || 'SYSTEM';
+    const results = await syncService.syncIntelligence(userId);
+    res.json({ message: 'Sync complete', results });
+  } catch (error) {
+    console.error('Trigger sync error:', error);
+    res.status(500).json({ message: 'Sync failed' });
+  }
+};
+
+// @desc    Get latest sync status
+// @route   GET /api/intel/sync/status
+// @access  Private
+const getSyncStatus = async (req, res) => {
+  try {
+    const status = await prisma.syncStatus.findFirst({
+      orderBy: { timestamp: 'desc' },
+    });
+    res.json(status || { status: 'never_run', iocCount: 0, message: 'No sync history found' });
+  } catch (error) {
+    console.error('Get sync status error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -125,4 +191,7 @@ module.exports = {
   getIocs,
   getIocById,
   getOpenCtiMatches,
+  createIoc,
+  triggerSync,
+  getSyncStatus,
 };
