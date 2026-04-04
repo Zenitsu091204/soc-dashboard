@@ -166,7 +166,7 @@ const IncidentManagementPage = () => {
                 variant="outlined"
               >
                 <MenuItem value="open">Open</MenuItem>
-                <MenuItem value="in-progress">In Progress</MenuItem>
+                <MenuItem value="investigating">Investigating</MenuItem>
                 <MenuItem value="resolved">Resolved</MenuItem>
                 <MenuItem value="closed">Closed</MenuItem>
               </TextField>

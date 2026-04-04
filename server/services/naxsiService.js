@@ -14,6 +14,11 @@ const RELOAD_COMMAND = process.env.FIREWALL_RELOAD_CMD || 'nginx -s reload';
  */
 const updateRulesFile = async (rules) => {
   try {
+    if (process.env.SIMULATE_FIREWALL === 'true' || process.env.NODE_ENV === 'development') {
+      console.log(`[SIMULATION] Skipping rule write to ${NAXSI_RULES_PATH}`);
+      return;
+    }
+
     // 1. Create backup of current file if it exists
     try {
       await fs.copyFile(NAXSI_RULES_PATH, NAXSI_BACKUP_PATH);

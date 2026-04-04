@@ -70,7 +70,7 @@ function LiveRefreshBar({ countdown, total, onRefresh, loading }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function OverviewPage() {
-  const [stats, setStats] = useState({ totalAlerts: 0, criticalAlerts: 0, openCases: 0, activeIocs: 0 });
+  const [stats, setStats] = useState({ totalAlerts: 0, criticalAlerts: 0, highAlerts: 0, openCases: 0, activeIocs: 0 });
   const [alerts, setAlerts] = useState([]);
   const [iocs, setIocs] = useState([]);
   const [openCtiMatches, setOpenCtiMatches] = useState([]);
@@ -146,7 +146,7 @@ export default function OverviewPage() {
           const status = a.status || 'open';
           if (activeFilters.status[status] === false) return false;
           // Note: "in-progress" is not a status in backend (it's "investigating" or similar, but the UI checks 'in-progress'. Let's relax status filtering if not exact match)
-          if (status === 'investigating' && activeFilters.status['in-progress'] === false) return false;
+          if (status === 'investigating' && activeFilters.status.investigating === false) return false;
           return true;
         });
       }
@@ -206,6 +206,14 @@ export default function OverviewPage() {
       severity: stats.criticalAlerts > 0 ? 'critical' : undefined,
     },
     {
+      title: 'High Severity',
+      value: loading ? '—' : stats.highAlerts,
+      trend: null,
+      icon: ShieldExclamationIcon,
+      color: 'orange',
+      severity: stats.highAlerts > 0 ? 'high' : undefined,
+    },
+    {
       title: 'SQL Injection Attempts',
       value: loading ? '—' : sqliCount,
       trend: null,
@@ -228,16 +236,23 @@ export default function OverviewPage() {
     },
   ];
 
-  // Calculate a simplistic dynamic risk score based on alerts
-  const riskScore = loading ? 0 : Math.min(100, Math.round(((stats.criticalAlerts * 10) + (stats.totalAlerts * 0.5) + (sqliCount * 5)) / 2));
+  // Calculate a dynamic risk score based on weighted alerts
+  const riskScore = loading ? 0 : Math.min(100, Math.round(((stats.criticalAlerts * 10) + (stats.highAlerts * 5) + (stats.totalAlerts * 0.5) + (sqliCount * 2)) / 3));
 
   // Compute live SLA metrics from alert data
   const slaMetrics = React.useMemo(() => {
     if (!alerts.length) return { slaCompliance: 100, avgResponseTime: 'N/A', avgResolutionTime: 'N/A', slaBreaches: 0, trend: '0%', trendType: 'positive' };
-    const resolved = alerts.filter(a => a.status === 'resolved');
-    const compliance = Math.round((resolved.length / alerts.length) * 100);
-    const breaches = alerts.filter(a => a.status === 'open' && a.severity === 'critical').length;
+    
+    // SLA compliance: (Resolved Criticals + Resolved Highs) / (Total Criticals + Total Highs)
+    const priorityAlerts = alerts.filter(a => ['critical', 'high'].includes(a.severity));
+    if (priorityAlerts.length === 0) return { slaCompliance: 100, avgResponseTime: 'N/A', avgResolutionTime: 'N/A', slaBreaches: 0, trend: '99%+', trendType: 'positive' };
+    
+    const resolvedPriority = priorityAlerts.filter(a => a.status === 'resolved');
+    const compliance = Math.round((resolvedPriority.length / priorityAlerts.length) * 100);
+    const breaches = priorityAlerts.filter(a => a.status === 'open').length;
+    
     // Average response time for resolved alerts (timestamp → updatedAt)
+    const resolved = alerts.filter(a => a.status === 'resolved');
     const responseTimes = resolved
       .filter(a => a.updatedAt && a.timestamp)
       .map(a => (new Date(a.updatedAt) - new Date(a.timestamp)) / 60000);
@@ -249,8 +264,8 @@ export default function OverviewPage() {
       avgResponseTime: avgMin !== null ? (avgMin >= 60 ? `${Math.floor(avgMin/60)}h ${avgMin%60}m` : `${avgMin}m`) : 'N/A',
       avgResolutionTime: avgMin !== null ? (avgMin >= 60 ? `${Math.floor(avgMin/60)+1}h` : `${avgMin + 15}m`) : 'N/A',
       slaBreaches: breaches,
-      trend: compliance >= 90 ? `+${100 - compliance}% headroom` : `-${90 - compliance}% below SLA`,
-      trendType: compliance >= 90 ? 'positive' : 'negative',
+      trend: compliance >= 95 ? 'Within limits' : `${100 - compliance}% over threshold`,
+      trendType: compliance >= 95 ? 'positive' : 'negative',
     };
   }, [alerts]);
 
@@ -301,7 +316,7 @@ export default function OverviewPage() {
       </div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         {statCards.map((s) => (
           <StatCard key={s.title} {...s} />
         ))}

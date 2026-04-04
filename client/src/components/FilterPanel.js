@@ -29,7 +29,7 @@ const FilterPanel = ({ open, onClose, onApplyFilters }) => {
     },
     status: {
       open: true,
-      'in-progress': true,
+      investigating: true,
       resolved: false,
       'false-positive': false,
     },
@@ -74,7 +74,7 @@ const FilterPanel = ({ open, onClose, onApplyFilters }) => {
       },
       status: {
         open: true,
-        'in-progress': true,
+        investigating: true,
         resolved: false,
         'false-positive': false,
       },
@@ -234,15 +234,15 @@ const FilterPanel = ({ open, onClose, onApplyFilters }) => {
             <FormControlLabel
               control={
                 <Checkbox
-                  checked={filters.status['in-progress']}
-                  onChange={() => handleStatusChange('in-progress')}
+                  checked={filters.status.investigating}
+                  onChange={() => handleStatusChange('investigating')}
                   sx={{
                     color: '#6366F1',
                     '&.Mui-checked': { color: '#6366F1' },
                   }}
                 />
               }
-              label={<Typography variant="body2">In Progress</Typography>}
+              label={<Typography variant="body2">Investigating</Typography>}
             />
             <FormControlLabel
               control={
