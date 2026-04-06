@@ -8,7 +8,8 @@ A production-ready **Security Operations Center (SOC) Dashboard** built with the
 
 ## 🚀 Features
 
-### **Production & Deployment (v4.4.0)**
+### **Production & Deployment (v4.4.1)**
+- **Unified Static Serving** — The Express backend automatically hosts the compiled React bundle internally, eliminating cross-origin complications and serving the entire platform seamlessly on a single port for live production.
 - **1-Click Guided Setup** — Execute `setup.js` to automatically resolve dependencies, generate crypto-secure `.env` tokens, migrate PostgreSQL schemas, and concurrently launch the app.
 - **Zero-Data Foundation** — Configured for immediate production use with exactly zero pre-loaded mock vulnerabilities/geo-threats. Only actual synced intel will appear.
 
@@ -112,6 +113,19 @@ node setup.js
 ```
 *Frontend runs on http://localhost:3000*
 *Backend runs on http://localhost:5000*
+
+### 3. Production Deployment (Unified Server)
+For live deployments, you do not need two servers. The backend is configured to statically serve the optimized frontend bundle on a single port.
+```powershell
+# 1. Build the frontend
+cd client
+npm run build
+
+# 2. Start the unified production server
+cd ../server
+node index.js
+```
+*The full application (frontend + API) now runs entirely on http://localhost:5000*
 
 ---
 
