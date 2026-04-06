@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
+const path = require('path');
 
 // ── Startup validation ────────────────────────────────────────────────────────
 if (!process.env.JWT_SECRET) {
@@ -80,8 +81,12 @@ app.use('/api/rules', ruleRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/settings', settingsRoutes);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'SOC Dashboard API is running' });
+// ── Serve Frontend (Production Mode) ──────────────────────────────────────────
+app.use(express.static(path.join(__dirname, '../client/build')));
+
+// Any request that doesn't match an API route falls back to the React App
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
 });
 
 // ── Error handling ────────────────────────────────────────────────────────────

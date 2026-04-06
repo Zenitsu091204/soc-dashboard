@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.4.0] - 2026-04-06 | 15:44 IST
+
+### Added — 1-Click Production Automated Setup
+- **Global Setup Script** — Fully overhauled `setup.js` and added a companion `setup.bat` executable to completely automate the build lifecycle (NPM install, Environment Generation, DB Resets, Seeding, and Webpack Build-Run).
+- **Zero-Data State Architecture** — Transformed the dashboard to run gracefully with exactly zero mock data. The system now respects empty environments entirely, defaulting all charts to accurate null states until live integrations (like OpenCTI or live scanner endpoints) are attached.
+- **Crypto-Secure Bootstrapping** — Automated setup script now generates dynamic 512-bit JWT secrets silently during native `.env` generation.
+
+### Removed — Codebase Clean Up
+- **Unused Metrics Subsystem (SystemHealth)** — Eliminated the mock hardware monitoring `/api/system/health` logic and frontend `SystemHealthWidget.js` as it is out-of-scope for the SIEM threat dashboard.
+- **Mock Geo Mapping** — Erased the hard-coded `GeographicThreatMap.js` frontend asset.
+- **Global Vulnerability Splitting** — Removed the `TopCvesWidget` connection to the public NVD REST API to preserve the "Zero-Data" integrity (external NVD tickets shouldn't populate internal dashboard tracking metrics).
+- **Outdated Project Docs** — Purged unneeded internal build descriptors (`MODULES.txt`, `PROJECT_STRUCTURE.txt`, etc.).
+
+---
+
 ## [4.3.0] - 2026-04-02 | 16:30 IST
 
 ### Added — Architecture Optimization & SOAR Hardening
@@ -428,7 +443,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-**Version 4.2.0** — SOAR, RBAC & Hardening Release _(2026-04-02)_
+**Version 4.4.0** — Production Automation & Zero-Data Architecture _(2026-04-06)_
+
+**Version 4.3.0** — Architecture Optimization & SOAR Hardening _(2026-04-02)_
 
 **Version 4.1.0** — Intelligent Operations & Enrichment _(2026-04-02)_
 

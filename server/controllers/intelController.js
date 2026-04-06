@@ -176,7 +176,7 @@ const triggerSync = async (req, res) => {
 const getSyncStatus = async (req, res) => {
   try {
     const status = await prisma.syncStatus.findFirst({
-      orderBy: { timestamp: 'desc' },
+      orderBy: { updatedAt: 'desc' },
     });
     res.json(status || { status: 'never_run', iocCount: 0, message: 'No sync history found' });
   } catch (error) {

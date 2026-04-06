@@ -1,67 +1,19 @@
 const axios = require('axios');
 
-const OPENCTI_URL = process.env.OPENCTI_URL || 'http://localhost:8080/graphql';
+const OPENCTI_URL = process.env.OPENCTI_URL;
 const OPENCTI_TOKEN = process.env.OPENCTI_TOKEN;
-const MOCK_OPENCTI = process.env.MOCK_OPENCTI === 'true' || !OPENCTI_TOKEN;
 
+// Guard: require explicit configuration in production
+const isConfigured = OPENCTI_URL && OPENCTI_TOKEN && OPENCTI_TOKEN !== 'your_opencti_token_here';
 
 /**
  * Fetch detailed threat intelligence from OpenCTI.
+ * Returns empty arrays if OpenCTI is not configured — no mock data injected.
  */
 const fetchAllIntel = async () => {
-  if (MOCK_OPENCTI) {
-    return { 
-      indicators: [
-        {
-          id: 'mock-ioc-1',
-          name: 'SELECT * FROM users',
-          type: 'stix-pattern',
-          description: 'Probable SQL Injection attempt detected in query parameter.',
-          pattern: "[url:value MATCHES '.*select.*from.*']",
-          confidence: 85
-        },
-        {
-          id: 'mock-ioc-2',
-          name: '<script>alert(1)</script>',
-          type: 'stix-pattern',
-          description: 'Cross-Site Scripting (XSS) payload identified in request body.',
-          pattern: "[body:value MATCHES '.*<script>.*']",
-          confidence: 95
-        },
-        {
-          id: 'mock-ioc-3',
-          name: '/etc/passwd',
-          type: 'stix-pattern',
-          description: 'Directory Traversal attempt to access system files.',
-          pattern: "[url:value MATCHES '.*/etc/passwd.*']",
-          confidence: 75
-        },
-        {
-          id: 'mock-ioc-4',
-          name: 'rm -rf /',
-          type: 'stix-pattern',
-          description: 'Remote Code Execution (RCE) command detected.',
-          pattern: "[body:value MATCHES '.*rm -rf.*']",
-          confidence: 92
-        }
-      ], 
-      campaigns: [
-        {
-          id: 'mock-campaign-1',
-          name: 'Operation Mock Shield',
-          description: 'A mock campaign for testing rule generation.',
-          status: 'Active',
-          confidence: 80
-        }
-      ], 
-      actors: [
-        {
-          id: 'mock-actor-1',
-          name: 'LulzSec Mock',
-          confidence: 70
-        }
-      ] 
-    };
+  if (!isConfigured) {
+    console.log('[OpenCTI] Not configured — skipping sync. Set OPENCTI_URL and OPENCTI_TOKEN in .env to enable.');
+    return { indicators: [], campaigns: [], actors: [] };
   }
 
   try {
@@ -119,14 +71,16 @@ const fetchAllIntel = async () => {
     const data = response.data?.data;
     
     return {
-      indicators: (data?.indicators?.edges || []).map(edge => ({
-        id: edge.node.id,
-        name: edge.node.name,
-        type: edge.node.indicator_types?.[0] || 'Unknown',
-        pattern: edge.node.pattern,
-        confidence: edge.node.confidence || 0,
-        description: edge.node.description,
-      })),
+      indicators: (data?.indicators?.edges || [])
+        .filter(edge => !edge.node.revoked)
+        .map(edge => ({
+          id: edge.node.id,
+          name: edge.node.name,
+          type: edge.node.indicator_types?.[0] || 'Unknown',
+          pattern: edge.node.pattern,
+          confidence: edge.node.confidence || 0,
+          description: edge.node.description,
+        })),
       campaigns: (data?.stixCampaigns?.edges || []).map(edge => ({
         id: edge.node.id,
         name: edge.node.name,
@@ -134,19 +88,23 @@ const fetchAllIntel = async () => {
         status: edge.node.status,
         confidence: edge.node.confidence,
       })),
-      actors: (data?.stixThreatActors?.edges || []).map(edge => ({
-        id: edge.node.id,
-        name: edge.node.name,
-        confidence: edge.node.confidence,
-      })),
+      actors: (data?.stixThreatActors?.edges || [])
+        .filter(edge => !edge.node.revoked)
+        .map(edge => ({
+          id: edge.node.id,
+          name: edge.node.name,
+          confidence: edge.node.confidence,
+        })),
     };
 
   } catch (error) {
-    console.error('OpenCTI fetch error:', error.message);
+    console.error('[OpenCTI] Fetch error:', error.message);
+    // Return empty — do not inject mock data into production
     return { indicators: [], campaigns: [], actors: [] };
   }
 };
 
 module.exports = {
   fetchAllIntel,
+  isConfigured,
 };

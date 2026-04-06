@@ -17,19 +17,7 @@ const SEV_COLORS = {
   low: '#3b82f6',
 };
 
-// Generate deterministic mock IPs based on alert IDs/entities as we don't have source IP in the basic mock data
-function generateIp(seedStr) {
-    let hash = 0;
-    for (let i = 0; i < seedStr.length; i++) {
-        hash = seedStr.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const o1 = Math.abs((hash >> 24) & 255);
-    const o2 = Math.abs((hash >> 16) & 255);
-    const o3 = Math.abs((hash >> 8) & 255);
-    const o4 = Math.abs(hash & 255);
-    // Avoid internal looking IPs for better demo effect
-    return `${o1 === 10 || o1 === 192 || o1 === 172 ? 111 : o1}.${o2}.${o3}.${o4}`;
-}
+
 
 function buildAttackerData(alerts) {
   const counts = new Map();
@@ -37,7 +25,8 @@ function buildAttackerData(alerts) {
 
   alerts.forEach((a) => {
     // Determine a "source IP"
-    const sourceIp = a.sourceIp || generateIp(a.entity || a.id || 'default');
+    const sourceIp = a.sourceIp;
+    if (!sourceIp) return;
     
     counts.set(sourceIp, (counts.get(sourceIp) || 0) + 1);
     

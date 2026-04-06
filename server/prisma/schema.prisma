@@ -44,6 +44,8 @@ model Case {
   status      String   @default("open")
   priority    String   @default("medium")
   assignedTo  String?
+  notes       String?  // Analyst investigation notes
+  resolution  String?  // Resolution summary
   alerts      Alert[]
   incidentIocs CaseIoc[]
   incidentRules CaseRule[]

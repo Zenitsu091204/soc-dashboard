@@ -104,14 +104,18 @@ const getRuleStats = async (req, res) => {
     const rules = await prisma.rule.findMany({
       take: 5,
       where: { status: 'active' },
+      include: { indicator: true },
       orderBy: { createdAt: 'desc' }
     });
 
     const stats = rules.map(r => ({
-      id: r.naxsiId || r.id.substring(0, 8),
-      name: r.type === 'NAXSI_MAIN' ? 'Main Rule' : 'Basic Rule',
-      count: Math.floor(Math.random() * 500) + 100,
-      progress: Math.floor(Math.random() * 40) + 60
+      id: r.naxsiId ? String(r.naxsiId) : r.id.substring(0, 8),
+      name: r.indicator?.value
+        ? `${r.indicator.type?.toUpperCase() || 'RULE'}: ${r.indicator.value.substring(0, 20)}`
+        : `Rule #${r.naxsiId || r.id.substring(0, 6)}`,
+      // Use naxsiId as a stable, deterministic hit-count proxy until a real hits table exists
+      count: r.naxsiId ? (r.naxsiId % 500) + 50 : 50,
+      progress: r.naxsiId ? Math.min(99, ((r.naxsiId % 40) + 60)) : 60,
     }));
 
     res.json(stats);

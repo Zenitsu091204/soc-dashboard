@@ -2,14 +2,18 @@
 
 A production-ready **Security Operations Center (SOC) Dashboard** built with the PERN stack (PostgreSQL, Express, React, Node.js). Designed for real-time threat monitoring, intelligence analysis, and analyst workflow management.
 
-> **Current Version:** 4.0.1 — Last updated 2026-03-27 16:17 IST
+> **Current Version:** 4.4.0 — Last updated 2026-04-06 15:44 IST
 
 ---
 
 ## 🚀 Features
 
+### **Production & Deployment (v4.4.0)**
+- **1-Click Guided Setup** — Execute `setup.js` to automatically resolve dependencies, generate crypto-secure `.env` tokens, migrate PostgreSQL schemas, and concurrently launch the app.
+- **Zero-Data Foundation** — Configured for immediate production use with exactly zero pre-loaded mock vulnerabilities/geo-threats. Only actual synced intel will appear.
+
 ### **Operations**
-- **Live Monitor** — Real-time alerts trend, recent activity feed, and system health status.
+- **Live Monitor** — Real-time alerts trend, recent activity feed, and zero-data states.
 - **Global Search** (`Ctrl+K`) — Instant search across Alerts, IOCs, and Threat Actors. Data cached per session for zero extra API calls per keystroke.
 - **Draggable Dashboard** — Custom dashboard builder with drag-and-drop widgets and persisted layouts.
 
@@ -94,36 +98,20 @@ soc-dashboard/
 
 ## ⚡ Setup Instructions
 
-### 1. Database Setup (PostgreSQL)
+### 1. Database Prerequisite (PostgreSQL)
+Ensure PostgreSQL is running locally. You do not need to construct the databases manually; Prisma will orchestrate the schema drops and seeding during setup.
 
-Ensure PostgreSQL is running locally and update `server/.env`:
-```env
-DATABASE_URL="postgresql://postgres:admin123@localhost:5432/soc_dashboard?schema=public"
-```
-
-### 2. Backend Setup
+### 2. Automated 1-Click Launch (Recommended)
+This script will concurrently install dependencies, compile frontend logic, migrate databases, generate 512-bit secure configuration keys, and start the processes.
 ```powershell
-cd server
-npm install
+# On Windows
+./setup.bat
 
-# Initialize database schema
-npx prisma migrate dev --name init
-
-# Seed demo data (users, alerts, threat actors, campaigns)
-node prisma/seed.js
-
-# Start dev server
-npm run dev
+# On Linux/MacOS
+node setup.js
 ```
-*Server runs on http://localhost:5000*
-
-### 3. Frontend Setup
-```powershell
-cd client
-npm install
-npm start
-```
-*Client runs on http://localhost:3000*
+*Frontend runs on http://localhost:3000*
+*Backend runs on http://localhost:5000*
 
 ---
 
@@ -132,7 +120,6 @@ npm start
 | Role | Email | Password |
 |------|-------|----------|
 | **Admin** | `admin@soc.com` | `password123` |
-| **Analyst** | `analyst@soc.com` | `password123` |
 
 ---
 

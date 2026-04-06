@@ -1,17 +1,21 @@
 # SOC Dashboard Features
-**Current Version:** 4.3.0 (Architecture Optimization Release)
+**Current Version:** 4.4.0 (Production Automation & Zero-Data Release)
 Complete documentation of every feature, page, component, and utility in the SOC Dashboard.
 
-**Last Updated:** 2026-04-02 | 16:35 IST — v4.3.0
+**Last Updated:** 2026-04-06 | 15:44 IST — v4.4.0
 
 ---
 
 ## Table of Contents
 
+### Production & Scalability (v4.4.0)
+1. [Automated Guided Setup](#-automated-guided-setup)
+2. [Zero-Data Configuration](#-zero-data-configuration)
+
 ### Architecture & Optimization (v4.3.0)
-1. [Automated Rollback & Verification](#-automated-rollback--verification)
-2. [Unified Intelligence Hub](#-unified-intelligence-hub)
-3. [Consolidated Dashboard Interface](#-consolidated-dashboard-interface)
+3. [Automated Rollback & Verification](#-automated-rollback--verification)
+4. [Unified Intelligence Hub](#-unified-intelligence-hub)
+5. [Consolidated Dashboard Interface](#-consolidated-dashboard-interface)
 
 ### SOAR & Hardening (v4.2.0)
 4. [SOAR Automation (NAXSI)](#-soar-automation-naxsi)
@@ -789,6 +793,37 @@ All pages and components adapt to screen size:
 
 ---
 
+## 🏗️ Production & Scalability
+
+---
+
+### 🚀 Automated Guided Setup
+
+> **Added:** v4.4.0 | 2026-04-06 | 15:44 IST
+
+**Location:** `setup.js`, `setup.bat`
+
+**Features:**
+- **One-Click Execution**: Installs dependencies across both frontend and backend concurrently via a native Node.js orchestration script.
+- **Crypto-Secure Configuration**: Generates a dynamic 512-bit `JWT_SECRET` and robust `.env` files automatically upon first run.
+- **Database Lifecycle**: Uses Prisma to aggressively reset, migrate, and seed the minimal viable admin accounts for a fresh setup.
+- **Concurrent Launch**: Spins up the entire stack using Webpack server endpoints securely after a successful installation check.
+
+---
+
+### 🈳 Zero-Data Configuration
+
+> **Added:** v4.4.0 | 2026-04-06 | 15:44 IST
+
+**Location:** `server/prisma/seed.js`, `client/src/components/widgets/TopCvesWidget.js`
+
+**Features:**
+- **No-Mock State**: The entire dashboard application has been purged of hard-coded "mock" generators.
+- **Clean Baselines**: The Prisma seeder no longer injects fake users, fake alerts, or fake IOCs. Only the default administrator account remains.
+- **Null-State UIs**: All legacy frontend widget behaviors that used to fall back onto public APIs (e.g., NVD fetching) have been transitioned to represent internally synced security logic only.
+
+---
+
 ## 🧪 Testing
 
 | Test File | Covers |
@@ -805,6 +840,7 @@ npm test
 
 ---
 
+**Version 4.4.0** — Production Automation & Zero-Data Architecture _(2026-04-06)_
 **Version 4.2.0** — SOAR, RBAC & Hardening Release _(2026-04-02)_
 **Version 4.1.0** — Intelligent Operations & Enrichment _(2026-04-02)_
 **Version 4.0.1** — Responsive Layout Fix _(2026-03-27)_
