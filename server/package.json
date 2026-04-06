@@ -9,6 +9,9 @@
         "test": "jest",
         "test:watch": "jest --watchAll"
     },
+    "prisma": {
+        "seed": "node prisma/seed.js"
+    },
     "keywords": [],
     "author": "",
     "license": "ISC",

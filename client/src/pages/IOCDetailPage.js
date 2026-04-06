@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
+import { toast } from 'react-hot-toast';
 import { 
   ArrowLeftIcon, 
   GlobeAltIcon, 
@@ -37,6 +38,7 @@ export default function IOCDetailPage() {
   const navigate = useNavigate();
   const [ioc, setIoc] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [generatingRule, setGeneratingRule] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -53,6 +55,20 @@ export default function IOCDetailPage() {
     };
     fetchIoc();
   }, [id]);
+  
+  const handleGenerateRule = async () => {
+    try {
+      setGeneratingRule(true);
+      await api.post('/rules/generate', { iocId: id });
+      toast.success('NAXSI rule generated and placed in pending queue');
+      navigate('/rule-management');
+    } catch (err) {
+      console.error('Failed to generate rule:', err);
+      toast.error('Failed to generate firewall rule');
+    } finally {
+      setGeneratingRule(false);
+    }
+  };
 
   const sevKey = (ioc?.severity || 'low').toLowerCase();
   const sev = SEV_STYLES[sevKey] || SEV_STYLES.low;
@@ -134,9 +150,23 @@ export default function IOCDetailPage() {
           
           {/* Intelligence Overview */}
           <section className="bg-slate-900/40 border border-white/10 rounded-3xl p-8 space-y-6">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3">
-              <SecurityRoundedIcon className="text-lg" /> Intelligence Overview
-            </h3>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-3 m-0">
+                <SecurityRoundedIcon className="text-lg" /> Intelligence Overview
+              </h3>
+              <button 
+                onClick={handleGenerateRule}
+                disabled={generatingRule}
+                className={`px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-500 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2`}
+              >
+                {generatingRule ? (
+                  <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <ShieldCheckIcon className="w-4 h-4" />
+                )}
+                {generatingRule ? 'Generating...' : 'Generate Firewall Rule'}
+              </button>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-4">

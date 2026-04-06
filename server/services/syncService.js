@@ -36,11 +36,17 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
           where: { value },
           update: {
             confidence: indicator.confidence,
+            name: indicator.name,
+            description: indicator.description,
+            pattern: indicator.pattern,
           },
           create: {
             type: indicator.type.toLowerCase().includes('ip') ? 'ip' : 
                   indicator.type.toLowerCase().includes('domain') ? 'domain' : 'hash',
             value,
+            name: indicator.name,
+            description: indicator.description,
+            pattern: indicator.pattern,
             confidence: indicator.confidence,
           }
         });

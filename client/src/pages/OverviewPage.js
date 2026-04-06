@@ -29,7 +29,7 @@ import {
   CodeBracketSquareIcon,
 } from '@heroicons/react/24/outline';
 
-const REFRESH_INTERVAL = 30; // seconds
+const DEFAULT_REFRESH_INTERVAL = 30; // seconds
 
 
 
@@ -76,10 +76,12 @@ export default function OverviewPage() {
   const [openCtiMatches, setOpenCtiMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [countdown, setCountdown] = useState(REFRESH_INTERVAL);
+  const [countdown, setCountdown] = useState(DEFAULT_REFRESH_INTERVAL);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState(null);
+  const [ruleStats, setRuleStats] = useState([]);
+  const [refreshInterval, setRefreshInterval] = useState(DEFAULT_REFRESH_INTERVAL);
   const countdownRef = useRef(null);
 
   // WebSockets for Real-time Updates
@@ -100,8 +102,8 @@ export default function OverviewPage() {
         },
       });
       setLastUpdated(new Date());
-      setCountdown(REFRESH_INTERVAL);
-    }, []),
+      setCountdown(refreshInterval);
+    }, [refreshInterval]),
     onAlertUpdated: useCallback((updatedAlert) => {
       setAlerts((prev) => prev.map(a => a.id === updatedAlert.id ? updatedAlert : a));
       toast(`ℹ️ Alert Updated: ${updatedAlert.title}`, {
@@ -109,8 +111,8 @@ export default function OverviewPage() {
         style: { background: '#6366F1', color: '#fff', fontWeight: 'bold' }
       });
       setLastUpdated(new Date());
-      setCountdown(REFRESH_INTERVAL);
-    }, [])
+      setCountdown(refreshInterval);
+    }, [refreshInterval])
   });
 
   // Pre-compute stable random confidence values once per threatActors load
@@ -131,14 +133,19 @@ export default function OverviewPage() {
         }
       }
 
-      const [statsRes, alertsRes, iocsRes, openCtiRes] = await Promise.all([
+      const [statsRes, alertsRes, iocsRes, openCtiRes, ruleStatsRes, settingsRes] = await Promise.all([
         api.get('/alerts/stats'),
         api.get(alertsUrl),
         api.get('/intel/iocs'),
         api.get('/intel/opencti-matches'),
+        api.get('/rules/stats'),
+        api.get('/settings/workspace'),
       ]);
 
       let fetchedAlerts = alertsRes.data;
+      if (settingsRes.data.refreshInterval) {
+        setRefreshInterval(Number(settingsRes.data.refreshInterval));
+      }
       if (activeFilters) {
         fetchedAlerts = fetchedAlerts.filter(a => {
           const s = a.severity || 'low';
@@ -155,15 +162,16 @@ export default function OverviewPage() {
       setAlerts(fetchedAlerts);
       setIocs(iocsRes.data);
       setOpenCtiMatches(openCtiRes.data);
+      setRuleStats(ruleStatsRes.data);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
       setError('Failed to load dashboard data. Please try refreshing.');
     } finally {
       setLoading(false);
-      setCountdown(REFRESH_INTERVAL);
+      setCountdown(refreshInterval);
     }
-  }, [activeFilters]);
+  }, [activeFilters, refreshInterval]);
 
   // Initial fetch
   useEffect(() => {
@@ -176,13 +184,13 @@ export default function OverviewPage() {
       setCountdown((prev) => {
         if (prev <= 1) {
           fetchData(true); // silent background refresh
-          return REFRESH_INTERVAL;
+          return refreshInterval;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(countdownRef.current);
-  }, [fetchData]);
+  }, [fetchData, refreshInterval]);
 
   const sqliCount = alerts.filter(a => 
     a.title?.toLowerCase().includes('sql') || 
@@ -303,7 +311,7 @@ export default function OverviewPage() {
           />
           <LiveRefreshBar
             countdown={countdown}
-            total={REFRESH_INTERVAL}
+            total={refreshInterval}
             onRefresh={() => fetchData(false)}
             loading={loading}
           />
@@ -334,10 +342,10 @@ export default function OverviewPage() {
 
       {/* Row 3: Performance & Widgets */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-stretch">
-        <RiskScoreCard score={riskScore} trend={null} />
+        <RiskScoreCard score={riskScore} />
         <SlaPerformanceCard metrics={slaMetrics} />
         <TopAttackerIpsCard alerts={alerts} />
-        <WafRulesCard />
+        <WafRulesCard rules={ruleStats} />
       </div>
 
       {/* Row 4: Threat Intel */}

@@ -77,6 +77,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updatedData) => {
+    const newUser = { ...user, ...updatedData };
+    setUser(newUser);
+    storage.setUser(newUser);
+  };
+
   const logout = () => {
     setUser(null);
     storage.clear();
@@ -84,7 +90,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, error, isAuthenticated: !!user, isLocked }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading, error, isAuthenticated: !!user, isLocked }}>
       {children}
     </AuthContext.Provider>
   );

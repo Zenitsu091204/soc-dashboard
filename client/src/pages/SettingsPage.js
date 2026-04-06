@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import GroupsRoundedIcon from '@mui/icons-material/GroupsRounded';
 import PowerRoundedIcon from '@mui/icons-material/PowerRounded';
@@ -170,12 +171,12 @@ function GhostBtn({ onClick, children, danger }) {
 
 // ─── Profile Tab ──────────────────────────────────────────────────────────────
 function ProfileTab() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [form, setForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
     role: user?.role || '',
-    phone: '',
+    phone: user?.phone || '',
     currentPassword: '', newPassword: '', confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
@@ -185,23 +186,49 @@ function ProfileTab() {
 
   const flash = (msg) => { setSaved(msg); setTimeout(() => setSaved(''), 3000); };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     const errs = {};
     if (!form.name.trim()) errs.name = 'Name is required';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Enter a valid email';
     setErrors(errs);
-    if (!Object.keys(errs).length) flash('Profile information updated');
+    if (Object.keys(errs).length) return;
+
+    try {
+      const { data } = await api.put('/auth/profile', {
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+      });
+      // Sync the updated data with global context and local storage
+      updateUser(data);
+      flash('Profile information updated');
+    } catch (err) {
+      console.error('Profile update error:', err);
+      const msg = err.response?.data?.message || 'Failed to update profile';
+      setErrors({ ...errs, email: msg });
+    }
   };
 
-  const savePassword = () => {
+  const savePassword = async () => {
     const errs = {};
     if (!form.currentPassword) errs.currentPassword = 'Required';
     if (form.newPassword.length < 8) errs.newPassword = 'Minimum 8 characters';
     if (form.newPassword !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match';
+    
     setErrors(errs);
-    if (!Object.keys(errs).length) {
+    if (Object.keys(errs).length) return;
+
+    try {
+      await api.put('/auth/password', {
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword
+      });
       setForm({ ...form, currentPassword: '', newPassword: '', confirmPassword: '' });
       flash('Password changed successfully');
+    } catch (err) {
+      console.error('Password change error:', err);
+      const msg = err.response?.data?.message || 'Failed to update password';
+      setErrors({ ...errs, currentPassword: msg });
     }
   };
 
@@ -262,11 +289,28 @@ const INITIAL_USERS = [];
 const AVATAR_COLORS = ['from-indigo-500 to-cyan-500','from-violet-500 to-pink-500','from-amber-500 to-orange-500','from-emerald-500 to-teal-500'];
 
 function UsersTab() {
-  const [users, setUsers]         = useState(INITIAL_USERS);
+  const [users, setUsers]         = useState([]);
+  const [loading, setLoading]     = useState(true);
   const [showAdd, setShowAdd]     = useState(false);
   const [delTarget, setDelTarget] = useState(null);
-  const [form, setForm]           = useState({ name: '', email: '', role: 'Analyst' });
+  const [form, setForm]           = useState({ name: '', email: '', role: 'analyst', password: 'password123' });
   const [errors, setErrors]       = useState({});
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get('/auth/users');
+      setUsers(data);
+    } catch (err) {
+      console.error('Fetch users error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const set = (f) => (e) => setForm({ ...form, [f]: e.target.value });
 
@@ -277,17 +321,40 @@ function UsersTab() {
     return e;
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const e = validate(); setErrors(e);
     if (!Object.keys(e).length) {
-      setUsers([...users, { id: Date.now(), ...form, status: 'Active' }]);
-      setForm({ name: '', email: '', role: 'Analyst' });
-      setShowAdd(false);
+      try {
+        await api.post('/auth/users', form);
+        setForm({ name: '', email: '', role: 'analyst', password: 'password123' });
+        setShowAdd(false);
+        fetchUsers();
+      } catch (err) {
+        setErrors({ email: err.response?.data?.message || 'Failed to add user' });
+      }
     }
   };
 
-  const toggleStatus = (id) =>
-    setUsers(users.map((u) => u.id === id ? { ...u, status: u.status === 'Active' ? 'Inactive' : 'Active' } : u));
+  const toggleStatus = async (id) => {
+    try {
+      await api.patch(`/auth/users/${id}/status`);
+      fetchUsers();
+    } catch (err) {
+      console.error('Toggle status error:', err);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await api.delete(`/auth/users/${delTarget.id}`);
+      setDelTarget(null);
+      fetchUsers();
+    } catch (err) {
+      console.error('Delete user error:', err);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading team members...</div>;
 
   return (
     <div>
@@ -307,7 +374,7 @@ function UsersTab() {
               className="flex items-center gap-4 p-3 rounded-xl bg-slate-800/50 border border-white/5 hover:border-indigo-500/20 hover:bg-slate-800/80 transition group">
               {/* Avatar */}
               <div className={`h-9 w-9 rounded-xl bg-gradient-to-br ${AVATAR_COLORS[i % AVATAR_COLORS.length]} flex items-center justify-center text-xs font-bold text-white flex-shrink-0`}>
-                {u.name.charAt(0)}
+                {u.name?.charAt(0) || 'U'}
               </div>
               {/* Info */}
               <div className="flex-1 min-w-0">
@@ -316,7 +383,7 @@ function UsersTab() {
               </div>
               {/* Role badge */}
               <span className={`hidden sm:inline-flex text-[10px] font-bold px-2 py-0.5 rounded-full border
-                ${u.role === 'Admin' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : 'bg-slate-700/60 text-slate-400 border-white/8'}`}>
+                ${u.role === 'admin' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30' : 'bg-slate-700/60 text-slate-400 border-white/8'}`}>
                 {u.role}
               </span>
               {/* Status toggle */}
@@ -363,7 +430,7 @@ function UsersTab() {
         </div>
         <div className="flex gap-3 justify-end">
           <GhostBtn onClick={() => setDelTarget(null)}>Cancel</GhostBtn>
-          <GhostBtn danger onClick={() => { setUsers(users.filter(u => u.id !== delTarget.id)); setDelTarget(null); }}>Remove</GhostBtn>
+          <GhostBtn danger onClick={handleDelete}>Remove</GhostBtn>
         </div>
       </Modal>
     </div>
@@ -379,55 +446,110 @@ const INTEGRATIONS = [
 ];
 
 function IntegrationsTab() {
-  const [items, setItems]         = useState(INTEGRATIONS);
+  const [items, setItems]         = useState([]);
+  const [loading, setLoading]     = useState(true);
   const [configTarget, setCT]     = useState(null);
   const [apiKey, setApiKey]       = useState('');
+  const [endpoint, setEndpoint]   = useState('');
+  const [syncFreq, setSyncFreq]   = useState('5m');
   const [apiKeyErr, setApiKeyErr] = useState('');
   const [saved, setSaved]         = useState(false);
 
-  const toggleConn = (id) => setItems(items.map(i => i.id === id ? { ...i, connected: !i.connected } : i));
-
-  const handleSave = () => {
-    if (!apiKey.trim() || apiKey.length < 10) { setApiKeyErr('API key must be at least 10 characters'); return; }
-    setApiKeyErr(''); setApiKey(''); setCT(null);
-    setSaved(true); setTimeout(() => setSaved(false), 3000);
+  const fetchIntegrations = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get('/settings/integrations');
+      setItems(data);
+    } catch (err) {
+      console.error('Fetch integrations error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    fetchIntegrations();
+  }, []);
+
+  const toggleConn = async (item) => {
+    try {
+      await api.patch(`/settings/integrations/${item.id}`, { 
+        status: item.status === 'Connected' ? 'Off' : 'Connected' 
+      });
+      fetchIntegrations();
+    } catch (err) {
+      console.error('Toggle connection error:', err);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!apiKey.trim() || apiKey.length < 10) { setApiKeyErr('API key must be at least 10 characters'); return; }
+    try {
+      await api.patch(`/settings/integrations/${configTarget.id}`, { 
+        apiKey,
+        endpoint,
+        config: { syncFreq }
+      });
+      setApiKeyErr(''); setApiKey(''); setEndpoint(''); setCT(null);
+      setSaved(true); setTimeout(() => setSaved(false), 3000);
+      fetchIntegrations();
+    } catch (err) {
+      setApiKeyErr('Failed to save configuration');
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading integrations...</div>;
 
   return (
     <div>
       <SaveBanner visible={saved} message="Integration configured successfully" />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {items.map((item) => {
-          const c = COLOR_MAP[item.color] || COLOR_MAP.indigo;
+          const Icon = INTEGRATIONS.find(i => i.id === item.name)?.Icon || ShieldRoundedIcon;
+          const color = INTEGRATIONS.find(i => i.id === item.name)?.color || 'indigo';
+          const c = COLOR_MAP[color] || COLOR_MAP.indigo;
+          const isConnected = item.status === 'Connected';
+          
           return (
             <div key={item.id} className={`bg-slate-800/40 border rounded-2xl p-5 hover:border-opacity-60 transition-all group
-              ${item.connected ? c.border : 'border-white/6'}`}>
+              ${isConnected ? c.border : 'border-white/6'}`}>
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className={`p-2.5 rounded-xl border ${c.bg} ${c.border}`}>
-                    <item.Icon style={{ fontSize: 20 }} className={c.text} />
+                    <Icon style={{ fontSize: 20 }} className={c.text} />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">{item.name}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-snug">{item.desc}</p>
+                    <p className="text-sm font-semibold text-white uppercase">{item.name}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-snug">
+                      {INTEGRATIONS.find(i => i.id === item.name)?.desc || 'Third-party service integration'}
+                    </p>
                   </div>
                 </div>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0
-                  ${item.connected ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-700/60 text-slate-500 border-white/8'}`}>
-                  {item.connected ? '● Connected' : '○ Off'}
+                  ${isConnected ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-700/60 text-slate-500 border-white/8'}`}>
+                  {isConnected ? '● Connected' : '○ Off'}
                 </span>
               </div>
               {/* Actions */}
               <div className="flex gap-2 pt-1">
-                <button onClick={() => toggleConn(item.id)}
+                <button onClick={() => toggleConn(item)}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl border transition
-                    ${item.connected
+                    ${isConnected
                       ? 'border-red-500/30 text-red-400 hover:bg-red-500/10'
                       : `${c.border} ${c.text} hover:bg-indigo-500/10`}`}>
-                  {item.connected ? <><LinkOffRoundedIcon style={{ fontSize: 14 }} />Disconnect</> : <><LinkRoundedIcon style={{ fontSize: 14 }} />Connect</>}
+                  {isConnected ? <><LinkOffRoundedIcon style={{ fontSize: 14 }} />Disconnect</> : <><LinkRoundedIcon style={{ fontSize: 14 }} />Connect</>}
                 </button>
-                <button onClick={() => { setCT(item); setApiKey(''); setApiKeyErr(''); }}
+                <button onClick={() => { 
+                    setCT(item); 
+                    setApiKey(item.apiKey || ''); 
+                    setEndpoint(item.endpoint || '');
+                    try {
+                      const cfg = item.config ? JSON.parse(item.config) : {};
+                      setSyncFreq(cfg.syncFreq || '5m');
+                    } catch { setSyncFreq('5m'); }
+                    setApiKeyErr(''); 
+                  }}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-xl border border-white/10 text-slate-300 hover:text-white hover:bg-white/6 transition">
                   <SettingsInputCompositeRoundedIcon style={{ fontSize: 14 }} /> Configure
                 </button>
@@ -441,10 +563,11 @@ function IntegrationsTab() {
       <Modal isOpen={!!configTarget} onClose={() => setCT(null)} title={`Configure ${configTarget?.name}`}>
         <div className="space-y-4">
           <InputField label="API Key" id="apiKey" type="password" value={apiKey}
-            onChange={e => setApiKey(e.target.value)} error={apiKeyErr} placeholder="Paste your API key…" helper="Your key is stored encrypted and never displayed again." />
-          <InputField label="Endpoint URL" id="endpoint" value="" onChange={() => {}} placeholder="https://api.example.com/v1" />
-          <SelectField label="Sync Frequency" id="syncFreq" value="5m"
-            onChange={() => {}} options={['1m', '5m', '15m', '30m', '1h'].map(v => ({ value: v, label: `Every ${v}` }))} />
+            onChange={e => setApiKey(e.target.value)} error={apiKeyErr} placeholder="Paste your API key…" helper="Your key is securely stored in the backend." />
+          <InputField label="Endpoint URL" id="endpoint" value={endpoint} 
+            onChange={e => setEndpoint(e.target.value)} placeholder="https://api.example.com/v1" />
+          <SelectField label="Sync Frequency" id="syncFreq" value={syncFreq}
+            onChange={e => setSyncFreq(e.target.value)} options={['1m', '5m', '15m', '30m', '1h'].map(v => ({ value: v, label: `Every ${v}` }))} />
         </div>
         <div className="flex gap-3 justify-end mt-6">
           <GhostBtn onClick={() => setCT(null)}>Cancel</GhostBtn>
@@ -457,22 +580,76 @@ function IntegrationsTab() {
 
 // ─── Alerts Tab ───────────────────────────────────────────────────────────────
 function AlertsTab() {
+  const [thresholds, setThresh] = useState({ criticalSla: '15', highSla: '60', retention: '90' });
   const [channels, setChannels] = useState({ email: true, slack: false, sound: true });
   const [behavior, setBehavior] = useState({ criticalOnly: false, autoEscalate: true, weeklyReport: true });
-  const [thresholds, setThresh] = useState({ criticalSla: '15', highSla: '60', retention: '90' });
+  const [loading, setLoading]   = useState(true);
   const [errors, setErrors]     = useState({});
   const [saved, setSaved]       = useState(false);
 
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await api.get('/settings/workspace');
+        if (data.criticalSla !== undefined) {
+          setThresh({
+            criticalSla: String(data.criticalSla || '15'),
+            highSla: String(data.highSla || '60'),
+            retention: String(data.retention || '90')
+          });
+        }
+        if (data.notifyEmail !== undefined) {
+          setChannels({
+            email: !!data.notifyEmail,
+            slack: !!data.notifySlack,
+            sound: !!data.notifySound
+          });
+        }
+        if (data.criticalOnly !== undefined) {
+          setBehavior({
+            criticalOnly: !!data.criticalOnly,
+            autoEscalate: !!data.autoEscalate,
+            weeklyReport: !!data.weeklyReport
+          });
+        }
+      } catch (err) {
+        console.error('Fetch settings error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   const setT = (f) => (e) => setThresh({ ...thresholds, [f]: e.target.value });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const e = {};
     if (!thresholds.criticalSla || isNaN(thresholds.criticalSla) || +thresholds.criticalSla < 1)  e.criticalSla = 'Must be ≥ 1';
     if (!thresholds.highSla     || isNaN(thresholds.highSla)     || +thresholds.highSla < 1)      e.highSla     = 'Must be ≥ 1';
     if (!thresholds.retention   || isNaN(thresholds.retention)   || +thresholds.retention < 7)    e.retention   = 'Minimum 7 days';
     setErrors(e);
-    if (!Object.keys(e).length) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+    if (Object.keys(e).length) return;
+
+    try {
+      const payload = {
+        ...thresholds,
+        notifyEmail: channels.email,
+        notifySlack: channels.slack,
+        notifySound: channels.sound,
+        criticalOnly: behavior.criticalOnly,
+        autoEscalate: behavior.autoEscalate,
+        weeklyReport: behavior.weeklyReport
+      };
+      await api.post('/settings/workspace', payload);
+      setSaved(true); 
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error('Save settings error:', err);
+    }
   };
+
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading configurations...</div>;
 
   return (
     <div>
@@ -505,19 +682,61 @@ function AlertsTab() {
 function DashboardTab() {
   const [display, setDisplay] = useState({ autoRefresh: true, compact: false, avatars: true, darkCharts: true, stickyHeader: true, animations: true });
   const [layout, setLayout]   = useState({ defaultPage: 'Live Monitor', refreshInterval: '30', dateFormat: 'DD/MM/YYYY', timezone: 'UTC' });
+  const [loading, setLoading] = useState(true);
   const [errors, setErrors]   = useState({});
   const [saved, setSaved]     = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await api.get('/settings/workspace');
+        if (data.refreshInterval !== undefined) {
+          setLayout({
+            defaultPage: data.defaultPage || 'Live Monitor',
+            refreshInterval: String(data.refreshInterval || '30'),
+            dateFormat: data.dateFormat || 'DD/MM/YYYY',
+            timezone: data.timezone || 'UTC'
+          });
+        }
+        if (data.autoRefresh !== undefined) {
+          setDisplay({
+            autoRefresh: !!data.autoRefresh,
+            compact: !!data.compact,
+            avatars: !!data.avatars,
+            darkCharts: !!data.darkCharts,
+            stickyHeader: !!data.stickyHeader,
+            animations: !!data.animations
+          });
+        }
+      } catch (err) {
+        console.error('Fetch settings error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const setL = (f) => (e) => setLayout({ ...layout, [f]: e.target.value });
   const toggleD = (k) => (v) => setDisplay({ ...display, [k]: v });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const e = {};
     const ri = Number(layout.refreshInterval);
     if (!layout.refreshInterval || isNaN(ri) || ri < 10 || ri > 3600) e.refreshInterval = '10–3600 seconds';
     setErrors(e);
-    if (!Object.keys(e).length) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+    if (Object.keys(e).length) return;
+
+    try {
+      await api.post('/settings/workspace', { ...layout, ...display });
+      setSaved(true); 
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error('Save settings error:', err);
+    }
   };
+
+  if (loading) return <div className="p-8 text-center text-slate-500">Loading preferences...</div>;
 
   return (
     <div>

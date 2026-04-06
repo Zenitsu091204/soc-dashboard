@@ -67,6 +67,7 @@ const intelRoutes = require('./routes/intelRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
 const ruleRoutes = require('./routes/ruleRoutes');
 const incidentRoutes = require('./routes/incidentRoutes');
+const settingsRoutes = require('./routes/settingsRoutes');
 const syncService = require('./services/syncService');
 const cron = require('node-cron');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
@@ -77,6 +78,7 @@ app.use('/api/intel', intelRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/incidents', incidentRoutes);
+app.use('/api/settings', settingsRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'SOC Dashboard API is running' });

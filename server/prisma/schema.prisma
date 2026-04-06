@@ -13,6 +13,8 @@ model User {
   password  String
   name      String?
   role      String   @default("analyst") // analyst, admin
+  status    String   @default("Active")  // Active, Inactive
+  phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -80,6 +82,9 @@ model Ioc {
   id          String   @id @default(uuid())
   type        String   // ip, domain, hash
   value       String   @unique
+  name        String?
+  description String?
+  pattern     String?
   confidence  Int?     // 0-100 score from OpenCTI
   severity    String?  // low, medium, high, critical
   lastEnriched   DateTime?
@@ -100,6 +105,7 @@ model Rule {
   lastVerified DateTime?
   verificationStatus String? // success, failed
   cases        CaseRule[]
+  naxsiId     Int?     @unique // The sequential ID within its category range
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -137,4 +143,24 @@ model Campaign {
   startDate   DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Integration {
+  id        String   @id @default(uuid())
+  name      String   @unique // siem, slack, virustotal, misp
+  apiKey    String?
+  endpoint  String?
+  status    String   @default("Off") // Connected, Off
+  config    String?  // JSON stringified configuration
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WorkspaceSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string") // string, number, boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

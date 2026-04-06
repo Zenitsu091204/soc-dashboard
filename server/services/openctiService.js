@@ -10,7 +10,58 @@ const MOCK_OPENCTI = process.env.MOCK_OPENCTI === 'true' || !OPENCTI_TOKEN;
  */
 const fetchAllIntel = async () => {
   if (MOCK_OPENCTI) {
-    return { indicators: [], campaigns: [], actors: [] };
+    return { 
+      indicators: [
+        {
+          id: 'mock-ioc-1',
+          name: 'SELECT * FROM users',
+          type: 'stix-pattern',
+          description: 'Probable SQL Injection attempt detected in query parameter.',
+          pattern: "[url:value MATCHES '.*select.*from.*']",
+          confidence: 85
+        },
+        {
+          id: 'mock-ioc-2',
+          name: '<script>alert(1)</script>',
+          type: 'stix-pattern',
+          description: 'Cross-Site Scripting (XSS) payload identified in request body.',
+          pattern: "[body:value MATCHES '.*<script>.*']",
+          confidence: 95
+        },
+        {
+          id: 'mock-ioc-3',
+          name: '/etc/passwd',
+          type: 'stix-pattern',
+          description: 'Directory Traversal attempt to access system files.',
+          pattern: "[url:value MATCHES '.*/etc/passwd.*']",
+          confidence: 75
+        },
+        {
+          id: 'mock-ioc-4',
+          name: 'rm -rf /',
+          type: 'stix-pattern',
+          description: 'Remote Code Execution (RCE) command detected.',
+          pattern: "[body:value MATCHES '.*rm -rf.*']",
+          confidence: 92
+        }
+      ], 
+      campaigns: [
+        {
+          id: 'mock-campaign-1',
+          name: 'Operation Mock Shield',
+          description: 'A mock campaign for testing rule generation.',
+          status: 'Active',
+          confidence: 80
+        }
+      ], 
+      actors: [
+        {
+          id: 'mock-actor-1',
+          name: 'LulzSec Mock',
+          confidence: 70
+        }
+      ] 
+    };
   }
 
   try {

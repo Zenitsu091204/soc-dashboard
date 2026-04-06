@@ -83,7 +83,58 @@ async function main() {
   });
   console.log('✅ Threat Actors ready');
 
-  // ── 3. IOCs ───────────────────────────────────────────────────────────────
+  // ── 3. Integrations ──────────────────────────────────────────────────────
+  await prisma.integration.upsert({
+    where: { name: 'siem' },
+    update: {},
+    create: { 
+      name: 'siem', 
+      status: 'Connected', 
+      apiKey: 'sk_test_51Mz...a982', 
+      endpoint: 'https://siem.internal/api/v1',
+      config: JSON.stringify({ index: 'logs-*', retention: 90 })
+    }
+  });
+  await prisma.integration.upsert({
+    where: { name: 'slack' },
+    update: {},
+    create: { 
+      name: 'slack', 
+      status: 'Off',
+      config: JSON.stringify({ channel: '#alerts-critical' })
+    }
+  });
+  await prisma.integration.upsert({
+    where: { name: 'virustotal' },
+    update: {},
+    create: { 
+      name: 'virustotal', 
+      status: 'Connected',
+      apiKey: 'vt_api_key_8821...99ef'
+    }
+  });
+  console.log('✅ Integrations ready');
+
+  // ── 4. Workspace Settings ────────────────────────────────────────────────
+  const settings = [
+    { key: 'criticalSla', value: '15',   type: 'number' },
+    { key: 'highSla',     value: '60',   type: 'number' },
+    { key: 'retention',   value: '90',   type: 'number' },
+    { key: 'autoRefresh', value: 'true', type: 'boolean' },
+    { key: 'compactMode', value: 'false', type: 'boolean' },
+    { key: 'timezone',    value: 'UTC',  type: 'string' },
+  ];
+
+  for (const s of settings) {
+    await prisma.workspaceSetting.upsert({
+      where: { key: s.key },
+      update: {},
+      create: s,
+    });
+  }
+  console.log('✅ Workspace Settings ready');
+
+  // ── 5. IOCs ───────────────────────────────────────────────────────────────
   await prisma.ioc.createMany({
     skipDuplicates: true,
     data: [

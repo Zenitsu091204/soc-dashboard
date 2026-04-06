@@ -2,4 +2,3 @@ MainRule "str:<script>alert(1)</script>" "msg:OpenCTI generated XSS rule" "mz:AR
 MainRule "str:SELECT * FROM users" "msg:OpenCTI generated SQL INJECTION rule" "mz:ARGS" "s:$SQL:8" id:1000;
 MainRule "str:/etc/passwd" "msg:OpenCTI generated RCE rule" "mz:BODY|ARGS" "s:$RCE:8" id:2300;
 MainRule "str:malicious-payload.ru" "msg:OpenCTI generated CUSTOM rule" "mz:ARGS" "s:$CUSTOM:8" id:20000;
-MainRule "str:rm -rf /" "msg:OpenCTI generated RCE rule" "mz:BODY|ARGS" "s:$RCE:8" id:2301;
