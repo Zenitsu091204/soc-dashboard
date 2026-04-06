@@ -6,6 +6,7 @@ const {
   getUserProfile,
   updateUserPassword,
   updateUserProfile,
+  createUser,
   getAllUsers,
   toggleUserStatus,
   deleteUser,
