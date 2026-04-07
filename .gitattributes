@@ -2,18 +2,23 @@
 # and leave files detected as binary untouched.
 * text=auto
 
-# text files will be normalized to Ensure consistent line endings on checkout
-*.js text eol=lf
-*.css text eol=lf
-*.html text eol=lf
-*.json text eol=lf
-*.md text eol=lf
-*.txt text eol=lf
+# Force LF line endings on checkout for all text source files
+*.js     text eol=lf
+*.css    text eol=lf
+*.html   text eol=lf
+*.json   text eol=lf
+*.md     text eol=lf
+*.txt    text eol=lf
+*.prisma text eol=lf
+*.sh     text eol=lf
+*.env    text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
 
-# Deny checkout of binary files that are not binary
-*.png binary
-*.jpg binary
+# Binary files — never touch line endings
+*.png  binary
+*.jpg  binary
 *.jpeg binary
-*.gif binary
-*.ico binary
-*.svg text
+*.gif  binary
+*.ico  binary
+*.svg  text eol=lf

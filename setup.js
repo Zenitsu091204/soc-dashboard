@@ -27,9 +27,10 @@ async function setup() {
   console.log('=' + '='.repeat(60) + '\n');
 
   // 1. Install Dependencies First (needed for Prisma, etc.)
-  runCommand('npm install', 'Installing root dependencies');
-  runCommand('npm install', 'Installing backend dependencies (server/)', path.join(__dirname, 'server'));
-  runCommand('npm install', 'Installing frontend dependencies (client/)', path.join(__dirname, 'client'));
+  // --legacy-peer-deps prevents install failures due to React 19 peer conflicts
+  runCommand('npm install --legacy-peer-deps', 'Installing root dependencies');
+  runCommand('npm install --legacy-peer-deps', 'Installing backend dependencies (server/)', path.join(__dirname, 'server'));
+  runCommand('npm install --legacy-peer-deps', 'Installing frontend dependencies (client/)', path.join(__dirname, 'client'));
 
   // 2. Environment Variable Configuration
   const envFile = path.join(__dirname, 'server', '.env');
@@ -37,7 +38,7 @@ async function setup() {
 
   if (!fs.existsSync(envFile)) {
     console.log('\n⚙️  Configuring environment variables...');
-    
+
     let envContent = '';
     if (fs.existsSync(envExampleFile)) {
       envContent = fs.readFileSync(envExampleFile, 'utf-8');
@@ -64,10 +65,17 @@ async function setup() {
   }
 
   // 3. Database Migration & Setup
-  // Using 'migrate reset' to ensure the DB is perfectly up to date and clean 
-  // (applies all migrations, then seeds automatically)
   console.log('🗄️  Starting database migration & seeding...\n');
-  console.log('Note: If this stalls, ensure PostgreSQL is running natively (or via Docker) locally on port 5432');
+  console.log('━'.repeat(62));
+  console.log('  ⚠️  PostgreSQL NOTE (Ubuntu/Linux users):');
+  console.log('  If this step fails with "Authentication failed", run:');
+  console.log('    sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD \'postgres\';"');
+  console.log('    sudo -u postgres psql -c "CREATE DATABASE soc_dashboard;"');
+  console.log('  Then edit /etc/postgresql/*/main/pg_hba.conf:');
+  console.log('    Change "local all postgres peer" → "local all postgres md5"');
+  console.log('    sudo systemctl restart postgresql');
+  console.log('━'.repeat(62) + '\n');
+
   runCommand('npx prisma migrate reset --force', 'Resetting and seeding database schema', path.join(__dirname, 'server'));
 
   console.log('\n============================================================');
@@ -76,10 +84,17 @@ async function setup() {
   console.log('============================================================\n');
 
   // 4. Start the Application
-  // Spawning `npm run dev` at the root which uses concurrently to start both frontend & backend
-  const appProcess = spawn(/^win/.test(process.platform) ? 'npm.cmd' : 'npm', ['run', 'dev'], {
+  // Set NODE_OPTIONS for OpenSSL compatibility on Node 17+ (Linux/macOS)
+  const childEnv = {
+    ...process.env,
+    NODE_OPTIONS: '--openssl-legacy-provider',
+  };
+
+  const isWin = /^win/.test(process.platform);
+  const appProcess = spawn(isWin ? 'npm.cmd' : 'npm', ['run', 'dev'], {
     stdio: 'inherit',
-    cwd: __dirname
+    cwd: __dirname,
+    env: childEnv,
   });
 
   appProcess.on('close', (code) => {
@@ -88,3 +103,4 @@ async function setup() {
 }
 
 setup();
+

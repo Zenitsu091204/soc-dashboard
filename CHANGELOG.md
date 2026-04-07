@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.5.0] - 2026-04-07 | 11:35 IST
+
+### Fixed — Ubuntu / Linux Compatibility
+
+- **OpenSSL Error on Node 17+** — `react-scripts` v5 uses a webpack version incompatible with the OpenSSL 3.x APIs shipped with Node.js 17+, causing a fatal `error:0308010C` crash on all modern Ubuntu LTS systems. Fixed by injecting `NODE_OPTIONS=--openssl-legacy-provider` directly into the `start` and `build` scripts in `client/package.json`, so it applies automatically without needing a global shell variable.
+  - **File:** `client/package.json`
+
+- **npm Peer Dependency Resolution Failures** — React 19 triggers peer dependency conflicts on Linux when npm's strict resolver is used, causing `npm install` to abort. All three `npm install` calls in `setup.js` now pass `--legacy-peer-deps` to bypass this.
+  - **File:** `setup.js`
+
+- **NODE_OPTIONS Not Propagated to Child Process** — `setup.js` uses `spawn()` to launch the dev server. The `NODE_OPTIONS` env var was not forwarded into the child process environment, meaning the OpenSSL fix had no effect when using the automated setup. Fixed by explicitly merging `NODE_OPTIONS` into the `env` passed to `spawn()`.
+  - **File:** `setup.js`
+
+- **Missing CRLF Coverage in `.gitattributes`** — `.prisma`, `.sh`, `.env`, `.yml`, and `.yaml` file types were not listed in `.gitattributes`, meaning Prisma schemas and shell scripts could be checked out with Windows `\r\n` endings on Linux, corrupting the shebang line of shell scripts and causing subtle parse errors in Prisma. All file types now have `eol=lf` enforced.
+  - **File:** `.gitattributes`
+
+- **Incomplete `.gitignore`** — The root `.gitignore` only excluded `node_modules`, leaving `build/`, `.env`, and `*.log` to be accidentally committed. These are now properly ignored.
+  - **File:** `.gitignore`
+
+### Added — Ubuntu Bootstrap Script
+
+- **`setup-ubuntu.sh`** — A fully-automated, end-to-end Ubuntu setup script that replaces the need for any manual configuration. A single `./setup-ubuntu.sh` call:
+  1. Installs Node.js 20 via the official NodeSource repository (skips if already v18+)
+  2. Installs and starts PostgreSQL
+  3. Configures `postgres` user password and creates the `soc_dashboard` database
+  4. Patches `/etc/postgresql/*/main/pg_hba.conf` to use `md5` authentication (replacing Ubuntu's default `peer` auth which blocks password-based logins)
+  5. Restarts PostgreSQL to apply auth changes
+  6. Converts all CRLF line endings to LF using `dos2unix`
+  7. Exports `NODE_OPTIONS=--openssl-legacy-provider` and persists it to `~/.bashrc`
+  8. Delegates to `node setup.js` for dependency install, DB migration, and launch
+  - **File:** `setup-ubuntu.sh` _(new)_
+
+### Enhanced — Setup & Documentation
+
+- **`setup.js`** — Added a prominent PostgreSQL note block before the Prisma migration step, printing exact Ubuntu-specific fix commands if authentication fails.
+  - **File:** `setup.js`
+
+- **`SETUP_GUIDE.md`** — Completely rewritten: Ubuntu is now the primary documented setup path. Includes a manual PostgreSQL configuration section, a prerequisites table with Ubuntu install commands, and a quick-reference troubleshooting table covering every known Ubuntu failure mode.
+  - **File:** `SETUP_GUIDE.md`
+
+- **`README.md`** — Setup Instructions section updated to prominently feature the Ubuntu bootstrap script (`setup-ubuntu.sh`) with a clear OS split between Linux and Windows flows.
+  - **File:** `README.md`
+
+---
+
 ## [4.4.0] - 2026-04-06 | 15:44 IST
 
 ### Added — 1-Click Production Automated Setup
@@ -442,6 +487,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mobile app version
 
 ---
+
+**Version 4.5.0** — Ubuntu / Linux Compatibility _(2026-04-07)_
 
 **Version 4.4.0** — Production Automation & Zero-Data Architecture _(2026-04-06)_
 

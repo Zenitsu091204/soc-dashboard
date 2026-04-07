@@ -103,20 +103,27 @@ soc-dashboard/
 Ensure PostgreSQL is running locally. You do not need to construct the databases manually; Prisma will orchestrate the schema drops and seeding during setup.
 
 ### 2. Automated 1-Click Launch (Recommended)
-This script will concurrently install dependencies, compile frontend logic, migrate databases, generate 512-bit secure configuration keys, and start the processes.
-```powershell
-# On Windows
-./setup.bat
 
-# On Linux/MacOS
-node setup.js
+#### 🐧 Ubuntu / Linux (use the bootstrap script — handles everything)
+```bash
+chmod +x setup-ubuntu.sh
+./setup-ubuntu.sh
 ```
-*Frontend runs on http://localhost:3000*
-*Backend runs on http://localhost:5000*
+This script automatically installs Node.js 20, configures PostgreSQL authentication, fixes line endings, installs all dependencies, and launches the app.
+
+#### 🪟 Windows
+Double-click `setup.bat`, or in PowerShell:
+```powershell
+./setup.bat
+```
+
+*Frontend runs on http://localhost:3000 — Backend runs on http://localhost:5000*
+
+> See **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** for manual steps, troubleshooting, and production deployment.
 
 ### 3. Production Deployment (Unified Server)
 For live deployments, you do not need two servers. The backend is configured to statically serve the optimized frontend bundle on a single port.
-```powershell
+```bash
 # 1. Build the frontend
 cd client
 npm run build

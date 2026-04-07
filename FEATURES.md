@@ -1,16 +1,19 @@
 # SOC Dashboard Features
-**Current Version:** 4.4.0 (Production Automation & Zero-Data Release)
+**Current Version:** 4.5.0 (Ubuntu / Linux Compatibility Release)
 Complete documentation of every feature, page, component, and utility in the SOC Dashboard.
 
-**Last Updated:** 2026-04-06 | 15:44 IST — v4.4.0
+**Last Updated:** 2026-04-07 | 11:35 IST — v4.5.0
 
 ---
 
 ## Table of Contents
 
+### Ubuntu / Linux Compatibility (v4.5.0)
+1. [Ubuntu Bootstrap Script](#-ubuntu-bootstrap-script)
+
 ### Production & Scalability (v4.4.0)
-1. [Automated Guided Setup](#-automated-guided-setup)
-2. [Zero-Data Configuration](#-zero-data-configuration)
+2. [Automated Guided Setup](#-automated-guided-setup)
+3. [Zero-Data Configuration](#-zero-data-configuration)
 
 ### Architecture & Optimization (v4.3.0)
 3. [Automated Rollback & Verification](#-automated-rollback--verification)
