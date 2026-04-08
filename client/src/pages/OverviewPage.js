@@ -12,10 +12,9 @@ import SlaPerformanceCard from '../components/SlaPerformanceCard';
 import TopAttackerIpsCard from '../components/TopAttackerIpsCard';
 import WafRulesCard from '../components/WafRulesCard';
 import ThreatIntelFeedCard from '../components/ThreatIntelFeedCard';
-import OpenCtiMatchesCard from '../components/OpenCtiMatchesCard';
+import TopActiveThreatsCard from '../components/TopActiveThreatsCard';
 import RiskScoreCard from '../components/RiskScoreCard';
 import FilterPanel, { FilterButton } from '../components/FilterPanel';
-import TopCvesWidget from '../components/widgets/TopCvesWidget';
 
 // Icons
 import {
@@ -220,17 +219,10 @@ export default function OverviewPage() {
       severity: stats.highAlerts > 0 ? 'high' : undefined,
     },
     {
-      title: 'SQL Injection Attempts',
-      value: loading ? '—' : sqliCount,
+      title: 'Total Reports',
+      value: loading ? '—' : (stats.totalReports || 0),
       trend: null,
       icon: CodeBracketSquareIcon,
-      color: 'yellow',
-    },
-    {
-      title: 'Open Cases',
-      value: loading ? '—' : stats.openCases,
-      trend: null,
-      icon: TicketIcon,
       color: 'yellow',
     },
     {
@@ -322,7 +314,7 @@ export default function OverviewPage() {
       </div>
 
       {/* KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {statCards.map((s) => (
           <StatCard key={s.title} {...s} />
         ))}
@@ -347,7 +339,7 @@ export default function OverviewPage() {
       </div>
 
       {/* Row 4: Threat Intel */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch pb-6">
         <ThreatIntelFeedCard
           feed={iocs.slice(0, 5).map((i) => ({
             id: i.id,
@@ -357,15 +349,10 @@ export default function OverviewPage() {
             severity: i.severity || 'low',
           }))}
         />
-        <OpenCtiMatchesCard matches={openCtiMatches.slice(0, 5)} />
+        <TopActiveThreatsCard alerts={alerts} />
       </div>
 
-      {/* Row 5: Vulnerabilities */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 pb-6 items-stretch">
-        <div className="lg:col-span-1">
-            <TopCvesWidget />
-        </div>
-      </div>
+
     </div>
   );
 }

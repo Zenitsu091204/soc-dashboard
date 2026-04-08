@@ -12,8 +12,7 @@ const isConfigured = OPENCTI_URL && OPENCTI_TOKEN && OPENCTI_TOKEN !== 'your_ope
  */
 const fetchAllIntel = async () => {
   if (!isConfigured) {
-    console.log('[OpenCTI] Not configured — skipping sync. Set OPENCTI_URL and OPENCTI_TOKEN in .env to enable.');
-    return { indicators: [], campaigns: [], actors: [] };
+    throw new Error('OpenCTI configuration is missing. Set OPENCTI_URL and OPENCTI_TOKEN in your .env file.');
   }
 
   try {
@@ -32,7 +31,7 @@ const fetchAllIntel = async () => {
             }
           }
         }
-        stixCampaigns(first: 20) {
+        campaigns(first: 20) {
           edges {
             node {
               id
@@ -43,7 +42,7 @@ const fetchAllIntel = async () => {
             }
           }
         }
-        stixThreatActors(first: 20) {
+        threatActors(first: 20) {
           edges {
             node {
               id
@@ -81,14 +80,14 @@ const fetchAllIntel = async () => {
           confidence: edge.node.confidence || 0,
           description: edge.node.description,
         })),
-      campaigns: (data?.stixCampaigns?.edges || []).map(edge => ({
+      campaigns: (data?.campaigns?.edges || []).map(edge => ({
         id: edge.node.id,
         name: edge.node.name,
         description: edge.node.description,
         status: edge.node.status,
         confidence: edge.node.confidence,
       })),
-      actors: (data?.stixThreatActors?.edges || [])
+      actors: (data?.threatActors?.edges || [])
         .filter(edge => !edge.node.revoked)
         .map(edge => ({
           id: edge.node.id,
