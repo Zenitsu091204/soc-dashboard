@@ -15,6 +15,9 @@ async function main() {
   await prisma.alert.deleteMany({});
   console.log('  ✅ Alerts cleared');
 
+  await prisma.caseIoc.deleteMany({});
+  await prisma.caseRule.deleteMany({});
+  await prisma.rule.deleteMany({});
   await prisma.case.deleteMany({});
   console.log('  ✅ Cases cleared');
 
