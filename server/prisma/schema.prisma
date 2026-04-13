@@ -76,6 +76,7 @@ model ThreatActor {
   origin      String?
   description String?
   lastSeen    DateTime?
+  important   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -92,6 +93,7 @@ model Ioc {
   lastEnriched   DateTime?
   rules        Rule[]
   cases        CaseIoc[]
+  important   Boolean  @default(false)
   seenAt      DateTime @default(now())
   createdAt   DateTime @default(now())
 }
@@ -143,6 +145,7 @@ model Campaign {
   actor       String?                        // linked threat actor name
   indicators  Int      @default(0)
   startDate   DateTime @default(now())
+  important   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -165,4 +168,138 @@ model WorkspaceSetting {
   type      String   @default("string") // string, number, boolean
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model OpenCtiReport {
+  id          String   @id
+  name        String
+  description String?
+  type        String?
+  published   DateTime?
+  author      String?
+  labels      String?  // JSON stringified
+  marking     String?
+  status      String?
+  important   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OpenCtiExternalReference {
+  id           String   @id
+  sourceName   String
+  externalId   String?
+  url          String?
+  description  String?
+  creationDate DateTime?
+  createdAt    DateTime @default(now())
+}
+
+model OpenCtiSighting {
+  id             String   @id
+  name           String?
+  description    String?
+  firstSeen      DateTime?
+  lastSeen       DateTime?
+  count          Int      @default(0)
+  confidence     Int      @default(0)
+  source         String?  // Name of source entity
+  target         String?  // Name of target entity
+  negative       Boolean  @default(false)
+  important      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model OpenCtiIncident {
+  id          String   @id
+  name        String
+  description String?
+  type        String?
+  severity    String?
+  source      String?
+  firstSeen   DateTime?
+  lastSeen    DateTime?
+  marking     String?
+  status      String?
+  important   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OpenCtiObservable {
+  id          String   @id
+  type        String
+  value       String
+  description String?
+  author      String?
+  labels      String? // JSON
+  marking     String?
+  platformCreationDate DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model OpenCtiMalware {
+  id          String   @id
+  name        String
+  description String?
+  firstSeen   DateTime?
+  lastSeen    DateTime?
+  targetedCountries String? // JSON
+  targetedSectors   String? // JSON
+  labels      String? // JSON
+  important   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OpenCtiIntrusionSet {
+  id          String   @id
+  name        String
+  description String?
+  firstSeen   DateTime?
+  lastSeen    DateTime?
+  targetedCountries String?
+  targetedSectors   String?
+  labels      String?
+  important   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model OpenCtiNote {
+  id          String   @id
+  attribute_abstract String?
+  content     String?
+  author      String?
+  createdAt   DateTime @default(now())
+}
+
+model OpenCtiOrganization {
+  id          String   @id
+  name        String
+  description String?
+  labels      String?
+  createdAt   DateTime @default(now())
+}
+
+model OpenCtiRelationship {
+  id          String   @id
+  sourceId    String
+  sourceType  String
+  targetId    String
+  targetType  String
+  relationshipType String
+  description String?
+  confidence  Int      @default(0)
+  createdAt   DateTime @default(now())
+}
+
+model OpenCtiConnector {
+  id          String   @id
+  name        String
+  type        String
+  status      String   // active, inactive
+  lastSeen    DateTime?
+  updatedAt   DateTime @updatedAt
 }

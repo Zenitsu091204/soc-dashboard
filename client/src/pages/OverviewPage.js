@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { useWebSockets } from '../hooks/useWebSockets';
@@ -24,6 +25,7 @@ import {
   SignalIcon,
   ArrowPathIcon,
   CodeBracketSquareIcon,
+  BoltIcon,
 } from '@heroicons/react/24/outline';
 
 const DEFAULT_REFRESH_INTERVAL = 30; // seconds
@@ -67,10 +69,12 @@ function LiveRefreshBar({ countdown, total, onRefresh, loading }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function OverviewPage() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ totalAlerts: 0, criticalAlerts: 0, highAlerts: 0, openCases: 0, activeIocs: 0 });
   const [alerts, setAlerts] = useState([]);
   const [iocs, setIocs] = useState([]);
   const [openCtiMatches, setOpenCtiMatches] = useState([]);
+  const [importantIntel, setImportantIntel] = useState({ reports: [], malware: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [countdown, setCountdown] = useState(DEFAULT_REFRESH_INTERVAL);
@@ -130,37 +134,33 @@ export default function OverviewPage() {
         }
       }
 
-      const [statsRes, alertsRes, iocsRes, openCtiRes, ruleStatsRes, settingsRes] = await Promise.all([
+      const [statsRes, alertsRes, iocsRes, openCtiRes, ruleStatsRes, settingsRes, reportsRes, malwareRes] = await Promise.all([
         api.get('/alerts/stats'),
         api.get(alertsUrl),
         api.get('/intel/iocs'),
         api.get('/intel/opencti-matches'),
         api.get('/rules/stats'),
         api.get('/settings/workspace'),
+        api.get('/intel/reports?important=true'),
+        api.get('/intel/malware?important=true'),
       ]);
 
       let fetchedAlerts = alertsRes.data;
       if (settingsRes.data.refreshInterval) {
         setRefreshInterval(Number(settingsRes.data.refreshInterval));
       }
-      if (activeFilters) {
-        fetchedAlerts = fetchedAlerts.filter(a => {
-          const s = a.severity || 'low';
-          if (!activeFilters.severity[s]) return false;
-          const status = a.status || 'open';
-          if (activeFilters.status[status] === false) return false;
-          // Note: "in-progress" is not a status in backend (it's "investigating" or similar, but the UI checks 'in-progress'. Let's relax status filtering if not exact match)
-          if (status === 'investigating' && activeFilters.status.investigating === false) return false;
-          return true;
-        });
-      }
 
-      setStats(statsRes.data);
+      setStats({
+        ...statsRes.data,
+        importantReportsCount: reportsRes.data.length,
+        importantMalwareCount: malwareRes.data.length
+      });
       setAlerts(fetchedAlerts);
       setIocs(iocsRes.data);
       setOpenCtiMatches(openCtiRes.data);
       setRuleStats(ruleStatsRes.data);
       setLastUpdated(new Date());
+      setImportantIntel({ reports: reportsRes.data, malware: malwareRes.data });
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
       setError('Failed to load dashboard data. Please try refreshing.');
@@ -219,15 +219,15 @@ export default function OverviewPage() {
       severity: stats.highAlerts > 0 ? 'high' : undefined,
     },
     {
-      title: 'Total Reports',
-      value: loading ? '—' : (stats.totalReports || 0),
+      title: 'Validated Reports',
+      value: loading ? '—' : (stats.importantReportsCount || 0),
       trend: null,
       icon: CodeBracketSquareIcon,
       color: 'yellow',
     },
     {
-      title: 'Active IOCs',
-      value: loading ? '—' : stats.activeIocs,
+      title: 'Advanced Arsenals',
+      value: loading ? '—' : (stats.importantMalwareCount || 0),
       trend: null,
       icon: CpuChipIcon,
       color: 'indigo',
@@ -338,7 +338,50 @@ export default function OverviewPage() {
         <WafRulesCard rules={ruleStats} />
       </div>
 
-      {/* Row 4: Threat Intel */}
+      {/* Row 4: OpenCTI Spotlight */}
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-5">
+         <div className="bg-slate-900/40 border border-white/5 rounded-3xl p-6 backdrop-blur-md relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-3xl rounded-full" />
+            <div className="flex items-center justify-between mb-6 relative z-10">
+               <div>
+                  <h3 className="text-xl font-black text-white flex items-center gap-2">
+                     <BoltIcon className="w-5 h-5 text-yellow-500" />
+                     OpenCTI Intelligence Spotlight
+                  </h3>
+                  <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider mt-1.5 opacity-60">High-Confidence intelligence requiring analyst review</p>
+               </div>
+               <button onClick={() => navigate('/intelligence')} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-bold rounded-xl transition-all border border-white/5">
+                 View Full Knowledge Graph
+               </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
+               {importantIntel.reports.slice(0, 3).map(report => (
+                 <div key={report.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:bg-white/10 transition-all cursor-pointer group/card">
+                    <div className="flex items-center justify-between mb-3">
+                       <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest px-2 py-0.5 bg-indigo-400/10 rounded-full border border-indigo-400/20">Report</span>
+                       <span className="text-[9px] font-bold text-slate-500">{new Date(report.published).toLocaleDateString()}</span>
+                    </div>
+                    <h4 className="text-sm font-bold text-white mb-2 line-clamp-1 group-hover/card:text-indigo-400 transition-colors">{report.name}</h4>
+                    <p className="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed opacity-80">{report.description || 'Deep investigation into emerging threat vectors and adversary operations.'}</p>
+                    <div className="flex items-center gap-2">
+                       <div className="flex -space-x-2">
+                          {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full bg-slate-800 border-2 border-slate-900 flex items-center justify-center text-[7px] text-slate-500 font-bold">CTI</div>)}
+                       </div>
+                       <span className="text-[9px] font-black text-slate-600 uppercase tracking-tighter">Verified sources</span>
+                    </div>
+                 </div>
+               ))}
+               {importantIntel.reports.length === 0 && (
+                 <div className="col-span-full py-10 text-center text-slate-500 text-sm font-bold tracking-widest uppercase opacity-40">
+                    Scanning Knowledge Base for validated reports...
+                 </div>
+               )}
+            </div>
+         </div>
+      </div>
+
+      {/* Row 5: Threat Intel Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch pb-6">
         <ThreatIntelFeedCard
           feed={iocs.slice(0, 5).map((i) => ({

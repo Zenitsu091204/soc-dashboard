@@ -1,0 +1,18 @@
+# SOC Dashboard - Systemd Service Template
+# Path: /etc/systemd/system/soc-dashboard.service
+
+[Unit]
+Description=SOC Dashboard - SIEM & Intelligence Platform
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=YOUR_UBUNTU_USER
+WorkingDirectory=/home/YOUR_UBUNTU_USER/soc-dashboard
+ExecStart=/usr/bin/npm start
+Restart=always
+# Environment variables can also be set here, but the server uses .env
+# Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

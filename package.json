@@ -5,11 +5,14 @@
   "scripts": {
     "install:all": "npm install && npm install --prefix client && npm install --prefix server",
     "setup": "node setup.js",
+    "build": "npm run install:all && npm run build --prefix client && npx prisma generate --schema=server/prisma/schema.prisma",
+    "start": "npm start --prefix server",
     "server": "npm run dev --prefix server",
     "client": "npm start --prefix client",
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "db:migrate": "npx prisma migrate dev --name init --schema=server/prisma/schema.prisma",
-    "db:seed": "node server/prisma/seed.js"
+    "db:seed": "node server/prisma/seed.js",
+    "db:deploy": "npx prisma migrate deploy --schema=server/prisma/schema.prisma"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

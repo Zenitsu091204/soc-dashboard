@@ -125,10 +125,31 @@ const getRuleStats = async (req, res) => {
   }
 };
 
+/**
+ * Export all active rules in plaintext NAXSI format.
+ */
+const exportRules = async (req, res) => {
+  try {
+    const activeRules = await prisma.rule.findMany({ 
+      where: { status: 'active' },
+      orderBy: { naxsiId: 'asc' }
+    });
+    
+    const content = await naxsiService.generateExportContent(activeRules);
+    
+    res.setHeader('Content-Type', 'text/plain');
+    res.send(content);
+  } catch (error) {
+    console.error('Export rules error:', error);
+    res.status(500).json({ message: 'Failed to export rules' });
+  }
+};
+
 module.exports = {
   getRules,
   createRuleFromIoc,
   updateRuleStatus,
   deployRules,
   getRuleStats,
+  exportRules,
 };

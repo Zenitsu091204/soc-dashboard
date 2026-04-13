@@ -17,7 +17,7 @@ chmod +x setup-ubuntu.sh
 ./setup-ubuntu.sh
 ```
 
-*(Frontend → http://localhost:3000 | Backend → http://localhost:5000)*
+*(Frontend → http://localhost:8000 | Backend → http://localhost:8001)*
 
 ---
 
@@ -47,7 +47,7 @@ cd ../server
 node index.js
 ```
 
-*(Full application → http://localhost:5000)*
+*(Full application → http://localhost:8001)*
 
 ---
 
@@ -123,5 +123,5 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 | `P1000 Authentication failed` | PostgreSQL peer auth | Follow Manual PostgreSQL Setup above |
 | `error:0308010C` (OpenSSL) | Node 17+ + old webpack | `export NODE_OPTIONS=--openssl-legacy-provider` |
 | `npm install` peer dep errors | React 19 conflicts | `npm install --legacy-peer-deps` |
-| `EADDRINUSE :5000` | Port already in use | `sudo kill -9 $(sudo lsof -ti :5000)` |
-| App unreachable from browser | UFW firewall blocking | `sudo ufw allow 5000 && sudo ufw allow 3000` |
+| `EADDRINUSE :8001` | Port already in use | `sudo kill -9 $(sudo lsof -ti :8001)` |
+| App unreachable from browser | UFW firewall blocking | `sudo ufw allow 8001 && sudo ufw allow 8000` |

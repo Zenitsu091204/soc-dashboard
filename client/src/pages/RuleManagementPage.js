@@ -17,15 +17,20 @@ import {
   Switch,
   Alert,
   Snackbar,
+  Tabs,
+  Tab,
+  Divider,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloudSyncIcon from '@mui/icons-material/CloudSync';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import TerminalIcon from '@mui/icons-material/Terminal';
+import InfoIcon from '@mui/icons-material/Info';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
@@ -37,7 +42,8 @@ const RuleManagementPage = () => {
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [deploying, setDeploying] = useState(false);
+  const [exportContent, setExportContent] = useState('');
+  const [activeTab, setActiveTab] = useState(0);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
   const fetchRules = async () => {
@@ -45,6 +51,10 @@ const RuleManagementPage = () => {
       setLoading(true);
       const { data } = await api.get('/rules');
       setRules(data);
+      
+      // Also fetch the formatted export content
+      const exportRes = await api.get('/rules/export');
+      setExportContent(exportRes.data);
     } catch (err) {
       showNotification('Failed to fetch rules', 'error');
     } finally {
@@ -64,8 +74,8 @@ const RuleManagementPage = () => {
     try {
       setSyncing(true);
       const { data } = await api.post('/intel/sync');
-      showNotification(`Sync complete: ${data.results.indicators} IOCs, ${data.results.campaigns} campaigns`, 'success');
-      fetchRules();
+      showNotification(`Sync complete: ${data.results.indicators} IOCs`, 'success');
+      await fetchRules();
     } catch (err) {
       showNotification('Sync failed', 'error');
     } finally {
@@ -73,23 +83,17 @@ const RuleManagementPage = () => {
     }
   };
 
-  const handleDeploy = async () => {
-    try {
-      setDeploying(true);
-      await api.post('/rules/deploy');
-      showNotification('Firewall configuration reloaded successfully', 'success');
-    } catch (err) {
-      showNotification('Deployment failed', 'error');
-    } finally {
-      setDeploying(false);
-    }
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    showNotification('Copied to clipboard', 'success');
   };
 
   const updateStatus = async (id, newStatus) => {
     try {
       await api.patch(`/rules/${id}/status`, { status: newStatus });
       showNotification(`Rule ${newStatus} successfully`, 'success');
-      setRules(rules.map(r => r.id === id ? { ...r, status: newStatus } : r));
+      // Refresh both list and export console
+      await fetchRules();
     } catch (err) {
       showNotification('Failed to update rule status', 'error');
     }
@@ -105,155 +109,220 @@ const RuleManagementPage = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', mb: 1 }}>
-            Rule Management
+          <Typography variant="h4" sx={{ fontWeight: 800, color: 'white', mb: 1, letterSpacing: '-0.02em' }}>
+            Firewall Rule Console
           </Typography>
-          <Typography variant="body2" sx={{ color: 'slate.400' }}>
-            Approve and manage NAXSI firewall rules generated from threat intelligence.
+          <Typography variant="body2" sx={{ color: 'slate.400', fontWeight: 'medium' }}>
+            Generate and manage NAXSI rules derived from STIX intelligence.
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button
             variant="outlined"
             startIcon={<CloudSyncIcon />}
             onClick={handleSync}
             disabled={syncing || !isAnalyst}
-            sx={{ borderColor: 'rgba(255,255,255,0.1)', color: 'slate.300', '&:hover': { borderColor: 'indigo.500' } }}
+            sx={{ 
+              borderColor: 'rgba(255,255,255,0.1)', 
+              color: 'slate.300', 
+              borderRadius: '12px',
+              textTransform: 'none',
+              fontWeight: 600,
+              '&:hover': { borderColor: 'indigo.500', backgroundColor: 'rgba(99, 102, 241, 0.05)' } 
+            }}
           >
-            {syncing ? 'Syncing...' : 'Sync OpenCTI'}
+            {syncing ? 'Syncing...' : 'Fetch Intel & Sync'}
           </Button>
-          <Tooltip title={!isAdmin ? "Only Admins can deploy to firewall" : ""}>
-            <span>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<PlayArrowIcon />}
-                onClick={handleDeploy}
-                disabled={deploying || !isAdmin}
-                sx={{ fontWeight: 'bold' }}
-              >
-                {deploying ? 'Deploying...' : 'Deploy to Firewall'}
-              </Button>
-            </span>
-          </Tooltip>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<ContentCopyIcon />}
+            onClick={() => handleCopy(exportContent)}
+            sx={{ 
+              fontWeight: 'bold', 
+              borderRadius: '12px',
+              textTransform: 'none',
+              px: 3,
+              boxShadow: '0 4px 14px 0 rgba(99, 102, 241, 0.39)'
+            }}
+          >
+            Copy All Active Rules
+          </Button>
         </Box>
       </Box>
 
-      <TableContainer component={Paper} sx={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(10px)', border: '1px border-white/5', borderRadius: 3 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ color: 'slate.400', fontWeight: 'bold' }}>Indicator</TableCell>
-              <TableCell sx={{ color: 'slate.400', fontWeight: 'bold' }}>Rule Content</TableCell>
-              <TableCell sx={{ color: 'slate.400', fontWeight: 'bold' }}>Source</TableCell>
-              <TableCell sx={{ color: 'slate.400', fontWeight: 'bold' }}>Verification</TableCell>
-              <TableCell sx={{ color: 'slate.400', fontWeight: 'bold' }}>Status</TableCell>
-              <TableCell sx={{ color: 'slate.400', fontWeight: 'bold', textAlign: 'right' }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rules.map((rule) => (
-              <TableRow key={rule.id} hover sx={{ '&:hover': { backgroundColor: 'rgba(255,255,255,0.02)' } }}>
-                <TableCell>
-                  <Box>
-                    <Typography variant="body2" sx={{ color: 'white', fontWeight: 'medium' }}>
-                      {rule.indicator?.value || 'Manual Rule'}
-                    </Typography>
-                    <Typography variant="caption" sx={{ color: 'slate.500', textTransform: 'uppercase' }}>
-                      {rule.indicator?.type || 'Generic'}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <code className="text-xs bg-black/30 p-2 rounded block text-indigo-300 border border-white/5 truncate max-w-sm">
-                    {rule.content}
-                  </code>
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={rule.source} 
-                    size="small" 
-                    sx={{ backgroundColor: 'rgba(99, 102, 241, 0.1)', color: 'indigo.400', border: '1px border-indigo-500/20' }} 
-                  />
-                </TableCell>
-                <TableCell>
-                  {rule.verificationStatus === 'success' ? (
-                    <Tooltip title={`Last verified: ${new Date(rule.lastVerified).toLocaleString()}`}>
-                      <Chip icon={<VerifiedUserIcon sx={{ fontSize: '16px !important' }} />} label="VERIFIED" size="small" color="success" variant="outlined" />
-                    </Tooltip>
-                  ) : rule.status === 'active' ? (
-                    <Tooltip title="Rule may not be active in firewall config">
-                      <Chip icon={<WarningAmberIcon sx={{ fontSize: '16px !important' }} />} label="UNVERIFIED" size="small" color="warning" variant="outlined" />
-                    </Tooltip>
-                  ) : (
-                    <Typography variant="caption" sx={{ color: 'slate.600' }}>N/A</Typography>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={rule.status.toUpperCase()}
-                    size="small"
-                    color={rule.status === 'active' ? 'success' : rule.status === 'pending' ? 'warning' : 'default'}
-                    sx={{ fontWeight: 'bold' }}
-                  />
-                </TableCell>
-                <TableCell sx={{ textAlign: 'right' }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                    {rule.status === 'pending' && (
-                      <>
-                        <Tooltip title="Approve & Enable">
-                          <IconButton color="success" size="small" onClick={() => updateStatus(rule.id, 'active')}>
-                            <CheckCircleOutlineIcon />
+      <Paper sx={{ backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 4, overflow: 'hidden' }}>
+        <Tabs 
+          value={activeTab} 
+          onChange={(e, v) => setActiveTab(v)}
+          sx={{
+            px: 2,
+            pt: 1,
+            '& .MuiTabs-indicator': { height: 3, borderRadius: '3px 3px 0 0' },
+            '& .MuiTab-root': { color: 'slate.400', fontWeight: 600, textTransform: 'none', fontSize: '0.9rem' }
+          }}
+        >
+          <Tab label="Review Queue" sx={{ py: 2 }} />
+          <Tab label="Export Console" sx={{ py: 2 }} />
+          <Tab label="Deployment Guide" sx={{ py: 2 }} />
+        </Tabs>
+        <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
+
+        {/* Tab 0: Rule Grid */}
+        {activeTab === 0 && (
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow sx={{ '& th': { borderBottom: '1px solid rgba(255,255,255,0.05)', py: 2.5 } }}>
+                  <TableCell sx={{ color: 'slate.500', fontWeight: 800, fontSize: '0.7rem', textTransform: 'uppercase', tracking: '0.1em' }}>Indicator</TableCell>
+                  <TableCell sx={{ color: 'slate.500', fontWeight: 800, fontSize: '0.7rem', textTransform: 'uppercase', tracking: '0.1em' }}>Rule Preview</TableCell>
+                  <TableCell sx={{ color: 'slate.500', fontWeight: 800, fontSize: '0.7rem', textTransform: 'uppercase', tracking: '0.1em' }}>Status</TableCell>
+                  <TableCell sx={{ color: 'slate.500', fontWeight: 800, fontSize: '0.7rem', textTransform: 'uppercase', tracking: '0.1em', textAlign: 'right' }}>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {rules.map((rule) => (
+                  <TableRow key={rule.id} hover sx={{ '&:last-child td': { border: 0 }, '&:hover': { backgroundColor: 'rgba(255,255,255,0.01)' } }}>
+                    <TableCell>
+                      <Box>
+                        <Typography variant="body2" sx={{ color: 'white', fontWeight: 700, mb: 0.5 }}>
+                          {rule.indicator?.value || 'Manual Rule'}
+                        </Typography>
+                        <Chip 
+                          label={rule.indicator?.type || 'Generic'} 
+                          size="small" 
+                          sx={{ height: 18, fontSize: '0.65rem', fontWeight: 900, backgroundColor: 'rgba(255,255,255,0.05)', color: 'slate.400' }} 
+                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <code className="text-[11px] bg-slate-950/80 p-2 rounded-lg text-indigo-300 border border-white/5 font-mono max-w-sm truncate block">
+                          {rule.content}
+                        </code>
+                        <Tooltip title="Copy Individual Rule">
+                          <IconButton size="small" onClick={() => handleCopy(rule.content)} sx={{ color: 'slate.500', '&:hover': { color: 'indigo-400' } }}>
+                            <ContentCopyIcon sx={{ fontSize: 16 }} />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title="Reject">
-                          <IconButton color="error" size="small" onClick={() => updateStatus(rule.id, 'rejected')}>
-                            <HighlightOffIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </>
-                    )}
-                    {rule.status === 'active' && (
-                      <Tooltip title="Disable Rule">
-                        <Switch 
-                          checked={true} 
-                          size="small" 
-                          onChange={() => updateStatus(rule.id, 'disabled')}
-                        />
-                      </Tooltip>
-                    )}
-                    {rule.status === 'disabled' && (
-                      <Tooltip title="Enable Rule">
-                        <Switch 
-                          checked={false} 
-                          size="small" 
-                          onChange={() => updateStatus(rule.id, 'active')}
-                        />
-                      </Tooltip>
-                    )}
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-            {rules.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} sx={{ textAlign: 'center', py: 8, color: 'slate.500' }}>
-                  No rules found. Sync with OpenCTI to generate rules from threat intelligence.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={rule.status.toUpperCase()}
+                        size="small"
+                        sx={{ 
+                          height: 20, 
+                          fontSize: '0.7rem', 
+                          fontWeight: 800,
+                          backgroundColor: rule.status === 'active' ? 'rgba(34, 197, 94, 0.1)' : rule.status === 'pending' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(255,255,255,0.05)',
+                          color: rule.status === 'active' ? '#4ade80' : rule.status === 'pending' ? '#facc15' : 'slate.400',
+                          border: `1px solid ${rule.status === 'active' ? 'rgba(34, 197, 94, 0.2)' : rule.status === 'pending' ? 'rgba(234, 179, 8, 0.2)' : 'rgba(255,255,255,0.1)'}`
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell sx={{ textAlign: 'right' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                        {rule.status === 'pending' && (
+                          <>
+                            <Tooltip title="Approve">
+                              <IconButton color="success" size="small" onClick={() => updateStatus(rule.id, 'active')} sx={{ backgroundColor: 'rgba(34, 197, 94, 0.05)' }}>
+                                <CheckCircleOutlineIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <IconButton color="error" size="small" onClick={() => updateStatus(rule.id, 'rejected')} sx={{ backgroundColor: 'rgba(239, 68, 68, 0.05)' }}>
+                                <HighlightOffIcon fontSize="small" />
+                            </IconButton>
+                          </>
+                        )}
+                        {rule.status !== 'pending' && (
+                           <Switch 
+                            checked={rule.status === 'active'} 
+                            size="small" 
+                            onChange={() => updateStatus(rule.id, rule.status === 'active' ? 'disabled' : 'active')}
+                          />
+                        )}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
+
+        {/* Tab 1: Export Console */}
+        {activeTab === 1 && (
+          <Box sx={{ p: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ color: 'slate.300', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TerminalIcon sx={{ fontSize: 18, color: 'indigo-400' }} />
+                Production Rule Set (Ready for naxsi_rules.conf)
+              </Typography>
+              <Button size="small" startIcon={<ContentCopyIcon />} onClick={() => handleCopy(exportContent)} sx={{ color: 'indigo-400', textTransform: 'none', fontWeight: 700 }}>
+                Copy Config
+              </Button>
+            </Box>
+            <Box 
+              component="pre" 
+              sx={{ 
+                p: 3, 
+                backgroundColor: 'rgba(2, 6, 23, 0.8)', 
+                borderRadius: 2, 
+                border: '1px solid rgba(99, 102, 241, 0.2)',
+                color: 'indigo.200',
+                fontSize: '11px',
+                fontFamily: 'JetBrains Mono, Fira Code, monospace',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                lineHeight: 1.6,
+                '&::-webkit-scrollbar': { width: '8px' },
+                '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '4px' }
+              }}
+            >
+              {exportContent || '# No active rules found. Approve generated rules to see them here.'}
+            </Box>
+          </Box>
+        )}
+
+        {/* Tab 2: Deployment Guide */}
+        {activeTab === 2 && (
+          <Box sx={{ p: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+              <InfoIcon sx={{ color: 'indigo-400' }} />
+              <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>Manual Deployment Guide</Typography>
+            </Box>
+            
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 3 }}>
+              {[
+                { step: '01', title: 'Export Config', desc: 'Go to the Export Console tab and copy the entire rule set. This includes Core and STIX-derived rules.' },
+                { step: '02', title: 'Update Proxy', desc: 'Paste the content into your firewall rule file (typically /etc/nginx/naxsi_rules.conf).' },
+                { step: '03', title: 'Reload Nginx', desc: 'Execute "nginx -t" to check syntax and "nginx -s reload" to apply the new protection.' }
+              ].map(item => (
+                <Box key={item.step} sx={{ p: 3, backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: 3, border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <Typography variant="h4" sx={{ color: 'indigo-500/30', fontWeight: 900, mb: 1 }}>{item.step}</Typography>
+                  <Typography variant="subtitle1" sx={{ color: 'white', fontWeight: 800, mb: 1 }}>{item.title}</Typography>
+                  <Typography variant="body2" sx={{ color: 'slate.400', lineHeight: 1.5 }}>{item.desc}</Typography>
+                </Box>
+              ))}
+            </Box>
+
+            <Alert severity="info" sx={{ mt: 4, backgroundColor: 'rgba(99, 102, 241, 0.1)', color: 'indigo.200', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: 3 }}>
+              <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 0.5 }}>PRO TIP</Typography>
+              The system strictly follows the STIX-CIDR/Regex mapping. Rules marked as "SQL_INJECTION" use ID ranges 1000-2104 and specific match zones (mz) tailored for database protection.
+            </Alert>
+          </Box>
+        )}
+      </Paper>
 
       <Snackbar
         open={notification.open}
-        autoHideDuration={6000}
+        autoHideDuration={4000}
         onClose={() => setNotification({ ...notification, open: false })}
       >
-        <Alert severity={notification.severity} sx={{ width: '100%' }}>
+        <Alert severity={notification.severity} variant="filled" sx={{ width: '100%', borderRadius: 3, fontWeight: 700 }}>
           {notification.message}
         </Alert>
       </Snackbar>

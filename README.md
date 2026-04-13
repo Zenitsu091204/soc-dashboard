@@ -2,11 +2,17 @@
 
 A production-ready **Security Operations Center (SOC) Dashboard** built with the PERN stack (PostgreSQL, Express, React, Node.js). Designed for real-time threat monitoring, intelligence analysis, and analyst workflow management.
 
-> **Current Version:** 4.4.0 — Last updated 2026-04-06 15:44 IST
+> **Current Version:** 4.6.0 — Last updated 2026-04-13 11:19 IST
 
 ---
 
 ## 🚀 Features
+
+### **Intelligence Hub 2.0 (v4.6.0)**
+- **Deep OpenCTI Knowledge Integration** — Ingests the full STIX-compliant knowledge graph, including Reports, Malware Families, Intrusion Sets, and Relationships.
+- **Contextual Rule Generation** — Automated NAXSI firewall rule creation that automatically traverses the relationship graph to embed adversary context into protection messages.
+- **"Fetch All, Show Important" Strategy** — Backend-level intelligence thresholding (>80% confidence / High severity) to prevent analyst information overload.
+- **Systems Monitoring** — Dedicated view for OpenCTI connector health and ingestion pipeline status.
 
 ### **Production & Deployment (v4.4.1)**
 - **Unified Static Serving** — The Express backend automatically hosts the compiled React bundle internally, eliminating cross-origin complications and serving the entire platform seamlessly on a single port for live production.
@@ -117,7 +123,7 @@ Double-click `setup.bat`, or in PowerShell:
 ./setup.bat
 ```
 
-*Frontend runs on http://localhost:3000 — Backend runs on http://localhost:5000*
+*Frontend runs on http://localhost:8000 — Backend runs on http://localhost:8001*
 
 > See **[SETUP_GUIDE.md](./SETUP_GUIDE.md)** for manual steps, troubleshooting, and production deployment.
 
@@ -132,7 +138,7 @@ npm run build
 cd ../server
 node index.js
 ```
-*The full application (frontend + API) now runs entirely on http://localhost:5000*
+*The full application (frontend + API) now runs entirely on http://localhost:8001*
 
 ---
 

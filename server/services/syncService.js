@@ -22,6 +22,14 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
       indicators: 0,
       campaigns: 0,
       actors: 0,
+      reports: 0,
+      sightings: 0,
+      incidents: 0,
+      observables: 0,
+      malware: 0,
+      intrusionSets: 0,
+      relationships: 0,
+      connectors: 0,
       fresh: 0,
     };
 
@@ -29,8 +37,8 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
     for (const indicator of intel.indicators) {
       try {
         const value = indicator.name; 
-        
         const existingIoc = await prisma.ioc.findUnique({ where: { value } });
+        const isImportant = indicator.confidence > 80;
         
         await prisma.ioc.upsert({
           where: { value },
@@ -39,6 +47,7 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
             name: indicator.name,
             description: indicator.description,
             pattern: indicator.pattern,
+            important: isImportant,
           },
           create: {
             type: indicator.type.toLowerCase().includes('ip') ? 'ip' : 
@@ -48,6 +57,7 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
             description: indicator.description,
             pattern: indicator.pattern,
             confidence: indicator.confidence,
+            important: isImportant,
           }
         });
 
@@ -62,21 +72,15 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
           const ruleData = await ruleService.generateRule(ioc);
           
           if (ruleData) {
-            // Tier 1: Confidence > 90 -> Auto-deploy (Active)
             if (indicator.confidence > 90) {
               ruleData.status = 'active';
               await prisma.rule.create({ data: ruleData });
-              console.log(`[AUTO-DEPLOY] Active rule for high-confidence IOC: ${value}`);
-            } 
-            // Tier 2: Confidence > 70 -> Auto-generate (Pending)
-            else if (indicator.confidence > 70) {
+            } else if (indicator.confidence > 70) {
               ruleData.status = 'pending';
               await prisma.rule.create({ data: ruleData });
-              console.log(`[AUTO-GENERATE] Pending rule for medium-confidence IOC: ${value}`);
             }
           }
         }
-
         results.indicators++;
       } catch (err) {
         console.error(`Error syncing indicator ${indicator.name}:`, err.message);
@@ -86,20 +90,25 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
     // 2. Sync Campaigns
     for (const campaign of intel.campaigns) {
       try {
+        const severity = campaign.confidence > 80 ? 'Critical' : campaign.confidence > 50 ? 'High' : 'Medium';
+        const isImportant = severity === 'Critical' || severity === 'High';
+        
         await prisma.campaign.upsert({
           where: { id: campaign.id },
           update: {
             title: campaign.name,
             description: campaign.description,
             status: campaign.status || 'Active',
-            severity: campaign.confidence > 80 ? 'Critical' : campaign.confidence > 50 ? 'High' : 'Medium',
+            severity: severity,
+            important: isImportant,
           },
           create: {
             id: campaign.id,
             title: campaign.name,
             description: campaign.description,
             status: campaign.status || 'Active',
-            severity: campaign.confidence > 80 ? 'Critical' : campaign.confidence > 50 ? 'High' : 'Medium',
+            severity: severity,
+            important: isImportant,
           }
         });
         results.campaigns++;
@@ -111,15 +120,18 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
     // 3. Sync Threat Actors
     for (const actor of intel.actors) {
       try {
+        const isImportant = actor.confidence > 80;
         await prisma.threatActor.upsert({
           where: { name: actor.name },
-          update: {
+          update: { 
             lastSeen: new Date(),
+            important: isImportant,
           },
           create: {
             name: actor.name,
             type: 'State-sponsored',
             lastSeen: new Date(),
+            important: isImportant,
           }
         });
         results.actors++;
@@ -128,12 +140,118 @@ const syncIntelligence = async (userId = 'SYSTEM') => {
       }
     }
 
+    // 4. Sync Reports (Mark as Important if recent or high status)
+    for (const report of intel.reports) {
+      try {
+        await prisma.openCtiReport.upsert({
+          where: { id: report.id },
+          update: {
+            status: report.status,
+            important: report.status === 'New' || !!report.marking,
+          },
+          create: {
+            id: report.id,
+            name: report.name,
+            description: report.description,
+            published: report.published ? new Date(report.published) : null,
+            status: report.status,
+            marking: report.marking,
+            important: report.status === 'New' || !!report.marking,
+          }
+        });
+        results.reports++;
+      } catch (err) {}
+    }
+
+    // 5. Sync Incidents (Always Important)
+    for (const incident of intel.incidents) {
+      try {
+        await prisma.openCtiIncident.upsert({
+          where: { id: incident.id },
+          update: {
+            severity: incident.severity,
+            status: incident.status,
+          },
+          create: {
+            id: incident.id,
+            name: incident.name,
+            description: incident.description,
+            type: incident.type,
+            severity: incident.severity,
+            source: incident.source,
+            firstSeen: incident.firstSeen ? new Date(incident.firstSeen) : null,
+            lastSeen: incident.lastSeen ? new Date(incident.lastSeen) : null,
+            important: true,
+          }
+        });
+        results.incidents++;
+      } catch (err) {}
+    }
+
+    // 6. Sync Malware (Important)
+    for (const mw of intel.malware) {
+      try {
+        await prisma.openCtiMalware.upsert({
+          where: { id: mw.id },
+          update: { lastSeen: mw.lastSeen ? new Date(mw.lastSeen) : null },
+          create: {
+            id: mw.id,
+            name: mw.name,
+            description: mw.description,
+            firstSeen: mw.firstSeen ? new Date(mw.firstSeen) : null,
+            lastSeen: mw.lastSeen ? new Date(mw.lastSeen) : null,
+            important: true,
+          }
+        });
+        results.malware++;
+      } catch (err) {}
+    }
+
+    // 7. Sync Relationships (System Data - Not flagged as important for UI list)
+    for (const rel of intel.relationships) {
+      try {
+        await prisma.openCtiRelationship.upsert({
+          where: { id: rel.id },
+          update: { confidence: rel.confidence },
+          create: {
+            id: rel.id,
+            sourceId: rel.sourceId,
+            sourceType: rel.sourceType,
+            targetId: rel.targetId,
+            targetType: rel.targetType,
+            relationshipType: rel.type,
+            description: rel.description,
+            confidence: rel.confidence,
+          }
+        });
+        results.relationships++;
+      } catch (err) {}
+    }
+
+    // 8. Sync Connectors
+    for (const conn of intel.connectors) {
+      try {
+        await prisma.openCtiConnector.upsert({
+          where: { id: conn.id },
+          update: { status: conn.status, lastSeen: conn.updatedAt ? new Date(conn.updatedAt) : null },
+          create: {
+            id: conn.id,
+            name: conn.name,
+            type: conn.type,
+            status: conn.status,
+            lastSeen: conn.updatedAt ? new Date(conn.updatedAt) : null,
+          }
+        });
+        results.connectors++;
+      } catch (err) {}
+    }
+
     await prisma.syncStatus.upsert({
       where: { serviceName: 'OpenCTI' },
       update: { 
         lastSync: new Date(), 
         status: 'success', 
-        message: `Synced ${results.indicators} IOCs`,
+        message: `Synced ${results.indicators} IOCs, ${results.reports} Reports, ${results.malware} Malware`,
         iocCount: results.indicators,
         freshness: results.fresh
       },

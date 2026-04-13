@@ -1,16 +1,17 @@
 const prisma = require('../utils/prisma');
 
 /**
- * NAXSI Rule Category Ranges
+ * NAXSI Rule Category Ranges (Strict Syntax Alignment)
  */
 const CATEGORY_RANGES = {
-  SQL_INJECTION: { min: 1000, max: 2107, score: '$SQL' },
-  TRAVERSAL: { min: 1200, max: 2402, score: '$TRAVERSAL' },
-  XSS: { min: 1300, max: 2205, score: '$XSS' },
-  RCE: { min: 2300, max: 2304, score: '$RCE' },
-  WHITELIST: { min: 10000, max: 19999, score: null },
-  CUSTOM: { min: 20000, max: 29999, score: '$CUSTOM' },
-  EVADE: { min: 20000, max: 29999, score: '$EVADE' }, // Mapping Evasion to Custom range as per plan
+  SQL_INJECTION: { min: 1000, max: 2104, score: '$SQL', mz: 'BODY|URL|ARGS|$HEADERS_VAR:Cookie' },
+  NOSQL_INJECTION: { min: 2105, max: 2107, score: '$SQL', mz: 'BODY|ARGS' },
+  XSS: { min: 1300, max: 2205, score: '$XSS', mz: 'ARGS|URL|BODY|$HEADERS_VAR:Cookie' },
+  RCE: { min: 2300, max: 2304, score: '$RCE', mz: 'BODY|URL|ARGS' },
+  TRAVERSAL: { min: 1200, max: 2402, score: '$TRAVERSAL', mz: 'ARGS|URL|BODY' },
+  EVADE: { min: 2400, max: 2402, score: '$EVADE', mz: 'ARGS|BODY|URL' },
+  WHITELIST: { min: 10000, max: 19999, score: null, mz: 'ARGS|BODY' },
+  CUSTOM: { min: 20000, max: 29999, score: '$CUSTOM', mz: 'ARGS' },
 };
 
 /**
@@ -19,10 +20,13 @@ const CATEGORY_RANGES = {
 const classifyIndicator = (indicator) => {
   const text = `${indicator.name} ${indicator.description || ''} ${indicator.pattern || ''}`.toLowerCase();
   
+  if (text.includes('[$]gt') || text.includes('[$]ne') || text.includes('[$]where') || text.includes('nosql') || text.includes('mongodb')) {
+    return 'NOSQL_INJECTION';
+  }
   if (text.includes('sql') || text.includes('injection') || text.includes('select') || text.includes('union')) {
     return 'SQL_INJECTION';
   }
-  if (text.includes('xss') || text.includes('cross-site') || text.includes('script') || text.includes('alert')) {
+  if (text.includes('xss') || text.includes('cross-site') || text.includes('script') || text.includes('alert') || text.includes('onerror')) {
     return 'XSS';
   }
   if (text.includes('rce') || text.includes('execute') || text.includes('shell') || text.includes('system') || text.includes('ssti')) {
@@ -45,27 +49,16 @@ const getNextAvailableId = async (category) => {
   const range = CATEGORY_RANGES[category];
   if (!range) throw new Error(`Invalid category: ${category}`);
 
-  // Find all used IDs in this range
   const usedIds = await prisma.rule.findMany({
-    where: {
-      naxsiId: {
-        gte: range.min,
-        lte: range.max
-      }
-    },
+    where: { naxsiId: { gte: range.min, lte: range.max } },
     select: { naxsiId: true },
     orderBy: { naxsiId: 'asc' }
   });
 
   const usedIdSet = new Set(usedIds.map(r => r.naxsiId));
-  
-  // Find the first available ID
   for (let id = range.min; id <= range.max; id++) {
-    if (!usedIdSet.has(id)) {
-      return id;
-    }
+    if (!usedIdSet.has(id)) return id;
   }
-
   throw new Error(`No available IDs left in range for category: ${category}`);
 };
 
@@ -73,8 +66,8 @@ const getNextAvailableId = async (category) => {
  * Validate NAXSI rule syntax.
  */
 const validateRuleSyntax = (content) => {
-  // Exact syntax: MainRule "str" "msg" "mz" "s:$CATEGORY:8" id;
-  const regex = /^MainRule\s+"str:.*"\s+"msg:.*"\s+"mz:.*"\s+"s:\$[A-Z]+:\d+"\s+id:\d+;$/;
+  // Pattern: MainRule "str:VALUE" "msg:MSG" "mz:MZ" "s:$SCORE:8" id:ID;
+  const regex = /^MainRule\s+"str:.*"\s+"msg:.*"\s+"mz:.*"\s+"s:\$[A-Z]+:8"\s+id:\d+;$/;
   return regex.test(content);
 };
 
@@ -82,47 +75,36 @@ const validateRuleSyntax = (content) => {
  * Generate a NAXSI rule from an IOC.
  */
 const generateRule = async (ioc) => {
-  // 1. Duplicate Detection - Check if a rule for this indicator already exists
   const existingRule = await prisma.rule.findFirst({
-    where: { 
-      indicatorId: ioc.id,
-      status: { in: ['pending', 'active'] } 
-    }
+    where: { indicatorId: ioc.id, status: { in: ['pending', 'active'] } }
   });
+  if (existingRule) return null;
 
-  if (existingRule) {
-    console.log(`[RULE-SERVICE] Duplicate rule avoided for IOC: ${ioc.value}`);
-    return null;
-  }
+  let contextMsg = '';
+  try {
+    const relationships = await prisma.openCtiRelationship.findMany({ where: { sourceId: ioc.id } });
+    for (const rel of relationships) {
+       if (rel.targetType === 'malware' || rel.targetType === 'intrusion-set') {
+         const target = await prisma.openCtiMalware.findUnique({ where: { id: rel.targetId } }) 
+                     || await prisma.openCtiIntrusionSet.findUnique({ where: { id: rel.targetId } });
+         if (target) contextMsg += ` [Related to ${target.name}]`;
+       }
+    }
+  } catch (err) { /* ignore */ }
 
-  // 2. Classification
   const category = classifyIndicator(ioc);
-  const rangeConfig = CATEGORY_RANGES[category];
-
-  // 3. ID Assignment
+  const config = CATEGORY_RANGES[category];
   const naxsiId = await getNextAvailableId(category);
 
-  // 4. Template Selection & Content Generation
-  // Reuse match zones: ARGS, URL, BODY, $HEADERS_VAR:Cookie based on attack type
-  let mz = 'ARGS';
-  if (category === 'XSS' || category === 'EVADE') {
-    mz = 'ARGS|BODY|$HEADERS_VAR:Cookie';
-  } else if (category === 'TRAVERSAL') {
-    mz = 'URL';
-  } else if (category === 'RCE') {
-    mz = 'BODY|ARGS';
-  }
-
-  const scoreLabel = rangeConfig.score || '$SQL'; // Fallback
-  const msg = `OpenCTI generated ${category.replace('_', ' ')} rule`;
+  const baseLabel = category.replace('_', ' ');
+  const msg = `OpenCTI ${baseLabel} detection${contextMsg}`;
+  const scoreLabel = config.score || '$SQL';
   
-  // Exact Syntax: MainRule "str" "msg" "mz" "s:$CATEGORY:8" id;
-  const content = `MainRule "str:${ioc.value}" "msg:${msg}" "mz:${mz}" "s:${scoreLabel}:8" id:${naxsiId};`;
+  // Strict alignment with provided pattern
+  const content = `MainRule "str:${ioc.value}" "msg:${msg}" "mz:${config.mz}" "s:${scoreLabel}:8" id:${naxsiId};`;
 
-  // 5. Validation
   if (!validateRuleSyntax(content)) {
-    console.error(`[RULE-SERVICE] Malformed rule generated: ${content}`);
-    throw new Error('Generated rule failed syntax validation');
+    throw new Error(`Generated rule failed syntax validation: ${content}`);
   }
 
   return {

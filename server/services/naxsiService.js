@@ -9,8 +9,20 @@ const NAXSI_RULES_PATH = process.env.NAXSI_RULES_PATH || path.join(__dirname, '.
 const NAXSI_BACKUP_PATH = NAXSI_RULES_PATH + '.bak';
 const RELOAD_COMMAND = process.env.FIREWALL_RELOAD_CMD || 'nginx -s reload';
 
+const CORE_RULES_HEADER = `########################################
+# NAXSI CORE RULES (Internal & Libinjection)
+########################################
+MainRule "msg:weird request" id:1;
+MainRule "msg:invalid hex" id:10;
+MainRule "msg:invalid POST" id:13;
+
+# Libinjection for SQLi/XSS (applied to all relevant zones)
+MainRule "msg:libinjection_sql" "mz:BODY|URL|ARGS|$HEADERS_VAR:Cookie" "s:$SQL:8" id:17;
+MainRule "msg:libinjection_xss" "mz:BODY|URL|ARGS|$HEADERS_VAR:Cookie" "s:$XSS:8" id:18;
+`;
+
 /**
- * Update the NAXSI configuration file with active rules, with rollback support.
+ * Update the NAXSI configuration file with active rules, including core rules.
  */
 const updateRulesFile = async (rules) => {
   try {
@@ -19,20 +31,23 @@ const updateRulesFile = async (rules) => {
       return;
     }
 
-    // 1. Create backup of current file if it exists
+    // 1. Create backup
     try {
       await fs.copyFile(NAXSI_RULES_PATH, NAXSI_BACKUP_PATH);
-    } catch (e) {
-      // Ignore if source doesn't exist
-    }
+    } catch (e) { /* ignore */ }
 
-    // 2. Ensure the directory exists
+    // 2. Ensure directory
     await fs.mkdir(path.dirname(NAXSI_RULES_PATH), { recursive: true });
 
+    // 3. Prepare content
     const activeRules = rules.filter(r => r.status === 'active');
-    const content = activeRules.map(r => r.content).join('\n');
+    
+    // Group rules by category for better readability in the file
+    let content = CORE_RULES_HEADER + '\n';
+    content += `########################################\n# CUSTOM & OPENCTI GENERATED RULES\n########################################\n`;
+    content += activeRules.map(r => r.content).join('\n');
 
-    // 3. Write new config
+    // 4. Write config
     await fs.writeFile(NAXSI_RULES_PATH, content, 'utf8');
     console.log(`Successfully updated NAXSI rules file at ${NAXSI_RULES_PATH}`);
   } catch (error) {
@@ -42,65 +57,62 @@ const updateRulesFile = async (rules) => {
 };
 
 /**
+ * Generates the plaintext configuration for the UI Export Console.
+ */
+const generateExportContent = async (activeRules) => {
+  let content = CORE_RULES_HEADER + '\n';
+  
+  const categories = [
+    { title: 'SQL & NoSQL INJECTION', min: 1000, max: 2107 },
+    { title: 'XSS & PAYLOADS', min: 1300, max: 2205 },
+    { title: 'RCE & SSTI', min: 2300, max: 2304 },
+    { title: 'TRAVERSAL & EVASION', min: 1200, max: 2402 },
+    { title: 'CUSTOM RULES', min: 20000, max: 29999 }
+  ];
+
+  categories.forEach(cat => {
+    const subset = activeRules.filter(r => r.naxsiId >= cat.min && r.naxsiId <= cat.max);
+    if (subset.length > 0) {
+      content += `########################################\n# ${cat.title} (IDs: ${cat.min}-${cat.max})\n########################################\n`;
+      content += subset.map(r => r.content).join('\n') + '\n\n';
+    }
+  });
+
+  return content;
+};
+
+/**
  * Restore from backup in case of deployment failure.
  */
 const rollbackRules = async () => {
   try {
     await fs.copyFile(NAXSI_BACKUP_PATH, NAXSI_RULES_PATH);
-    console.log('Successfully rolled back NAXSI config to previous stable state.');
+    console.log('Successfully rolled back NAXSI config.');
   } catch (error) {
     console.error('CRITICAL: Rollback failed:', error.message);
   }
 };
 
 /**
- * Verify that the active rules in the database are present in the config file.
- */
-const verifyRuleStatus = async (rules) => {
-  try {
-    const fileContent = await fs.readFile(NAXSI_RULES_PATH, 'utf8');
-    const activeRules = rules.filter(r => r.status === 'active');
-    
-    for (const rule of activeRules) {
-      const isPresent = fileContent.includes(rule.content);
-      await prisma.rule.update({
-        where: { id: rule.id },
-        data: { 
-          lastVerified: new Date(),
-          verificationStatus: isPresent ? 'success' : 'failed'
-        }
-      });
-    }
-  } catch (error) {
-    console.error('Verification failed:', error.message);
-  }
-};
-
-/**
- * Reload the firewall/proxy configuration with retry logic.
+ * Reload the firewall.
  */
 const reloadFirewall = async (retries = 3) => {
   try {
     if (process.env.NODE_ENV === 'development' && !process.env.FORCE_RELOAD) {
-      console.log(`[MOCK] Executing reload command: ${RELOAD_COMMAND}`);
       return { stdout: 'Mock reload successful', stderr: '' };
     }
-
     let lastError;
     for (let i = 0; i < retries; i++) {
       try {
-        const { stdout, stderr } = await execPromise(RELOAD_COMMAND);
-        return { stdout, stderr };
+        return await execPromise(RELOAD_COMMAND);
       } catch (err) {
         lastError = err;
-        console.warn(`Reload attempt ${i + 1} failed, retrying...`);
         await new Promise(res => setTimeout(res, 1000));
       }
     }
     throw lastError;
   } catch (error) {
-    console.error('Error reloading firewall after retries:', error.message);
-    // If reload fails after retries, trigger rollback
+    console.error('Error reloading firewall:', error.message);
     await rollbackRules();
     throw error;
   }
@@ -108,7 +120,7 @@ const reloadFirewall = async (retries = 3) => {
 
 module.exports = {
   updateRulesFile,
+  generateExportContent,
   reloadFirewall,
-  verifyRuleStatus,
   rollbackRules,
 };

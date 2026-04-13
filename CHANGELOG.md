@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.7.0] - 2026-04-13 | 12:00 IST
+
+### Added — Ubuntu Production Infrastructure
+- **Unified Build Orchestration** — Integrated a root-level `npm run build` and `npm start` workflow to manage the combined React + Node.js stack for production deployment.
+- **Service & Proxy Templates** — Created production-ready `systemd` service files and Nginx reverse proxy configurations located in the `/config` directory.
+- **Production Deployment Guide** — Launched `DEPLOY_UBUNTU.md`, a definitive step-by-step manual for OS hardening, database migrations, and Nginx/Naxsi authorization.
+
+### Added — Rule Management Console
+- **Unified Export Interface** — Transformed the Rule Management view into a high-performance export console with "Copy All" capability for manual firewall updates.
+- **Strict NAXSI Enforcement** — Re-engineered the Rule Service to adhere to mission-critical syntax patterns, specific ID ranges, and optimized match zones.
+- **Core Rules Baseline** — Hardcoded the NAXSI core protection set (IDs 1-18) as a mandatory foundation for all configuration exports.
+
+### Changed — Environment Preparation
+- **Production Hardened `.env.example`** — Updated environment templates with secure defaults and pathing for production filesystem integration (NAXSI rules path, Reload commands).
+
+## [4.6.1] - 2026-04-13 | 11:42 IST
+
+### Added — Production Hardening & Diagnostics
+- **Connection Diagnostics** — Added `testConnection` capability to OpenCTI service to verify API availability and credentials without triggering a full sync.
+- **Production Cleanup Engine** — Enhanced `prisma/clear.js` to support full data wipes for all new STIX-compliant OpenCTI models.
+
+### Changed — "Clean Slate" Reset
+- **Removed All Mock Data** — Purged the database of all placeholder alerts, campaigns, and intelligence records.
+- **Default Production State** — The dashboard now defaults to a "Scanning..." standby mode, waiting for real data ingestion.
+
+## [4.6.0] - 2026-04-13 | 11:19 IST
+
+### Added — Deep OpenCTI Knowledge Integration (API-First)
+Successfully implemented a **Direct API-First** ingestion strategy, transforming the dashboard into a full-scale threat intelligence knowledge base. This version functions as a direct GraphQL client, eliminating the need for external sidecar connectors for data synchronization.
+
+- **Direct GraphQL Sync Engine** — Ingestion of 11 new entity types via native API calls: Reports, Incidents, Sightings, Malware, Intrusion Sets, Relationships, Observables, Organizations, and Notes.
+  - **Files:** `server/prisma/schema.prisma`, `server/services/openctiService.js`, `server/services/syncService.js`
+- **Contextual Rule Generation** — NAXSI rule service now traverses the relationship graph to enrich rules with adversary context (e.g., related malware families).
+  - **File:** `server/services/ruleService.js`
+- **Intelligence Hub 2.0** — Reorganized tabbed interface with 7 categorized navigation pillars: Indicators, Adversaries, Campaigns, Knowledge, Arsenal, Events, and System.
+  - **File:** `client/src/pages/IntelligencePage.js`
+- **OpenCTI Spotlight & KPIs** — Main dashboard now features a real-time intelligence briefing card and new KPIs for validated reports and malware arsenals.
+  - **File:** `client/src/pages/OverviewPage.js`
+- **System Health Monitoring** — Dedicated monitoring view for OpenCTI engine connectors and ingestion pipeline health.
+  - **File:** `client/src/pages/OpenCtiSystemPage.js`
+- **Premium Data Grid** — New reusable `OpenCtiDataGrid` component for glassmorphism-themed intelligence tables.
+  - **File:** `client/src/components/intel/OpenCtiDataGrid.js`
+
+### Enhanced
+- **"Show Important" Filtering** — Implemented backend-level `important` flagging logic and frontend `importantOnly` props for focused analyst workflows.
+  - **Files:** `server/controllers/intelController.js`, `client/src/pages/IOCFeedPage.js`, `client/src/pages/ThreatActorsPage.js`
+
+---
+
 ## [4.5.0] - 2026-04-07 | 11:35 IST
 
 ### Fixed — Ubuntu / Linux Compatibility
@@ -488,6 +537,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+**Version 4.6.0** — Deep OpenCTI Knowledge Integration _(2026-04-13)_
 **Version 4.5.0** — Ubuntu / Linux Compatibility _(2026-04-07)_
 
 **Version 4.4.0** — Production Automation & Zero-Data Architecture _(2026-04-06)_

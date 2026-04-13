@@ -9,21 +9,27 @@ const getThreatActors = async (req, res) => {
   try {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
+    const importantOnly = req.query.important === 'true';
+
+    const where = {};
+    if (importantOnly) where.important = true;
 
     if (page && limit) {
       const skip = (page - 1) * limit;
       const [actors, total] = await Promise.all([
         prisma.threatActor.findMany({
+          where,
           skip,
           take: limit,
           orderBy: { lastSeen: 'desc' },
         }),
-        prisma.threatActor.count(),
+        prisma.threatActor.count({ where }),
       ]);
       return res.json({ data: actors, meta: { total, page, limit } });
     }
 
     const actors = await prisma.threatActor.findMany({
+      where,
       orderBy: { lastSeen: 'desc' },
     });
     res.json(actors);
@@ -58,21 +64,27 @@ const getIocs = async (req, res) => {
   try {
     const page = parseInt(req.query.page);
     const limit = parseInt(req.query.limit);
+    const importantOnly = req.query.important === 'true';
+
+    const where = {};
+    if (importantOnly) where.important = true;
 
     if (page && limit) {
       const skip = (page - 1) * limit;
       const [iocs, total] = await Promise.all([
         prisma.ioc.findMany({
+          where,
           skip,
           take: limit,
           orderBy: { seenAt: 'desc' },
         }),
-        prisma.ioc.count(),
+        prisma.ioc.count({ where }),
       ]);
       return res.json({ data: iocs, meta: { total, page, limit } });
     }
 
     const iocs = await prisma.ioc.findMany({
+      where,
       orderBy: { seenAt: 'desc' },
     });
     res.json(iocs);
@@ -156,6 +168,14 @@ const createIoc = async (req, res) => {
   }
 };
 
+// @desc    Test OpenCTI Connection
+// @route   GET /api/intel/test-connection
+// @access  Private
+const testCtiConnection = async (req, res) => {
+  const result = await openCtiService.testConnection();
+  res.json(result);
+};
+
 // @desc    Trigger manual sync with OpenCTI
 // @route   POST /api/intel/sync
 // @access  Private
@@ -185,6 +205,81 @@ const getSyncStatus = async (req, res) => {
   }
 };
 
+// @desc    Get OpenCTI Reports
+// @route   GET /api/intel/reports
+const getReports = async (req, res) => {
+  try {
+    const importantOnly = req.query.important === 'true';
+    const where = importantOnly ? { important: true } : {};
+    const reports = await prisma.openCtiReport.findMany({
+      where,
+      orderBy: { published: 'desc' },
+    });
+    res.json(reports);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch reports' });
+  }
+};
+
+// @desc    Get OpenCTI Incidents
+// @route   GET /api/intel/incidents
+const getIncidents = async (req, res) => {
+  try {
+    const importantOnly = req.query.important === 'true';
+    const where = importantOnly ? { important: true } : {};
+    const incidents = await prisma.openCtiIncident.findMany({
+      where,
+      orderBy: { firstSeen: 'desc' },
+    });
+    res.json(incidents);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch incidents' });
+  }
+};
+
+// @desc    Get OpenCTI Malware
+// @route   GET /api/intel/malware
+const getMalware = async (req, res) => {
+  try {
+    const importantOnly = req.query.important === 'true';
+    const where = importantOnly ? { important: true } : {};
+    const malware = await prisma.openCtiMalware.findMany({
+      where,
+      orderBy: { lastSeen: 'desc' },
+    });
+    res.json(malware);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch malware' });
+  }
+};
+
+// @desc    Get Relationships
+// @route   GET /api/intel/relationships
+const getRelationships = async (req, res) => {
+  try {
+    const relationships = await prisma.openCtiRelationship.findMany({
+      take: 100,
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json(relationships);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch relationships' });
+  }
+};
+
+// @desc    Get Connectors
+// @route   GET /api/intel/connectors
+const getConnectors = async (req, res) => {
+  try {
+    const connectors = await prisma.openCtiConnector.findMany({
+      orderBy: { lastSeen: 'desc' },
+    });
+    res.json(connectors);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch connectors' });
+  }
+};
+
 module.exports = {
   getThreatActors,
   getThreatActorById,
@@ -192,6 +287,12 @@ module.exports = {
   getIocById,
   getOpenCtiMatches,
   createIoc,
+  testCtiConnection,
   triggerSync,
   getSyncStatus,
+  getReports,
+  getIncidents,
+  getMalware,
+  getRelationships,
+  getConnectors,
 };

@@ -20,7 +20,7 @@ const formatDate = (dateString) => {
   });
 };
 
-export default function ThreatActorsPage({ hideHeader = false }) {
+export default function ThreatActorsPage({ hideHeader = false, importantOnly = false }) {
   const navigate = useNavigate();
   const [threatActors, setThreatActors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,9 @@ export default function ThreatActorsPage({ hideHeader = false }) {
     if (!isLoadMore) setLoading(true);
     setError(null);
     try {
-      const { data } = await api.get(`/intel/threat-actors?page=${pageNum}&limit=12`);
+      const baseUrl = `/intel/threat-actors?page=${pageNum}&limit=12`;
+      const url = importantOnly ? `${baseUrl}&important=true` : baseUrl;
+      const { data } = await api.get(url);
       
       let newActors = [];
       if (data.data && data.meta) {

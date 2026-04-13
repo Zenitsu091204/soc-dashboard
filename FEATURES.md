@@ -1,15 +1,21 @@
 # SOC Dashboard Features
-**Current Version:** 4.5.0 (Ubuntu / Linux Compatibility Release)
+**Current Version:** 4.6.0 (Deep OpenCTI Knowledge Integration)
 Complete documentation of every feature, page, component, and utility in the SOC Dashboard.
 
-**Last Updated:** 2026-04-07 | 11:35 IST — v4.5.0
+**Last Updated:** 2026-04-13 | 11:19 IST — v4.6.0
 
 ---
 
 ## Table of Contents
 
+### Deep OpenCTI Knowledge Integration (v4.6.0)
+1. [Full Knowledge Graph Sync](#-full-knowledge-graph-sync)
+2. [Contextual Rule Generation](#-contextual-rule-generation)
+3. [Intelligence Spotlight & KPIs](#-intelligence-spotlight--kpis)
+4. [System Health Monitoring](#-system-health-monitoring)
+
 ### Ubuntu / Linux Compatibility (v4.5.0)
-1. [Ubuntu Bootstrap Script](#-ubuntu-bootstrap-script)
+5. [Ubuntu Bootstrap Script](#-ubuntu-bootstrap-script)
 
 ### Production & Scalability (v4.4.0)
 2. [Automated Guided Setup](#-automated-guided-setup)
@@ -80,8 +86,9 @@ Complete documentation of every feature, page, component, and utility in the SOC
 39. [toast.js](#-toastjs) _(v2.0.0)_
 40. [storage.js](#-storagejs)
 41. [format.js](#-formatjs)
-42. [performanceUtils.js](#-performanceutilsjs) _(v2.2.0)_
-43. [testUtils.js](#-testutilsjs) _(v2.0.0)_
+43. [OpenCtiDataGrid](#-openctidatagrid) _(v4.6.0)_
+44. [performanceUtils.js](#-performanceutilsjs) _(v2.2.0)_
+45. [testUtils.js](#-testutilsjs) _(v2.0.0)_
 
 ---
 
@@ -793,6 +800,69 @@ All pages and components adapt to screen size:
 - **Knowledge Base Sync**: Direct ingestion of Indicators, Campaigns, and Threat Actor metadata from OpenCTI.
 - **Scheduled Ingestion**: Background cron job ensures local intelligence is never older than 60 minutes.
 - **Health Monitoring**: Real-time `SyncStatus` tracking visible on the administrator dashboard.
+
+---
+
+## 🤖 Deep OpenCTI Knowledge Integration (API-First v4.6.0)
+
+---
+
+### 🧬 Direct API Sync Engine
+
+**Location:** `server/services/syncService.js`, `server/services/openctiService.js`, `server/prisma/schema.prisma`
+
+**Features:**
+- **Native GraphQL Client**: Functions as a direct API client to OpenCTI, removing the requirement for sidecar connectors or secondary processes for synchronization.
+- **"Fetch All" Strategy**: Ingests 11+ entity types to create a full local mirror of the OpenCTI knowledge base.
+- **Entity Coverage**: Indicators, Campaigns, Threat Actors, Reports, Incidents, Sightings, Malware families, Intrusion Sets, Relationships, Organizations, and Analyst Notes.
+- **Relationship Persistence**: Local storage of STIX-compliant relationships allows for graph-aware querying.
+- **Automated Flagging**: Intelligent thresholding flags entities with >80% confidence or High/Critical severity as `important`.
+
+---
+
+### 🧠 Contextual Rule Generation
+
+**Location:** `server/services/ruleService.js`
+
+**Features:**
+- **Relationship Traversal**: Automated NAXSI rule generation now traverses the local relationship graph to find related malware or adversaries.
+- **Enriched Rule Metadata**: Protection rules now include human-readable context in the message, e.g., `OpenCTI SQL Injection rule [Related to Cobalt Strike]`.
+- **Confidence-Driven Deployment**:
+    - **Tier-1 (90%+)**: Active deployment automatically.
+    - **Tier-2 (70%+)**: Pending approval required.
+
+---
+
+### 📡 Intelligence Spotlight & KPIs
+
+**Location:** `client/src/pages/OverviewPage.js`
+
+**Features:**
+- **Analyst Spotlight Card**: A dedicated briefing widget on the main dashboard showing the latest high-confidence intelligence reports.
+- **Intel KPIs**: Real-time counters for "Validated Reports" and "Advanced Arsenals" (Malware Families).
+- **Glassmorphism Design**: High-density visual briefing with backdrop-blur and pulsating activity indicators.
+
+---
+
+### 🖥️ OpenCtiDataGrid
+
+**Location:** `client/src/components/intel/OpenCtiDataGrid.js`
+
+**Features:**
+- **Reusable Intelligence Grid**: Premium glassmorphism table designed specifically for high-volume threat intelligence.
+- **Status Badging**: Visual chips for confidence, marking (TLP), and relationship types.
+- **Data-Driven Columns**: Supports dynamic column rendering for varied entity types (Malware vs Indicators).
+
+---
+
+### 🏥 System Health Monitoring
+
+**Location:** `client/src/pages/OpenCtiSystemPage.js`
+
+**Features:**
+- **Connector Status Grid**: Real-time heartbeat monitoring for OpenCTI engine connectors.
+- **Ingestion Pipeline Metrics**: Visibility into the last sync status, success/failure logs, and object counts.
+- **Manual Sync Override**: One-click manual ingestion trigger for rapid threat updates.
 
 ---
 

@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-export default function IOCFeedPage({ hideHeader = false }) {
+export default function IOCFeedPage({ hideHeader = false, importantOnly = false }) {
   const navigate = useNavigate();
   const [iocs, setIocs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +30,8 @@ export default function IOCFeedPage({ hideHeader = false }) {
     setError(null);
     const fetchIocs = async () => {
       try {
-        const { data } = await api.get('/intel/iocs');
+        const url = importantOnly ? '/intel/iocs?important=true' : '/intel/iocs';
+        const { data } = await api.get(url);
         setIocs(data);
       } catch (err) {
         console.error('Failed to fetch IOCs', err);

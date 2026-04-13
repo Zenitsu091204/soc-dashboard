@@ -44,7 +44,7 @@ async function setup() {
       envContent = fs.readFileSync(envExampleFile, 'utf-8');
     } else {
       // Fallback if .env.example is missing
-      envContent = `PORT=5000\nNODE_ENV=development\nDATABASE_URL="postgresql://postgres:postgres@localhost:5432/soc_dashboard?schema=public"\nCLIENT_ORIGIN=http://localhost:3000\n`;
+      envContent = `PORT=8001\nNODE_ENV=development\nDATABASE_URL="postgresql://postgres:postgres@localhost:5432/soc_dashboard?schema=public"\nCLIENT_ORIGIN=http://localhost:8000\n`;
     }
 
     // Auto-generate a secure JWT Secret if the placeholder exists
