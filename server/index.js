@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 
 // Restrict CORS to the frontend origin only
-const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:3000').split(',');
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:8000').split(',');
 app.use(cors({
   origin: (origin, callback) => {
     // Allow server-to-server requests (no origin) or listed origins

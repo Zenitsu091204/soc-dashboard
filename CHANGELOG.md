@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.7.1] - 2026-04-13 | 12:30 IST
+
+### Added — Port Remapping (8000/8001)
+- **Infrastructure Realignment** — Successfully remapped the entire application stack to run on Port 8000 (Frontend) and Port 8001 (Backend API).
+- **Environment Synchronization** — Updated `.env.example`, active `.env`, and CORS fallbacks to ensure seamless cross-origin communication on the new ports.
+- **Documentation Update** — Refreshed all setup and deployment guides with the new port instructions and troubleshooting commands.
+
+### Fixed — Windows Environment Compatibility
+- **Launch Script Robustness** — Fixed a `spawn EINVAL` error in the `setup.js` script by enabling shell execution for Windows platforms.
+- **Login Connectivity** — Resolved "Login Page Errors" by synchronizing API URLs across the authentication context and interceptors.
+
 ## [4.7.0] - 2026-04-13 | 12:00 IST
 
 ### Added — Ubuntu Production Infrastructure

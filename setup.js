@@ -95,6 +95,7 @@ async function setup() {
     stdio: 'inherit',
     cwd: __dirname,
     env: childEnv,
+    shell: true,
   });
 
   appProcess.on('close', (code) => {
